@@ -188,6 +188,7 @@ namespace egret.sys {
             let stage = this.stage;
             stage.$stageWidth = stageWidth;
             stage.$stageHeight = stageHeight;
+            ++stage.transform._localID;
             if (egret.nativeRender) {
                 egret_native.nrResize(stageWidth, stageHeight);
             } else {

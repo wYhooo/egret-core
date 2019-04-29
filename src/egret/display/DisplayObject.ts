@@ -335,6 +335,7 @@ namespace egret {
             self.$x = matrix.tx;
             self.$y = matrix.ty;
             self.$matrixDirty = false;
+            ++this.transform._localID;
             if (m.a == 1 && m.b == 0 && m.c == 0 && m.d == 1) {
                 self.$useTranslate = false;
             }
@@ -450,6 +451,7 @@ namespace egret {
                 return false;
             }
             self.$x = value;
+            ++this.transform._localID;
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setX(value);
             }
@@ -517,6 +519,7 @@ namespace egret {
                 return false;
             }
             self.$y = value;
+            ++this.transform._localID;
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setY(value);
             }
@@ -581,6 +584,7 @@ namespace egret {
             }
             self.$scaleX = value;
             self.$matrixDirty = true;
+            ++this.transform._localID;
 
             self.$updateUseTransform();
             if (egret.nativeRender) {
@@ -645,6 +649,7 @@ namespace egret {
             }
             self.$scaleY = value;
             self.$matrixDirty = true;
+            ++this.transform._localID;
 
             self.$updateUseTransform();
             if (egret.nativeRender) {
@@ -712,6 +717,7 @@ namespace egret {
             self.$skewY += angle;
             self.$rotation = value;
             self.$matrixDirty = true;
+            ++this.transform._localID;
 
             self.$updateUseTransform();
             if (egret.nativeRender) {
@@ -766,6 +772,7 @@ namespace egret {
 
             self.$skewX = value;
             self.$matrixDirty = true;
+            ++this.transform._localID;
 
             self.$updateUseTransform();
             if (egret.nativeRender) {
@@ -820,6 +827,7 @@ namespace egret {
 
             self.$skewY = value;
             self.$matrixDirty = true;
+            ++this.transform._localID;
 
             self.$updateUseTransform();
             if (egret.nativeRender) {
@@ -2291,7 +2299,7 @@ namespace egret {
         /*
         * transform refactor
         */
-       public transform: Transform2D = new Transform2D;
+        public transform: Transform2D = new Transform2D;
 
         /**
          * Updates the object transform for rendering.
@@ -2306,6 +2314,9 @@ namespace egret {
             // multiply the alphas..
             //this.worldAlpha = this.alpha * this.parent.worldAlpha;
             //this._bounds.updateID++;
+        }
+
+        public _updateTransformAsVirtualRenderingRoot(): void {
         }
     }
 }

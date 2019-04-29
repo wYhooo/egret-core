@@ -179,6 +179,7 @@ namespace egret {
 
             self.$children.splice(index, 0, child);
             child.$setParent(self);
+            child.transform._parentID = -1; //transform refactor
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.addChildAt(child.$nativeDisplayObject.id, index);
             }
@@ -429,6 +430,7 @@ namespace egret {
             }
             let displayList = this.$displayList || this.$parentDisplayList;
             child.$setParent(null);
+            child.transform._parentID = -1; //transform refactor
             let indexNow = children.indexOf(child);
             if (indexNow != -1) {
                 children.splice(indexNow, 1);
@@ -868,6 +870,41 @@ namespace egret {
             //         child.updateTransform();
             //     }
             // }
+        }
+
+        public _updateTransformAsVirtualRenderingRoot(): void {
+
+            const transform = this.transform;
+
+            //this.world = parent.world * this.local
+            transform.__$offsetX__ = this.$x; //没有父级
+            transform.__$offsetY__ = this.$y; //没有父级
+            //
+            const wt = Matrix.create(); //虚拟一个identity的父级别
+            wt.identity();
+            const lt = this.$getMatrix();
+            const worldtransform = transform.worldTransform;
+            worldtransform.identity();//world清除一下，因为准备重新算了
+            if (this.$useTranslate) {
+                worldtransform.a = lt.a * wt.a + lt.b * wt.c;
+                worldtransform.b = lt.a * wt.b + lt.b * wt.d;
+                worldtransform.c = lt.c * wt.a + lt.d * wt.c;
+                worldtransform.d = lt.c * wt.b + lt.d * wt.d;
+                worldtransform.tx = lt.tx * wt.a + lt.ty * wt.c + wt.tx;
+                worldtransform.ty = lt.tx * wt.b + lt.ty * wt.d + wt.ty;
+                transform.__$offsetX__ = -this.$anchorOffsetX;
+                transform.__$offsetY__ = -this.$anchorOffsetY;
+            }
+            else {
+                worldtransform.a = wt.a;
+                worldtransform.b = wt.b;
+                worldtransform.c = wt.c;
+                worldtransform.d = wt.d;
+                transform.__$offsetX__ += -this.$anchorOffsetX;
+                transform.__$offsetY__ += -this.$anchorOffsetY;
+            }
+            //this.$offsetMatrixDirty = true;
+            Matrix.release(wt);
         }
     }
 }

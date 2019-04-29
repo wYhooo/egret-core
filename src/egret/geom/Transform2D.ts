@@ -44,6 +44,8 @@ namespace egret {
         public _currentLocalID: number = 0;
         public _worldID: number = 0;
         public _parentID: number = 0;
+        public __$offsetX__: number = 0;
+        public __$offsetY__: number = 0;
 
         constructor() {
             /**
@@ -95,11 +97,11 @@ namespace egret {
             // this._cy = 0; // cos rotation + Math.PI/2 - skewX;
             // this._sy = 1; // sin rotation + Math.PI/2 - skewX;
 
-            this._localID = 0;
-            this._currentLocalID = 0;
+            // this._localID = 0;
+            // this._currentLocalID = 0;
 
-            this._worldID = 0;
-            this._parentID = 0;
+            // this._worldID = 0;
+            // this._parentID = 0;
         }
 
         /**
@@ -153,7 +155,7 @@ namespace egret {
          * @param {PIXI.Transform} parentTransform - The transform of the parent of this object
          */
         public updateTransform(parentTransform: Transform2D): void {
-           
+
             this.updateLocalTransform();
 
             /*
@@ -172,7 +174,7 @@ namespace egret {
                 this._parentID = -1;
             }
             */
-           const lt = this.localTransform;
+            const lt = this.localTransform;
             if (this._parentID !== parentTransform._worldID) {
                 // concat the parent matrix with the objects transform.
                 const pt = parentTransform.worldTransform;

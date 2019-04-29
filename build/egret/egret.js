@@ -869,6 +869,7 @@ var egret;
             self.$x = matrix.tx;
             self.$y = matrix.ty;
             self.$matrixDirty = false;
+            ++this.transform._localID;
             if (m.a == 1 && m.b == 0 && m.c == 0 && m.d == 1) {
                 self.$useTranslate = false;
             }
@@ -975,6 +976,7 @@ var egret;
                 return false;
             }
             self.$x = value;
+            ++this.transform._localID;
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setX(value);
             }
@@ -1040,6 +1042,7 @@ var egret;
                 return false;
             }
             self.$y = value;
+            ++this.transform._localID;
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setY(value);
             }
@@ -1102,6 +1105,7 @@ var egret;
             }
             self.$scaleX = value;
             self.$matrixDirty = true;
+            ++this.transform._localID;
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setScaleX(value);
@@ -1163,6 +1167,7 @@ var egret;
             }
             self.$scaleY = value;
             self.$matrixDirty = true;
+            ++this.transform._localID;
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setScaleY(value);
@@ -1227,6 +1232,7 @@ var egret;
             self.$skewY += angle;
             self.$rotation = value;
             self.$matrixDirty = true;
+            ++this.transform._localID;
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setRotation(value);
@@ -1276,6 +1282,7 @@ var egret;
             value = value / 180 * Math.PI;
             self.$skewX = value;
             self.$matrixDirty = true;
+            ++this.transform._localID;
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setSkewX(self.$skewXdeg);
@@ -1325,6 +1332,7 @@ var egret;
             value = (value + self.$rotation) / 180 * Math.PI;
             self.$skewY = value;
             self.$matrixDirty = true;
+            ++this.transform._localID;
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setSkewY(self.$skewYdeg);
@@ -2696,6 +2704,8 @@ var egret;
             // multiply the alphas..
             //this.worldAlpha = this.alpha * this.parent.worldAlpha;
             //this._bounds.updateID++;
+        };
+        DisplayObject.prototype._updateTransformAsVirtualRenderingRoot = function () {
         };
         /**
          * @private
@@ -4495,6 +4505,7 @@ var egret;
             }
             self.$children.splice(index, 0, child);
             child.$setParent(self);
+            child.transform._parentID = -1; //transform refactor
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.addChildAt(child.$nativeDisplayObject.id, index);
             }
@@ -4737,6 +4748,7 @@ var egret;
             }
             var displayList = this.$displayList || this.$parentDisplayList;
             child.$setParent(null);
+            child.transform._parentID = -1; //transform refactor
             var indexNow = children.indexOf(child);
             if (indexNow != -1) {
                 children.splice(indexNow, 1);
@@ -5153,6 +5165,38 @@ var egret;
             //         child.updateTransform();
             //     }
             // }
+        };
+        DisplayObjectContainer.prototype._updateTransformAsVirtualRenderingRoot = function () {
+            var transform = this.transform;
+            //this.world = parent.world * this.local
+            transform.__$offsetX__ = this.$x; //没有父级
+            transform.__$offsetY__ = this.$y; //没有父级
+            //
+            var wt = egret.Matrix.create(); //虚拟一个identity的父级别
+            wt.identity();
+            var lt = this.$getMatrix();
+            var worldtransform = transform.worldTransform;
+            worldtransform.identity(); //world清除一下，因为准备重新算了
+            if (this.$useTranslate) {
+                worldtransform.a = lt.a * wt.a + lt.b * wt.c;
+                worldtransform.b = lt.a * wt.b + lt.b * wt.d;
+                worldtransform.c = lt.c * wt.a + lt.d * wt.c;
+                worldtransform.d = lt.c * wt.b + lt.d * wt.d;
+                worldtransform.tx = lt.tx * wt.a + lt.ty * wt.c + wt.tx;
+                worldtransform.ty = lt.tx * wt.b + lt.ty * wt.d + wt.ty;
+                transform.__$offsetX__ = -this.$anchorOffsetX;
+                transform.__$offsetY__ = -this.$anchorOffsetY;
+            }
+            else {
+                worldtransform.a = wt.a;
+                worldtransform.b = wt.b;
+                worldtransform.c = wt.c;
+                worldtransform.d = wt.d;
+                transform.__$offsetX__ += -this.$anchorOffsetX;
+                transform.__$offsetY__ += -this.$anchorOffsetY;
+            }
+            //this.$offsetMatrixDirty = true;
+            egret.Matrix.release(wt);
         };
         /**
          * @private
@@ -6880,6 +6924,7 @@ var egret;
             _this.$maxTouches = 99;
             _this.$stage = _this;
             _this.$nestLevel = 1;
+            _this.transform._parentID = -1; //transform refactor only once -1;
             return _this;
         }
         Stage.prototype.createNativeDisplayObject = function () {
@@ -12692,6 +12737,8 @@ var egret;
             this._currentLocalID = 0;
             this._worldID = 0;
             this._parentID = 0;
+            this.__$offsetX__ = 0;
+            this.__$offsetY__ = 0;
             /**
              * The local matrix transform
              *
@@ -12727,10 +12774,10 @@ var egret;
             // this._sx = 0; // sin rotation + skewY;
             // this._cy = 0; // cos rotation + Math.PI/2 - skewX;
             // this._sy = 1; // sin rotation + Math.PI/2 - skewX;
-            this._localID = 0;
-            this._currentLocalID = 0;
-            this._worldID = 0;
-            this._parentID = 0;
+            // this._localID = 0;
+            // this._currentLocalID = 0;
+            // this._worldID = 0;
+            // this._parentID = 0;
         }
         /**
          * Called when a value changes.
@@ -13850,6 +13897,7 @@ var egret;
                 var stage = this.stage;
                 stage.$stageWidth = stageWidth;
                 stage.$stageHeight = stageHeight;
+                ++stage.transform._localID;
                 if (egret.nativeRender) {
                     egret_native.nrResize(stageWidth, stageHeight);
                 }

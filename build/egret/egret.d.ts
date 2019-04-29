@@ -1298,6 +1298,7 @@ declare namespace egret {
          * TODO - Optimization pass!
          */
         updateTransform(): void;
+        _updateTransformAsVirtualRenderingRoot(): void;
     }
 }
 declare namespace egret {
@@ -2952,6 +2953,7 @@ declare namespace egret {
          * Updates the transform on all children of this container for rendering
          */
         updateTransform(): void;
+        _updateTransformAsVirtualRenderingRoot(): void;
     }
 }
 declare namespace egret {
@@ -8023,6 +8025,8 @@ declare namespace egret {
         _currentLocalID: number;
         _worldID: number;
         _parentID: number;
+        __$offsetX__: number;
+        __$offsetY__: number;
         constructor();
         /**
          * Called when a value changes.

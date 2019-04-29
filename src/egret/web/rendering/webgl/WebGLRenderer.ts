@@ -64,9 +64,27 @@ namespace egret.web {
 
             webglBufferContext.pushBuffer(webglBuffer);
 
+            //-------------------------------------------------------------------------------------------------------
+            ///重构对一个没有父节点的stage做虚拟父级，写的比较脏，以后整理
+            //缓存下来
+            const cacheParent = displayObject.parent;
+            //准备修改虚拟父级的矩阵
+            const virtualRenderingRoot = this.virtualRenderingRoot;
+            //仿照下面这一句 webglBuffer.transform(matrix.a, matrix.b, matrix.c, matrix.d, 0, 0);   
+            //local设置为偏移矩阵，同时tx,ty = 0;
+            const m1 = Matrix.create();
+            m1.setTo(matrix.a, matrix.b, matrix.c, matrix.d, 0, 0);
+            virtualRenderingRoot.$setMatrix(m1, true);
+            Matrix.release(m1);
+            //计算一下全局
+            virtualRenderingRoot._updateTransformAsVirtualRenderingRoot();
+            //这个仿照 下面 this.drawDisplayObject(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
+            virtualRenderingRoot.transform.__$offsetX__ = matrix.tx;
+            virtualRenderingRoot.transform.__$offsetY__ = matrix.ty;
             //
             displayObject.$setParent(this.virtualRenderingRoot);
             displayObject.updateTransform();
+            //-------------------------------------------------------------------------------------------------------
 
             //绘制显示对象
             webglBuffer.transform(matrix.a, matrix.b, matrix.c, matrix.d, 0, 0);
@@ -75,8 +93,12 @@ namespace egret.web {
             let drawCall = webglBuffer.$drawCalls;
             webglBuffer.onRenderFinish();
 
-            //
-            displayObject.$setParent(null);
+            ////-------------------------------------------------------------------------------------------------------
+            //还原回去,保持stage没有parent
+            displayObject.$setParent(cacheParent);
+            virtualRenderingRoot.transform.__$offsetX__ = 0;
+            virtualRenderingRoot.transform.__$offsetY__ = 0;
+            /////-------------------------------------------------------------------------------------------------------
 
             webglBufferContext.popBuffer();
             let invert = Matrix.create();

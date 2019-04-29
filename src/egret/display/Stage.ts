@@ -65,6 +65,7 @@ namespace egret {
             super();
             this.$stage = this;
             this.$nestLevel = 1;
+            this.transform._parentID = -1; //transform refactor only once -1;
         }
 
         protected createNativeDisplayObject(): void {
