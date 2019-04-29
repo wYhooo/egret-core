@@ -687,6 +687,10 @@ var egret;
             _this.$renderNode = null;
             _this.$renderDirty = false;
             _this.$renderMode = null;
+            /*
+            * transform refactor
+            */
+            _this.transform = new egret.Transform2D;
             if (egret.nativeRender) {
                 _this.createNativeDisplayObject();
             }
@@ -2678,6 +2682,20 @@ var egret;
                 parent = parent.$parent;
             }
             return false;
+        };
+        /**
+         * Updates the object transform for rendering.
+         *
+         * TODO - Optimization pass!
+         */
+        DisplayObject.prototype.updateTransform = function () {
+            // if (!this.parent) {
+            //     return;
+            // }
+            this.transform.updateTransform(this.parent.transform);
+            // multiply the alphas..
+            //this.worldAlpha = this.alpha * this.parent.worldAlpha;
+            //this._bounds.updateID++;
         };
         /**
          * @private
@@ -5105,6 +5123,36 @@ var egret;
                 return this;
             }
             return _super.prototype.$hitTest.call(this, stageX, stageY);
+        };
+        /**
+         * Updates the transform on all children of this container for rendering
+         */
+        DisplayObjectContainer.prototype.updateTransform = function () {
+            // if (!this.parent) {
+            //     return;
+            // }
+            // if (this.sortableChildren && this.sortDirty) {
+            //     this.sortChildren();
+            // }
+            // this._boundsID++;
+            this.transform.updateTransform(this.parent.transform);
+            // TODO: check render flags, how to process stuff here
+            //this.worldAlpha = this.alpha * this.parent.worldAlpha;
+            var children = this.$children;
+            if (children && children.length) {
+                for (var i = 0, j = children.length; i < j; ++i) {
+                    var child = children[i];
+                    if (child.visible) {
+                        child.updateTransform();
+                    }
+                }
+            }
+            // for (let i = 0, j = this.children.length; i < j; ++i) {
+            //     const child = this.children[i];
+            //     if (child.visible) {
+            //         child.updateTransform();
+            //     }
+            // }
         };
         /**
          * @private
@@ -12594,6 +12642,179 @@ var egret;
      */
     egret.$TempRectangle = new Rectangle();
 })(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-present, Egret Technology.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    /**
+     * Transform that takes care about its versions
+     *
+     * @class
+     * @memberof PIXI
+     */
+    var Transform2D = (function () {
+        function Transform2D() {
+            /**
+             * The global matrix transform. It can be swapped temporarily by some functions like getLocalBounds()
+             *
+             * @member {PIXI.Matrix}
+             */
+            //this.worldTransform = new Matrix();
+            this.worldTransform = new egret.Matrix;
+            this.localTransform = new egret.Matrix;
+            this._localID = 0;
+            this._currentLocalID = 0;
+            this._worldID = 0;
+            this._parentID = 0;
+            /**
+             * The local matrix transform
+             *
+             * @member {PIXI.Matrix}
+             */
+            //this.localTransform = new Matrix();
+            /**
+             * The coordinate of the object relative to the local coordinates of the parent.
+             *
+             * @member {PIXI.ObservablePoint}
+             */
+            //this.position = new ObservablePoint(this.onChange, this, 0, 0);
+            /**
+             * The scale factor of the object.
+             *
+             * @member {PIXI.ObservablePoint}
+             */
+            //this.scale = new ObservablePoint(this.onChange, this, 1, 1);
+            /**
+             * The pivot point of the displayObject that it rotates around.
+             *
+             * @member {PIXI.ObservablePoint}
+             */
+            //this.pivot = new ObservablePoint(this.onChange, this, 0, 0);
+            /**
+             * The skew amount, on the x and y axis.
+             *
+             * @member {PIXI.ObservablePoint}
+             */
+            // this.skew = new ObservablePoint(this.updateSkew, this, 0, 0);
+            // this._rotation = 0;
+            // this._cx = 1; // cos rotation + skewY;
+            // this._sx = 0; // sin rotation + skewY;
+            // this._cy = 0; // cos rotation + Math.PI/2 - skewX;
+            // this._sy = 1; // sin rotation + Math.PI/2 - skewX;
+            this._localID = 0;
+            this._currentLocalID = 0;
+            this._worldID = 0;
+            this._parentID = 0;
+        }
+        /**
+         * Called when a value changes.
+         *
+         * @private
+         */
+        Transform2D.prototype.onChange = function () {
+            this._localID++;
+        };
+        /**
+         * Called when skew or rotation changes
+         *
+         * @private
+         */
+        Transform2D.prototype.updateSkew = function () {
+            // this._cx = Math.cos(this._rotation + this.skew._y);
+            // this._sx = Math.sin(this._rotation + this.skew._y);
+            // this._cy = -Math.sin(this._rotation - this.skew._x); // cos, added PI/2
+            // this._sy = Math.cos(this._rotation - this.skew._x); // sin, added PI/2
+            this._localID++;
+        };
+        /**
+         * Updates only local matrix
+         */
+        Transform2D.prototype.updateLocalTransform = function () {
+            var lt = this.localTransform;
+            if (this._localID !== this._currentLocalID) {
+                // get the matrix values of the displayobject based on its transform properties..
+                // lt.a = this._cx * this.scale._x;
+                // lt.b = this._sx * this.scale._x;
+                // lt.c = this._cy * this.scale._y;
+                // lt.d = this._sy * this.scale._y;
+                // lt.tx = this.position._x - ((this.pivot._x * lt.a) + (this.pivot._y * lt.c));
+                // lt.ty = this.position._y - ((this.pivot._x * lt.b) + (this.pivot._y * lt.d));
+                this._currentLocalID = this._localID;
+                // force an update..
+                this._parentID = -1;
+            }
+        };
+        /**
+         * Updates the values of the object and applies the parent's transform.
+         *
+         * @param {PIXI.Transform} parentTransform - The transform of the parent of this object
+         */
+        Transform2D.prototype.updateTransform = function (parentTransform) {
+            this.updateLocalTransform();
+            /*
+            if (this._localID !== this._currentLocalID) {
+                // get the matrix values of the displayobject based on its transform properties..
+                // lt.a = this._cx * this.scale._x;
+                // lt.b = this._sx * this.scale._x;
+                // lt.c = this._cy * this.scale._y;
+                // lt.d = this._sy * this.scale._y;
+
+                // lt.tx = this.position._x - ((this.pivot._x * lt.a) + (this.pivot._y * lt.c));
+                // lt.ty = this.position._y - ((this.pivot._x * lt.b) + (this.pivot._y * lt.d));
+                this._currentLocalID = this._localID;
+
+                // force an update..
+                this._parentID = -1;
+            }
+            */
+            var lt = this.localTransform;
+            if (this._parentID !== parentTransform._worldID) {
+                // concat the parent matrix with the objects transform.
+                var pt = parentTransform.worldTransform;
+                var wt = this.worldTransform;
+                wt.a = (lt.a * pt.a) + (lt.b * pt.c);
+                wt.b = (lt.a * pt.b) + (lt.b * pt.d);
+                wt.c = (lt.c * pt.a) + (lt.d * pt.c);
+                wt.d = (lt.c * pt.b) + (lt.d * pt.d);
+                wt.tx = (lt.tx * pt.a) + (lt.ty * pt.c) + pt.tx;
+                wt.ty = (lt.tx * pt.b) + (lt.ty * pt.d) + pt.ty;
+                this._parentID = parentTransform._worldID;
+                // update the id of the transform..
+                this._worldID++;
+            }
+        };
+        return Transform2D;
+    }());
+    egret.Transform2D = Transform2D;
+    __reflect(Transform2D.prototype, "egret.Transform2D");
+    //Transform.IDENTITY = new Transform();
+})(egret || (egret = {}));
 var egret;
 (function (egret) {
     egret.$locale_strings = egret.$locale_strings || {};
@@ -13917,34 +14138,6 @@ var egret;
 //  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-present, Egret Technology.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
 var egret;
 (function (egret) {
     /** !!!!!!!!inspired by Babylon.js!!!!!!!!!!!!!
@@ -14075,6 +14268,40 @@ var egret;
     }());
     egret.KTXContainer = KTXContainer;
     __reflect(KTXContainer.prototype, "egret.KTXContainer");
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-present, Egret Technology.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    var sys;
+    (function (sys) {
+    })(sys = egret.sys || (egret.sys = {}));
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -25387,9 +25614,3 @@ var egret;
 //  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //////////////////////////////////////////////////////////////////////////////////////
-var egret;
-(function (egret) {
-    var sys;
-    (function (sys) {
-    })(sys = egret.sys || (egret.sys = {}));
-})(egret || (egret = {}));

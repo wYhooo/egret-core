@@ -40,6 +40,8 @@ namespace egret.web {
      */
     export class WebGLRenderer implements sys.SystemRenderer {
 
+        public virtualRenderingRoot: DisplayObjectContainer = new DisplayObjectContainer;
+
         public constructor() {
 
         }
@@ -62,12 +64,19 @@ namespace egret.web {
 
             webglBufferContext.pushBuffer(webglBuffer);
 
+            //
+            displayObject.$setParent(this.virtualRenderingRoot);
+            displayObject.updateTransform();
+
             //绘制显示对象
             webglBuffer.transform(matrix.a, matrix.b, matrix.c, matrix.d, 0, 0);
             this.drawDisplayObject(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
             webglBufferContext.$drawWebGL();
             let drawCall = webglBuffer.$drawCalls;
             webglBuffer.onRenderFinish();
+
+            //
+            displayObject.$setParent(null);
 
             webglBufferContext.popBuffer();
             let invert = Matrix.create();

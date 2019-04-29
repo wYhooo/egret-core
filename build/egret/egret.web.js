@@ -7093,6 +7093,7 @@ var egret;
          */
         var WebGLRenderer = (function () {
             function WebGLRenderer() {
+                this.virtualRenderingRoot = new egret.DisplayObjectContainer;
                 this.nestLevel = 0; //渲染的嵌套层次，0表示在调用堆栈的最外层。
             }
             /**
@@ -7110,12 +7111,17 @@ var egret;
                 var webglBufferContext = webglBuffer.context;
                 var root = forRenderTexture ? displayObject : null;
                 webglBufferContext.pushBuffer(webglBuffer);
+                //
+                displayObject.$setParent(this.virtualRenderingRoot);
+                displayObject.updateTransform();
                 //绘制显示对象
                 webglBuffer.transform(matrix.a, matrix.b, matrix.c, matrix.d, 0, 0);
                 this.drawDisplayObject(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
                 webglBufferContext.$drawWebGL();
                 var drawCall = webglBuffer.$drawCalls;
                 webglBuffer.onRenderFinish();
+                //
+                displayObject.$setParent(null);
                 webglBufferContext.popBuffer();
                 var invert = egret.Matrix.create();
                 matrix.$invertInto(invert);

@@ -2288,6 +2288,24 @@ namespace egret {
             return false;
         }
 
-    }
+        /*
+        * transform refactor
+        */
+       public transform: Transform2D = new Transform2D;
 
+        /**
+         * Updates the object transform for rendering.
+         *
+         * TODO - Optimization pass!
+         */
+        public updateTransform(): void {
+            // if (!this.parent) {
+            //     return;
+            // }
+            this.transform.updateTransform(this.parent.transform);
+            // multiply the alphas..
+            //this.worldAlpha = this.alpha * this.parent.worldAlpha;
+            //this._bounds.updateID++;
+        }
+    }
 }
