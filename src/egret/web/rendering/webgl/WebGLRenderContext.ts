@@ -290,7 +290,7 @@ namespace egret.web {
                     const extension = gl.getExtension(availableExtensions[i]);
                     const formats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
                     if (DEBUG) {
-                        egret.log(formats);
+                        egret.log('supported formats:');
                         for (const key in extension) {
                             egret.log(key, extension[key], '0x' + extension[key].toString(16));
                         }

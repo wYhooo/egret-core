@@ -5847,7 +5847,7 @@ var egret;
                         var extension = gl.getExtension(availableExtensions[i]);
                         var formats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
                         if (true) {
-                            egret.log(formats);
+                            egret.log('supported formats:');
                             for (var key in extension) {
                                 egret.log(key, extension[key], '0x' + extension[key].toString(16));
                             }
