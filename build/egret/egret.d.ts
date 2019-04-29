@@ -7472,6 +7472,7 @@ declare namespace egret {
          * target = other * this
          */
         $preMultiplyInto(other: Matrix, target: Matrix): void;
+        fequals(other: Matrix): boolean;
     }
     /**
      * @private
@@ -14382,6 +14383,8 @@ declare namespace egret {
          * @returns
          */
         private static cosInt(value);
+        private static readonly EPSILON;
+        static fequal(left: number, right: number): boolean;
     }
 }
 /**

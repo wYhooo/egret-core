@@ -132,6 +132,28 @@ namespace egret.web {
         public cacheArrays(buffer: WebGLRenderBuffer, sourceX: number, sourceY: number, sourceWidth: number, sourceHeight: number,
             destX: number, destY: number, destWidth: number, destHeight: number, textureSourceWidth: number, textureSourceHeight: number,
             meshUVs?: number[], meshVertices?: number[], meshIndices?: number[], rotated?: boolean): void {
+            //--------------------------------------------------------------------------------------
+            if (DEBUG && buffer._debugCurrentTransform) {
+                // const trans = buffer._debugCurrentTransform;
+                // const wt = trans.worldTransform;
+                // const globalMatrix = buffer.globalMatrix;
+                // if (!NumberUtils.fequal(globalMatrix.a, wt.a)
+                //     || !NumberUtils.fequal(globalMatrix.b, wt.b)
+                //     || !NumberUtils.fequal(globalMatrix.c, wt.c)
+                //     || !NumberUtils.fequal(globalMatrix.d, wt.d)
+                //     || !NumberUtils.fequal(globalMatrix.tx, wt.tx)
+                //     || !NumberUtils.fequal(globalMatrix.ty, wt.ty)
+                //     || !NumberUtils.fequal(buffer.$offsetX, trans.__$offsetX__)
+                //     || !NumberUtils.fequal(buffer.$offsetX, trans.__$offsetY__)
+                // ) {
+                //     egret.error('check _debugCurrentTransform failed');
+                // }
+                // else {
+                //     // check is ok
+                // }
+            }
+            //--------------------------------------------------------------------------------------
+
             let alpha = buffer.globalAlpha;
             //计算出绘制矩阵，之后把矩阵还原回之前的
             let locWorldTransform = buffer.globalMatrix;

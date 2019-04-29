@@ -149,6 +149,7 @@ namespace egret.web {
                 drawCalls++;
                 buffer.$offsetX = offsetX;
                 buffer.$offsetY = offsetY;
+                buffer._debugCurrentTransform = displayObject.transform;
                 switch (node.type) {
                     case sys.RenderNodeType.BitmapNode:
                         this.renderBitmap(<sys.BitmapNode>node, buffer);
@@ -171,6 +172,7 @@ namespace egret.web {
                 }
                 buffer.$offsetX = 0;
                 buffer.$offsetY = 0;
+                buffer._debugCurrentTransform = null;
             }
             if (displayList && !isStage) {
                 return drawCalls;
@@ -629,6 +631,7 @@ namespace egret.web {
             let drawCalls = 0;
             if (node) {
                 drawCalls++;
+                buffer._debugCurrentTransform = displayObject.transform;
                 switch (node.type) {
                     case sys.RenderNodeType.BitmapNode:
                         this.renderBitmap(<sys.BitmapNode>node, buffer);
@@ -649,6 +652,7 @@ namespace egret.web {
                         this.renderNormalBitmap(<sys.NormalBitmapNode>node, buffer);
                         break;
                 }
+                buffer._debugCurrentTransform = null;
             }
             let children = displayObject.$children;
             if (children) {
@@ -687,6 +691,7 @@ namespace egret.web {
         private renderNode(node: sys.RenderNode, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, forHitTest?: boolean): void {
             buffer.$offsetX = offsetX;
             buffer.$offsetY = offsetY;
+            buffer._debugCurrentTransform = null;
             switch (node.type) {
                 case sys.RenderNodeType.BitmapNode:
                     this.renderBitmap(<sys.BitmapNode>node, buffer);

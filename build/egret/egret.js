@@ -11988,6 +11988,15 @@ var egret;
             target.tx = tx;
             target.ty = ty;
         };
+        //
+        Matrix.prototype.fequals = function (other) {
+            return egret.NumberUtils.fequal(this.a, other.a)
+                && egret.NumberUtils.fequal(this.b, other.b)
+                && egret.NumberUtils.fequal(this.c, other.c)
+                && egret.NumberUtils.fequal(this.d, other.d)
+                && egret.NumberUtils.fequal(this.tx, other.tx)
+                && egret.NumberUtils.fequal(this.ty, other.ty);
+        };
         return Matrix;
     }(egret.HashObject));
     egret.Matrix = Matrix;
@@ -24431,6 +24440,11 @@ var egret;
             }
             return egret_cos_map[value];
         };
+        NumberUtils.fequal = function (left, right) {
+            return Math.abs(left - right) < NumberUtils.EPSILON;
+        };
+        //
+        NumberUtils.EPSILON = 0.000001; //根据精度需要;
         return NumberUtils;
     }());
     egret.NumberUtils = NumberUtils;

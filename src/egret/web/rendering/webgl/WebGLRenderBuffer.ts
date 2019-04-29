@@ -59,7 +59,10 @@ namespace egret.web {
          */
         private root: boolean;
 
+        //refactor
+        public _debugCurrentTransform: Transform2D = null;
 
+        //
         public constructor(width?: number, height?: number, root?: boolean) {
             super();
             // 获取webglRenderContext

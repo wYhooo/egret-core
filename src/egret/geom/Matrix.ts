@@ -916,6 +916,16 @@ namespace egret {
             target.ty = ty;
         }
 
+        //
+        public fequals(other: Matrix): boolean {
+            return NumberUtils.fequal(this.a, other.a)
+            && NumberUtils.fequal(this.b, other.b)
+            && NumberUtils.fequal(this.c, other.c)
+            && NumberUtils.fequal(this.d, other.d)
+            && NumberUtils.fequal(this.tx, other.tx)
+            && NumberUtils.fequal(this.ty, other.ty);
+        }
+
     }
     /**
      * @private

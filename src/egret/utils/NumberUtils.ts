@@ -142,6 +142,11 @@ namespace egret {
             return egret_cos_map[value];
         }
 
+        //
+        private static readonly EPSILON = 0.000001 //根据精度需要;
+        public static fequal(left: number, right: number) {
+            return Math.abs(left - right) < NumberUtils.EPSILON;
+        }
     }
 }
 

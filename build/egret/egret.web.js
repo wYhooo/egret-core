@@ -5326,6 +5326,27 @@ var egret;
              * 缓存一组顶点
              */
             WebGLVertexArrayObject.prototype.cacheArrays = function (buffer, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight, textureSourceWidth, textureSourceHeight, meshUVs, meshVertices, meshIndices, rotated) {
+                //--------------------------------------------------------------------------------------
+                if (true && buffer._debugCurrentTransform) {
+                    // const trans = buffer._debugCurrentTransform;
+                    // const wt = trans.worldTransform;
+                    // const globalMatrix = buffer.globalMatrix;
+                    // if (!NumberUtils.fequal(globalMatrix.a, wt.a)
+                    //     || !NumberUtils.fequal(globalMatrix.b, wt.b)
+                    //     || !NumberUtils.fequal(globalMatrix.c, wt.c)
+                    //     || !NumberUtils.fequal(globalMatrix.d, wt.d)
+                    //     || !NumberUtils.fequal(globalMatrix.tx, wt.tx)
+                    //     || !NumberUtils.fequal(globalMatrix.ty, wt.ty)
+                    //     || !NumberUtils.fequal(buffer.$offsetX, trans.__$offsetX__)
+                    //     || !NumberUtils.fequal(buffer.$offsetX, trans.__$offsetY__)
+                    // ) {
+                    //     egret.error('check _debugCurrentTransform failed');
+                    // }
+                    // else {
+                    //     // check is ok
+                    // }
+                }
+                //--------------------------------------------------------------------------------------
                 var alpha = buffer.globalAlpha;
                 //计算出绘制矩阵，之后把矩阵还原回之前的
                 var locWorldTransform = buffer.globalMatrix;
@@ -6693,8 +6714,11 @@ var egret;
          */
         var WebGLRenderBuffer = (function (_super) {
             __extends(WebGLRenderBuffer, _super);
+            //
             function WebGLRenderBuffer(width, height, root) {
                 var _this = _super.call(this) || this;
+                //refactor
+                _this._debugCurrentTransform = null;
                 _this.globalAlpha = 1;
                 /**
                  * stencil state
@@ -7191,6 +7215,7 @@ var egret;
                     drawCalls++;
                     buffer.$offsetX = offsetX;
                     buffer.$offsetY = offsetY;
+                    buffer._debugCurrentTransform = displayObject.transform;
                     switch (node.type) {
                         case 1 /* BitmapNode */:
                             this.renderBitmap(node, buffer);
@@ -7213,6 +7238,7 @@ var egret;
                     }
                     buffer.$offsetX = 0;
                     buffer.$offsetY = 0;
+                    buffer._debugCurrentTransform = null;
                 }
                 if (displayList && !isStage) {
                     return drawCalls;
@@ -7644,6 +7670,7 @@ var egret;
                 var drawCalls = 0;
                 if (node) {
                     drawCalls++;
+                    buffer._debugCurrentTransform = displayObject.transform;
                     switch (node.type) {
                         case 1 /* BitmapNode */:
                             this.renderBitmap(node, buffer);
@@ -7664,6 +7691,7 @@ var egret;
                             this.renderNormalBitmap(node, buffer);
                             break;
                     }
+                    buffer._debugCurrentTransform = null;
                 }
                 var children = displayObject.$children;
                 if (children) {
@@ -7699,6 +7727,7 @@ var egret;
             WebGLRenderer.prototype.renderNode = function (node, buffer, offsetX, offsetY, forHitTest) {
                 buffer.$offsetX = offsetX;
                 buffer.$offsetY = offsetY;
+                buffer._debugCurrentTransform = null;
                 switch (node.type) {
                     case 1 /* BitmapNode */:
                         this.renderBitmap(node, buffer);
