@@ -705,10 +705,14 @@ namespace egret.web {
                     this.renderBitmap(<sys.BitmapNode>node, buffer);
                     break;
                 case sys.RenderNodeType.TextNode:
+                    buffer._debugCurrentTextNode = <sys.TextNode>node;
                     this.renderText(<sys.TextNode>node, buffer);
+                    buffer._debugCurrentTextNode = null;
                     break;
                 case sys.RenderNodeType.GraphicsNode:
+                    buffer._debugCurrentGraphicsNode = <sys.GraphicsNode>node;
                     this.renderGraphics(<sys.GraphicsNode>node, buffer, forHitTest);
+                    buffer._debugCurrentGraphicsNode = null;
                     break;
                 case sys.RenderNodeType.GroupNode:
                     this.renderGroup(<sys.GroupNode>node, buffer);
