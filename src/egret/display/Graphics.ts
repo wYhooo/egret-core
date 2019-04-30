@@ -918,6 +918,11 @@ namespace egret {
             node.y = this.minY;
             node.width = Math.ceil(this.maxX - this.minX);
             node.height = Math.ceil(this.maxY - this.minY);
+            /*
+            *buffer.transform(1, 0, 0, 1, node.x, node.y);
+            */
+           node.offsetMatrix.setTo(1, 0, 0, 1, node.x, node.y);
+           node.offsetMatrixDirty = true;
         }
 
         /**

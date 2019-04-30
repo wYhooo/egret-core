@@ -37,6 +37,11 @@ namespace egret.sys {
      */
     export class GraphicsNode extends RenderNode {
 
+        public readonly offsetMatrix: egret.Matrix = new Matrix;
+        public readonly offsetRenderMatrix: egret.Matrix = new Matrix;
+        public offsetMatrixLastWorldID: number = -1;
+        public offsetMatrixDirty: boolean = true;
+
         public constructor() {
             super();
             this.type = RenderNodeType.GraphicsNode;
@@ -140,9 +145,15 @@ namespace egret.sys {
          * 清空所有缓存的绘制数据
          */
         public clear():void {
+            //
             this.drawData.length = 0;
             this.dirtyRender = true;
             this.renderCount = 0;
+            //
+            this.offsetMatrix.identity();
+            this.offsetRenderMatrix.identity();
+            this.offsetMatrixLastWorldID = -1;
+            this.offsetMatrixDirty = true;
         }
 
         /**

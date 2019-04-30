@@ -5328,23 +5328,40 @@ var egret;
             WebGLVertexArrayObject.prototype.cacheArrays = function (buffer, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight, textureSourceWidth, textureSourceHeight, meshUVs, meshVertices, meshIndices, rotated) {
                 //--------------------------------------------------------------------------------------
                 if (true && buffer._debugCurrentTransform) {
-                    // const trans = buffer._debugCurrentTransform;
-                    // const wt = trans.worldTransform;
-                    // const globalMatrix = buffer.globalMatrix;
-                    // if (!NumberUtils.fequal(globalMatrix.a, wt.a)
-                    //     || !NumberUtils.fequal(globalMatrix.b, wt.b)
-                    //     || !NumberUtils.fequal(globalMatrix.c, wt.c)
-                    //     || !NumberUtils.fequal(globalMatrix.d, wt.d)
-                    //     || !NumberUtils.fequal(globalMatrix.tx, wt.tx)
-                    //     || !NumberUtils.fequal(globalMatrix.ty, wt.ty)
-                    //     || !NumberUtils.fequal(buffer.$offsetX, trans.__$offsetX__)
-                    //     || !NumberUtils.fequal(buffer.$offsetY, trans.__$offsetY__)
-                    // ) {
-                    //     egret.error('check _debugCurrentTransform failed');
-                    // }
-                    // else {
-                    //     // check is ok
-                    // }
+                    var trans = buffer._debugCurrentTransform;
+                    var globalMatrix = buffer.globalMatrix;
+                    if (buffer._debugCurrentGraphicsNode) {
+                        var om = buffer._debugCurrentGraphicsNode.offsetRenderMatrix;
+                        if (!egret.NumberUtils.fequal(globalMatrix.a, om.a)
+                            || !egret.NumberUtils.fequal(globalMatrix.b, om.b)
+                            || !egret.NumberUtils.fequal(globalMatrix.c, om.c)
+                            || !egret.NumberUtils.fequal(globalMatrix.d, om.d)
+                            || !egret.NumberUtils.fequal(globalMatrix.tx, om.tx)
+                            || !egret.NumberUtils.fequal(globalMatrix.ty, om.ty)
+                            || !egret.NumberUtils.fequal(buffer.$offsetX, trans.__$offsetX__)
+                            || !egret.NumberUtils.fequal(buffer.$offsetY, trans.__$offsetY__)) {
+                            egret.error('check _debugCurrentGraphicsNode failed');
+                        }
+                        else {
+                            // check is ok
+                        }
+                    }
+                    else {
+                        var wt = trans.worldTransform;
+                        if (!egret.NumberUtils.fequal(globalMatrix.a, wt.a)
+                            || !egret.NumberUtils.fequal(globalMatrix.b, wt.b)
+                            || !egret.NumberUtils.fequal(globalMatrix.c, wt.c)
+                            || !egret.NumberUtils.fequal(globalMatrix.d, wt.d)
+                            || !egret.NumberUtils.fequal(globalMatrix.tx, wt.tx)
+                            || !egret.NumberUtils.fequal(globalMatrix.ty, wt.ty)
+                            || !egret.NumberUtils.fequal(buffer.$offsetX, trans.__$offsetX__)
+                            || !egret.NumberUtils.fequal(buffer.$offsetY, trans.__$offsetY__)) {
+                            egret.error('check _debugCurrentTransform failed');
+                        }
+                        else {
+                            // check is ok
+                        }
+                    }
                 }
                 //--------------------------------------------------------------------------------------
                 var alpha = buffer.globalAlpha;
@@ -6719,6 +6736,7 @@ var egret;
                 var _this = _super.call(this) || this;
                 //refactor
                 _this._debugCurrentTransform = null;
+                _this._debugCurrentGraphicsNode = null;
                 _this.globalAlpha = 1;
                 /**
                  * stencil state
@@ -7224,7 +7242,9 @@ var egret;
                             this.renderText(node, buffer);
                             break;
                         case 3 /* GraphicsNode */:
+                            buffer._debugCurrentGraphicsNode = node;
                             this.renderGraphics(node, buffer);
+                            buffer._debugCurrentGraphicsNode = null;
                             break;
                         case 4 /* GroupNode */:
                             this.renderGroup(node, buffer);
@@ -7679,7 +7699,9 @@ var egret;
                             this.renderText(node, buffer);
                             break;
                         case 3 /* GraphicsNode */:
+                            buffer._debugCurrentGraphicsNode = node;
                             this.renderGraphics(node, buffer);
+                            buffer._debugCurrentGraphicsNode = null;
                             break;
                         case 4 /* GroupNode */:
                             this.renderGroup(node, buffer);
@@ -8024,6 +8046,21 @@ var egret;
                     }
                     buffer.transform(1, 0, 0, 1, node.x, node.y);
                 }
+                /*
+                *******************
+                */
+                var trans = buffer._debugCurrentTransform;
+                if (trans && (trans._worldID !== node.offsetMatrixLastWorldID || node.offsetMatrixDirty)) {
+                    node.offsetMatrixDirty = false;
+                    node.offsetMatrixLastWorldID = trans._worldID;
+                    var wt = trans.worldTransform;
+                    var offsetRenderMatrix = node.offsetRenderMatrix;
+                    offsetRenderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
+                    offsetRenderMatrix.$preMultiplyInto(node.offsetMatrix, offsetRenderMatrix);
+                }
+                /*
+                *******************
+                */
                 var surface = this.canvasRenderBuffer.surface;
                 if (forHitTest) {
                     this.canvasRenderer.renderGraphics(node, this.canvasRenderBuffer.context, true);

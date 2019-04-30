@@ -11122,6 +11122,11 @@ var egret;
             node.y = this.minY;
             node.width = Math.ceil(this.maxX - this.minX);
             node.height = Math.ceil(this.maxY - this.minY);
+            /*
+            *buffer.transform(1, 0, 0, 1, node.x, node.y);
+            */
+            node.offsetMatrix.setTo(1, 0, 0, 1, node.x, node.y);
+            node.offsetMatrixDirty = true;
         };
         /**
          * 更新当前的lineX和lineY值，并标记尺寸失效。
@@ -15603,6 +15608,10 @@ var egret;
             __extends(GraphicsNode, _super);
             function GraphicsNode() {
                 var _this = _super.call(this) || this;
+                _this.offsetMatrix = new egret.Matrix;
+                _this.offsetRenderMatrix = new egret.Matrix;
+                _this.offsetMatrixLastWorldID = -1;
+                _this.offsetMatrixDirty = true;
                 /**
                  * 脏渲染标记
                  * 暂时调用lineStyle,beginFill,beginGradientFill标记,实际应该draw时候标记在Path2D
@@ -15708,9 +15717,15 @@ var egret;
              * 清空所有缓存的绘制数据
              */
             GraphicsNode.prototype.clear = function () {
+                //
                 this.drawData.length = 0;
                 this.dirtyRender = true;
                 this.renderCount = 0;
+                //
+                this.offsetMatrix.identity();
+                this.offsetRenderMatrix.identity();
+                this.offsetMatrixLastWorldID = -1;
+                this.offsetMatrixDirty = true;
             };
             /**
              * 覆盖父类方法，不自动清空缓存的绘图数据，改为手动调用clear()方法清空。

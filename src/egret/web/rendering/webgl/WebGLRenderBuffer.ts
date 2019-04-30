@@ -61,6 +61,7 @@ namespace egret.web {
 
         //refactor
         public _debugCurrentTransform: Transform2D = null;
+        public _debugCurrentGraphicsNode: egret.sys.GraphicsNode = null;
 
         //
         public constructor(width?: number, height?: number, root?: boolean) {

@@ -9993,6 +9993,10 @@ declare namespace egret.sys {
      * 矢量渲染节点
      */
     class GraphicsNode extends RenderNode {
+        readonly offsetMatrix: egret.Matrix;
+        readonly offsetRenderMatrix: egret.Matrix;
+        offsetMatrixLastWorldID: number;
+        offsetMatrixDirty: boolean;
         constructor();
         /**
          * 指定一种简单的单一颜色填充，在绘制时该填充将在随后对其他 Graphics 方法（如 lineTo() 或 drawCircle()）的调用中使用。

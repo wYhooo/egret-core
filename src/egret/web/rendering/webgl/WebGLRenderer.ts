@@ -158,7 +158,9 @@ namespace egret.web {
                         this.renderText(<sys.TextNode>node, buffer);
                         break;
                     case sys.RenderNodeType.GraphicsNode:
+                        buffer._debugCurrentGraphicsNode = <sys.GraphicsNode>node;
                         this.renderGraphics(<sys.GraphicsNode>node, buffer);
+                        buffer._debugCurrentGraphicsNode = null;
                         break;
                     case sys.RenderNodeType.GroupNode:
                         this.renderGroup(<sys.GroupNode>node, buffer);
@@ -640,7 +642,9 @@ namespace egret.web {
                         this.renderText(<sys.TextNode>node, buffer);
                         break;
                     case sys.RenderNodeType.GraphicsNode:
+                        buffer._debugCurrentGraphicsNode = <sys.GraphicsNode>node;
                         this.renderGraphics(<sys.GraphicsNode>node, buffer);
+                        buffer._debugCurrentGraphicsNode = null;
                         break;
                     case sys.RenderNodeType.GroupNode:
                         this.renderGroup(<sys.GroupNode>node, buffer);
@@ -1007,6 +1011,21 @@ namespace egret.web {
                 }
                 buffer.transform(1, 0, 0, 1, node.x, node.y);
             }
+            /*
+            *******************
+            */
+            const trans = buffer._debugCurrentTransform;
+            if (trans && (trans._worldID !== node.offsetMatrixLastWorldID || node.offsetMatrixDirty)) {
+                node.offsetMatrixDirty = false;
+                node.offsetMatrixLastWorldID = trans._worldID;
+                const wt = trans.worldTransform;
+                const offsetRenderMatrix = node.offsetRenderMatrix;
+                offsetRenderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
+                offsetRenderMatrix.$preMultiplyInto(node.offsetMatrix, offsetRenderMatrix);
+            }
+            /*
+            *******************
+            */
             let surface = this.canvasRenderBuffer.surface;
             if (forHitTest) {
                 this.canvasRenderer.renderGraphics(node, this.canvasRenderBuffer.context, true);
