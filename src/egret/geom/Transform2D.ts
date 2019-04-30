@@ -130,10 +130,52 @@ namespace egret {
         /**
          * Updates only local matrix
          */
-        updateLocalTransform() {
-            const lt = this.localTransform;
-
+        updateLocalTransform(displayObject: DisplayObject) {
+            /*
             if (this._localID !== this._currentLocalID) {
+                this.$getMatrix();//这里有更新,虽然丑点，就这么写吧
+                this._currentLocalID = this._localID;
+                this._parentID = -1;
+            }
+            if (this._parentID !== parent._worldID) {
+                //this.world = parent.world * this.local
+                this.__$offsetX__ = parent.__$offsetX__ + this.$x;
+                this.__$offsetY__ = parent.__$offsetY__ + this.$y;
+                //
+                const wt = parent.$worldTransform;
+                const lt = this.$getMatrix();
+                const worldtransform = this.$worldTransform;
+                if (this.$useTranslate) {
+                    worldtransform.a = lt.a * wt.a + lt.b * wt.c;
+                    worldtransform.b = lt.a * wt.b + lt.b * wt.d;
+                    worldtransform.c = lt.c * wt.a + lt.d * wt.c;
+                    worldtransform.d = lt.c * wt.b + lt.d * wt.d;
+                    worldtransform.tx = lt.tx * wt.a + lt.ty * wt.c + wt.tx;
+                    worldtransform.ty = lt.tx * wt.b + lt.ty * wt.d + wt.ty;
+                    this.__$offsetX__ = -this.$anchorOffsetX;
+                    this.__$offsetY__ = -this.$anchorOffsetY;
+                }
+                else {
+                    worldtransform.a = wt.a;
+                    worldtransform.b = wt.b;
+                    worldtransform.c = wt.c;
+                    worldtransform.d = wt.d;
+                    this.__$offsetX__ += -this.$anchorOffsetX;
+                    this.__$offsetY__ += -this.$anchorOffsetY;
+                }
+                //下放给子类的实现
+                this.onUpdateTransform(parent);
+                this._parentID = parent._worldID;
+                ++this._worldID;
+                this.$offsetMatrixDirty = true;
+            }
+            */
+            //const lt = this.localTransform;
+            if (this._localID !== this._currentLocalID) {
+                ///
+                const sm = displayObject.$getMatrix();
+                const lm = this.localTransform;
+                lm.setTo(sm.a, sm.b, sm.c, sm.d, sm.tx, sm.ty);
                 // get the matrix values of the displayobject based on its transform properties..
                 // lt.a = this._cx * this.scale._x;
                 // lt.b = this._sx * this.scale._x;
@@ -154,10 +196,8 @@ namespace egret {
          *
          * @param {PIXI.Transform} parentTransform - The transform of the parent of this object
          */
-        public updateTransform(parentTransform: Transform2D): void {
-
-            this.updateLocalTransform();
-
+        public updateTransform(displayObject: DisplayObject, parentTransform: Transform2D): void {
+            this.updateLocalTransform(displayObject);
             /*
             if (this._localID !== this._currentLocalID) {
                 // get the matrix values of the displayobject based on its transform properties..
@@ -174,8 +214,9 @@ namespace egret {
                 this._parentID = -1;
             }
             */
-            const lt = this.localTransform;
+            //const lt = this.localTransform;
             if (this._parentID !== parentTransform._worldID) {
+                /*
                 // concat the parent matrix with the objects transform.
                 const pt = parentTransform.worldTransform;
                 const wt = this.worldTransform;
@@ -186,11 +227,35 @@ namespace egret {
                 wt.d = (lt.c * pt.b) + (lt.d * pt.d);
                 wt.tx = (lt.tx * pt.a) + (lt.ty * pt.c) + pt.tx;
                 wt.ty = (lt.tx * pt.b) + (lt.ty * pt.d) + pt.ty;
-
+                */
+                //this.world = parent.world * this.local
+                this.__$offsetX__ = parentTransform.__$offsetX__ + displayObject.$x;
+                this.__$offsetY__ = parentTransform.__$offsetY__ + displayObject.$y;
+                //
+                const wt = parentTransform.worldTransform;
+                const lt = this.localTransform;//this.$getMatrix();
+                const worldtransform = this.worldTransform;
+                if (displayObject.$useTranslate) {
+                    worldtransform.a = lt.a * wt.a + lt.b * wt.c;
+                    worldtransform.b = lt.a * wt.b + lt.b * wt.d;
+                    worldtransform.c = lt.c * wt.a + lt.d * wt.c;
+                    worldtransform.d = lt.c * wt.b + lt.d * wt.d;
+                    worldtransform.tx = lt.tx * wt.a + lt.ty * wt.c + wt.tx;
+                    worldtransform.ty = lt.tx * wt.b + lt.ty * wt.d + wt.ty;
+                    this.__$offsetX__ = -displayObject.$anchorOffsetX;
+                    this.__$offsetY__ = -displayObject.$anchorOffsetY;
+                }
+                else {
+                    worldtransform.a = wt.a;
+                    worldtransform.b = wt.b;
+                    worldtransform.c = wt.c;
+                    worldtransform.d = wt.d;
+                    this.__$offsetX__ += -displayObject.$anchorOffsetX;
+                    this.__$offsetY__ += -displayObject.$anchorOffsetY;
+                }
                 this._parentID = parentTransform._worldID;
-
                 // update the id of the transform..
-                this._worldID++;
+                ++this._worldID;
             }
         }
 

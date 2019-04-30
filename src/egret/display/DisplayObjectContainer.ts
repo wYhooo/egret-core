@@ -851,7 +851,7 @@ namespace egret {
             // }
             // this._boundsID++;
 
-            this.transform.updateTransform(this.parent.transform);
+            this.transform.updateTransform(this, this.parent.transform);
 
             // TODO: check render flags, how to process stuff here
             //this.worldAlpha = this.alpha * this.parent.worldAlpha;

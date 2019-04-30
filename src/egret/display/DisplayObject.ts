@@ -350,7 +350,7 @@ namespace egret {
                 self.$skewXdeg = clampRotation(self.$skewX * 180 / Math.PI);
                 self.$skewYdeg = clampRotation(self.$skewY * 180 / Math.PI);
                 self.$rotation = clampRotation(self.$skewY * 180 / Math.PI);
-            }
+            } 
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setMatrix(matrix.a, matrix.b, matrix.c, matrix.d, matrix.tx, matrix.ty);
             }
@@ -2310,7 +2310,7 @@ namespace egret {
             // if (!this.parent) {
             //     return;
             // }
-            this.transform.updateTransform(this.parent.transform);
+            this.transform.updateTransform(this, this.parent.transform);
             // multiply the alphas..
             //this.worldAlpha = this.alpha * this.parent.worldAlpha;
             //this._bounds.updateID++;

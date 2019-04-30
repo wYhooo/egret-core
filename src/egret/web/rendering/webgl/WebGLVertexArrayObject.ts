@@ -144,7 +144,7 @@ namespace egret.web {
                 //     || !NumberUtils.fequal(globalMatrix.tx, wt.tx)
                 //     || !NumberUtils.fequal(globalMatrix.ty, wt.ty)
                 //     || !NumberUtils.fequal(buffer.$offsetX, trans.__$offsetX__)
-                //     || !NumberUtils.fequal(buffer.$offsetX, trans.__$offsetY__)
+                //     || !NumberUtils.fequal(buffer.$offsetY, trans.__$offsetY__)
                 // ) {
                 //     egret.error('check _debugCurrentTransform failed');
                 // }

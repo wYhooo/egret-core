@@ -8044,13 +8044,13 @@ declare namespace egret {
         /**
          * Updates only local matrix
          */
-        updateLocalTransform(): void;
+        updateLocalTransform(displayObject: DisplayObject): void;
         /**
          * Updates the values of the object and applies the parent's transform.
          *
          * @param {PIXI.Transform} parentTransform - The transform of the parent of this object
          */
-        updateTransform(parentTransform: Transform2D): void;
+        updateTransform(displayObject: DisplayObject, parentTransform: Transform2D): void;
     }
 }
 declare namespace egret {
