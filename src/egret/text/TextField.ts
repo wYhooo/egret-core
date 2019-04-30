@@ -1754,6 +1754,7 @@ namespace egret {
             node.y = bounds.y;
             node.width = Math.ceil(bounds.width);
             node.height = Math.ceil(bounds.height);
+            node.offsetMatrixDirty = true;
             Rectangle.release(bounds);
         }
 

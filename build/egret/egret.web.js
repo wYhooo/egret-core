@@ -5331,7 +5331,7 @@ var egret;
                     var trans = buffer._debugCurrentTransform;
                     var globalMatrix = buffer.globalMatrix;
                     if (buffer._debugCurrentGraphicsNode) {
-                        var om = buffer._debugCurrentGraphicsNode.offsetRenderMatrix;
+                        var om = buffer._debugCurrentGraphicsNode.renderMatrix;
                         if (!egret.NumberUtils.fequal(globalMatrix.a, om.a)
                             || !egret.NumberUtils.fequal(globalMatrix.b, om.b)
                             || !egret.NumberUtils.fequal(globalMatrix.c, om.c)
@@ -5341,6 +5341,22 @@ var egret;
                             || !egret.NumberUtils.fequal(buffer.$offsetX, trans.__$offsetX__)
                             || !egret.NumberUtils.fequal(buffer.$offsetY, trans.__$offsetY__)) {
                             egret.error('check _debugCurrentGraphicsNode failed');
+                        }
+                        else {
+                            // check is ok
+                        }
+                    }
+                    else if (buffer._debugCurrentTextNode) {
+                        var om = buffer._debugCurrentTextNode.renderMatrix;
+                        if (!egret.NumberUtils.fequal(globalMatrix.a, om.a)
+                            || !egret.NumberUtils.fequal(globalMatrix.b, om.b)
+                            || !egret.NumberUtils.fequal(globalMatrix.c, om.c)
+                            || !egret.NumberUtils.fequal(globalMatrix.d, om.d)
+                            || !egret.NumberUtils.fequal(globalMatrix.tx, om.tx)
+                            || !egret.NumberUtils.fequal(globalMatrix.ty, om.ty)
+                            || !egret.NumberUtils.fequal(buffer.$offsetX, trans.__$offsetX__)
+                            || !egret.NumberUtils.fequal(buffer.$offsetY, trans.__$offsetY__)) {
+                            egret.error('check _debugCurrentTextNode failed');
                         }
                         else {
                             // check is ok
@@ -6737,6 +6753,7 @@ var egret;
                 //refactor
                 _this._debugCurrentTransform = null;
                 _this._debugCurrentGraphicsNode = null;
+                _this._debugCurrentTextNode = null;
                 _this.globalAlpha = 1;
                 /**
                  * stencil state
@@ -7239,7 +7256,9 @@ var egret;
                             this.renderBitmap(node, buffer);
                             break;
                         case 2 /* TextNode */:
+                            buffer._debugCurrentTextNode = node;
                             this.renderText(node, buffer);
+                            buffer._debugCurrentTextNode = null;
                             break;
                         case 3 /* GraphicsNode */:
                             buffer._debugCurrentGraphicsNode = node;
@@ -7696,7 +7715,9 @@ var egret;
                             this.renderBitmap(node, buffer);
                             break;
                         case 2 /* TextNode */:
+                            buffer._debugCurrentTextNode = node;
                             this.renderText(node, buffer);
+                            buffer._debugCurrentTextNode = null;
                             break;
                         case 3 /* GraphicsNode */:
                             buffer._debugCurrentGraphicsNode = node;
@@ -7926,6 +7947,22 @@ var egret;
              * @private
              */
             WebGLRenderer.prototype.renderText = function (node, buffer) {
+                /*
+                *******************
+                */
+                var trans = buffer._debugCurrentTransform;
+                if (trans && (trans._worldID !== node.offsetMatrixLastWorldID || node.offsetMatrixDirty)) {
+                    node.offsetMatrixDirty = false;
+                    node.offsetMatrixLastWorldID = trans._worldID;
+                    var wt = trans.worldTransform;
+                    var renderMatrix = node.renderMatrix;
+                    renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
+                    node.updateOffsetMatrix(egret.sys.DisplayList.$canvasScaleX, egret.sys.DisplayList.$canvasScaleY, buffer.context.$maxTextureSize);
+                    renderMatrix.$preMultiplyInto(node.offsetMatrix, renderMatrix);
+                }
+                /*
+                *******************
+                */
                 var width = node.width - node.x;
                 var height = node.height - node.y;
                 if (width <= 0 || height <= 0 || !width || !height || node.drawData.length == 0) {
@@ -8054,9 +8091,9 @@ var egret;
                     node.offsetMatrixDirty = false;
                     node.offsetMatrixLastWorldID = trans._worldID;
                     var wt = trans.worldTransform;
-                    var offsetRenderMatrix = node.offsetRenderMatrix;
-                    offsetRenderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
-                    offsetRenderMatrix.$preMultiplyInto(node.offsetMatrix, offsetRenderMatrix);
+                    var renderMatrix = node.renderMatrix;
+                    renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
+                    renderMatrix.$preMultiplyInto(node.offsetMatrix, renderMatrix);
                 }
                 /*
                 *******************

@@ -15609,7 +15609,7 @@ var egret;
             function GraphicsNode() {
                 var _this = _super.call(this) || this;
                 _this.offsetMatrix = new egret.Matrix;
-                _this.offsetRenderMatrix = new egret.Matrix;
+                _this.renderMatrix = new egret.Matrix;
                 _this.offsetMatrixLastWorldID = -1;
                 _this.offsetMatrixDirty = true;
                 /**
@@ -15723,7 +15723,7 @@ var egret;
                 this.renderCount = 0;
                 //
                 this.offsetMatrix.identity();
-                this.offsetRenderMatrix.identity();
+                this.renderMatrix.identity();
                 this.offsetMatrixLastWorldID = -1;
                 this.offsetMatrixDirty = true;
             };
@@ -16199,8 +16199,14 @@ var egret;
          */
         var TextNode = (function (_super) {
             __extends(TextNode, _super);
+            //
             function TextNode() {
                 var _this = _super.call(this) || this;
+                //
+                _this.offsetMatrix = new egret.Matrix;
+                _this.renderMatrix = new egret.Matrix;
+                _this.offsetMatrixLastWorldID = -1;
+                _this.offsetMatrixDirty = true;
                 /**
                  * 颜色值
                  */
@@ -16260,6 +16266,32 @@ var egret;
             TextNode.prototype.cleanBeforeRender = function () {
                 _super.prototype.cleanBeforeRender.call(this);
                 this.dirtyRender = true;
+            };
+            TextNode.prototype.updateOffsetMatrix = function (canvasScaleX, canvasScaleY, maxTextureSize) {
+                if (!canvasScaleX || !canvasScaleY || !maxTextureSize) {
+                    egret.warn('canvasScaleX = ' + canvasScaleX);
+                    egret.warn('canvasScaleY = ' + canvasScaleY);
+                    egret.warn('maxTextureSize = ' + maxTextureSize);
+                    return;
+                }
+                var width = this.width - this.x;
+                var height = this.height - this.y;
+                if (width <= 0 || height <= 0 || !width || !height || this.drawData.length == 0) {
+                    return;
+                }
+                if (width * canvasScaleX > maxTextureSize) {
+                    canvasScaleX *= maxTextureSize / (width * canvasScaleX);
+                }
+                if (height * canvasScaleY > maxTextureSize) {
+                    canvasScaleY *= maxTextureSize / (height * canvasScaleY);
+                }
+                width *= canvasScaleX;
+                height *= canvasScaleY;
+                var x = this.x * canvasScaleX;
+                var y = this.y * canvasScaleY;
+                if (x || y) {
+                    this.offsetMatrix.setTo(1, 0, 0, 1, x / canvasScaleX, y / canvasScaleY);
+                }
             };
             return TextNode;
         }(sys.RenderNode));
@@ -21494,6 +21526,7 @@ var egret;
             node.y = bounds.y;
             node.width = Math.ceil(bounds.width);
             node.height = Math.ceil(bounds.height);
+            node.offsetMatrixDirty = true;
             egret.Rectangle.release(bounds);
         };
         Object.defineProperty(TextField.prototype, "textFlow", {

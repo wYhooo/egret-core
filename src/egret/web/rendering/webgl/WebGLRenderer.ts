@@ -155,7 +155,9 @@ namespace egret.web {
                         this.renderBitmap(<sys.BitmapNode>node, buffer);
                         break;
                     case sys.RenderNodeType.TextNode:
+                        buffer._debugCurrentTextNode = <sys.TextNode>node;
                         this.renderText(<sys.TextNode>node, buffer);
+                        buffer._debugCurrentTextNode = null;
                         break;
                     case sys.RenderNodeType.GraphicsNode:
                         buffer._debugCurrentGraphicsNode = <sys.GraphicsNode>node;
@@ -639,7 +641,9 @@ namespace egret.web {
                         this.renderBitmap(<sys.BitmapNode>node, buffer);
                         break;
                     case sys.RenderNodeType.TextNode:
+                        buffer._debugCurrentTextNode = <sys.TextNode>node;
                         this.renderText(<sys.TextNode>node, buffer);
+                        buffer._debugCurrentTextNode = null;
                         break;
                     case sys.RenderNodeType.GraphicsNode:
                         buffer._debugCurrentGraphicsNode = <sys.GraphicsNode>node;
@@ -884,6 +888,23 @@ namespace egret.web {
          * @private
          */
         private renderText(node: sys.TextNode, buffer: WebGLRenderBuffer): void {
+            /*
+            *******************
+            */
+            const trans = buffer._debugCurrentTransform;
+            if (trans && (trans._worldID !== node.offsetMatrixLastWorldID || node.offsetMatrixDirty)) {
+                node.offsetMatrixDirty = false;
+                node.offsetMatrixLastWorldID = trans._worldID;
+                const wt = trans.worldTransform;
+                const renderMatrix = node.renderMatrix;
+                renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
+                node.updateOffsetMatrix(sys.DisplayList.$canvasScaleX, sys.DisplayList.$canvasScaleY, buffer.context.$maxTextureSize);
+                renderMatrix.$preMultiplyInto(node.offsetMatrix, renderMatrix);
+            }
+            /*
+            *******************
+            */
+
             let width = node.width - node.x;
             let height = node.height - node.y;
             if (width <= 0 || height <= 0 || !width || !height || node.drawData.length == 0) {
@@ -1019,9 +1040,9 @@ namespace egret.web {
                 node.offsetMatrixDirty = false;
                 node.offsetMatrixLastWorldID = trans._worldID;
                 const wt = trans.worldTransform;
-                const offsetRenderMatrix = node.offsetRenderMatrix;
-                offsetRenderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
-                offsetRenderMatrix.$preMultiplyInto(node.offsetMatrix, offsetRenderMatrix);
+                const renderMatrix = node.renderMatrix;
+                renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
+                renderMatrix.$preMultiplyInto(node.offsetMatrix, renderMatrix);
             }
             /*
             *******************

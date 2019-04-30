@@ -137,7 +137,7 @@ namespace egret.web {
                 const trans = buffer._debugCurrentTransform;
                 const globalMatrix = buffer.globalMatrix;
                 if (buffer._debugCurrentGraphicsNode) {
-                    const om = buffer._debugCurrentGraphicsNode.offsetRenderMatrix;
+                    const om = buffer._debugCurrentGraphicsNode.renderMatrix;
                     if (!NumberUtils.fequal(globalMatrix.a, om.a)
                         || !NumberUtils.fequal(globalMatrix.b, om.b)
                         || !NumberUtils.fequal(globalMatrix.c, om.c)
@@ -148,6 +148,23 @@ namespace egret.web {
                         || !NumberUtils.fequal(buffer.$offsetY, trans.__$offsetY__)
                     ) {
                         egret.error('check _debugCurrentGraphicsNode failed');
+                    }
+                    else {
+                        // check is ok
+                    }
+                }
+                else if (buffer._debugCurrentTextNode) {
+                    const om = buffer._debugCurrentTextNode.renderMatrix;
+                    if (!NumberUtils.fequal(globalMatrix.a, om.a)
+                        || !NumberUtils.fequal(globalMatrix.b, om.b)
+                        || !NumberUtils.fequal(globalMatrix.c, om.c)
+                        || !NumberUtils.fequal(globalMatrix.d, om.d)
+                        || !NumberUtils.fequal(globalMatrix.tx, om.tx)
+                        || !NumberUtils.fequal(globalMatrix.ty, om.ty)
+                        || !NumberUtils.fequal(buffer.$offsetX, trans.__$offsetX__)
+                        || !NumberUtils.fequal(buffer.$offsetY, trans.__$offsetY__)
+                    ) {
+                        egret.error('check _debugCurrentTextNode failed');
                     }
                     else {
                         // check is ok

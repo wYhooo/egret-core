@@ -38,7 +38,7 @@ namespace egret.sys {
     export class GraphicsNode extends RenderNode {
 
         public readonly offsetMatrix: egret.Matrix = new Matrix;
-        public readonly offsetRenderMatrix: egret.Matrix = new Matrix;
+        public readonly renderMatrix: egret.Matrix = new Matrix;
         public offsetMatrixLastWorldID: number = -1;
         public offsetMatrixDirty: boolean = true;
 
@@ -151,7 +151,7 @@ namespace egret.sys {
             this.renderCount = 0;
             //
             this.offsetMatrix.identity();
-            this.offsetRenderMatrix.identity();
+            this.renderMatrix.identity();
             this.offsetMatrixLastWorldID = -1;
             this.offsetMatrixDirty = true;
         }

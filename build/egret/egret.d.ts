@@ -9994,7 +9994,7 @@ declare namespace egret.sys {
      */
     class GraphicsNode extends RenderNode {
         readonly offsetMatrix: egret.Matrix;
-        readonly offsetRenderMatrix: egret.Matrix;
+        readonly renderMatrix: egret.Matrix;
         offsetMatrixLastWorldID: number;
         offsetMatrixDirty: boolean;
         constructor();
@@ -10272,6 +10272,10 @@ declare namespace egret.sys {
      * 文本渲染节点
      */
     class TextNode extends RenderNode {
+        readonly offsetMatrix: egret.Matrix;
+        readonly renderMatrix: egret.Matrix;
+        offsetMatrixLastWorldID: number;
+        offsetMatrixDirty: boolean;
         constructor();
         /**
          * 颜色值
@@ -10338,6 +10342,7 @@ declare namespace egret.sys {
          * 在显示对象的$updateRenderNode()方法被调用前，自动清空自身的drawData数据。
          */
         cleanBeforeRender(): void;
+        updateOffsetMatrix(canvasScaleX: number, canvasScaleY: number, maxTextureSize: number): void;
     }
 }
 declare namespace egret.sys {
