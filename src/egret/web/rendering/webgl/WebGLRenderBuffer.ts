@@ -60,9 +60,10 @@ namespace egret.web {
         private root: boolean;
 
         //refactor
-        public _debugCurrentTransform: Transform2D = null;
-        public _debugCurrentGraphicsNode: egret.sys.GraphicsNode = null;
-        public _debugCurrentTextNode: egret.sys.TextNode = null;
+        // public _debugCurrentTransform: Transform2D = null;
+        // public _debugCurrentGraphicsNode: egret.sys.GraphicsNode = null;
+        // public _debugCurrentTextNode: egret.sys.TextNode = null;
+        public _debugCurrentRenderNode: egret.sys.RenderNode = null;
 
         //
         public constructor(width?: number, height?: number, root?: boolean) {

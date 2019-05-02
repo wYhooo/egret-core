@@ -153,21 +153,24 @@ namespace egret.web {
                 drawCalls++;
                 buffer.$offsetX = offsetX;
                 buffer.$offsetY = offsetY;
-                buffer._debugCurrentTransform = displayObject.transform;
+                displayObject.transform.__$offsetX__ = offsetX;
+                displayObject.transform.__$offsetY__ = offsetY;
+                //buffer._debugCurrentTransform = displayObject.transform;
+                buffer._debugCurrentRenderNode = node;
                 this.__displayObjectToRenderNode__(displayObject, node, buffer);
                 switch (node.type) {
                     case sys.RenderNodeType.BitmapNode:
                         this.renderBitmap(<sys.BitmapNode>node, buffer);
                         break;
                     case sys.RenderNodeType.TextNode:
-                        buffer._debugCurrentTextNode = <sys.TextNode>node;
+                        //buffer._debugCurrentTextNode = <sys.TextNode>node;
                         this.renderText(<sys.TextNode>node, buffer);
-                        buffer._debugCurrentTextNode = null;
+                        //buffer._debugCurrentTextNode = null;
                         break;
                     case sys.RenderNodeType.GraphicsNode:
-                        buffer._debugCurrentGraphicsNode = <sys.GraphicsNode>node;
+                        //buffer._debugCurrentGraphicsNode = <sys.GraphicsNode>node;
                         this.renderGraphics(<sys.GraphicsNode>node, buffer);
-                        buffer._debugCurrentGraphicsNode = null;
+                        //buffer._debugCurrentGraphicsNode = null;
                         break;
                     case sys.RenderNodeType.GroupNode:
                         this.renderGroup(displayObject, <sys.GroupNode>node, buffer);
@@ -181,7 +184,8 @@ namespace egret.web {
                 }
                 buffer.$offsetX = 0;
                 buffer.$offsetY = 0;
-                buffer._debugCurrentTransform = null;
+                //buffer._debugCurrentTransform = null;
+                buffer._debugCurrentRenderNode = null;
             }
             if (displayList && !isStage) {
                 return drawCalls;
@@ -334,6 +338,8 @@ namespace egret.web {
                 // 绘制结果的时候，应用滤镜
                 buffer.$offsetX = offsetX + displayBoundsX;
                 buffer.$offsetY = offsetY + displayBoundsY;
+                displayObject.transform.__$offsetX__ = offsetX + displayBoundsX;
+                displayObject.transform.__$offsetY__ = offsetY + displayBoundsY;
                 let savedMatrix = Matrix.create();
                 let curMatrix = buffer.globalMatrix;
                 savedMatrix.a = curMatrix.a;
@@ -640,21 +646,22 @@ namespace egret.web {
             let drawCalls = 0;
             if (node) {
                 drawCalls++;
-                buffer._debugCurrentTransform = displayObject.transform;
+                //buffer._debugCurrentTransform = displayObject.transform;
+                buffer._debugCurrentRenderNode = node;
                 this.__displayObjectToRenderNode__(displayObject, node, buffer);
                 switch (node.type) {
                     case sys.RenderNodeType.BitmapNode:
                         this.renderBitmap(<sys.BitmapNode>node, buffer);
                         break;
                     case sys.RenderNodeType.TextNode:
-                        buffer._debugCurrentTextNode = <sys.TextNode>node;
+                        //buffer._debugCurrentTextNode = <sys.TextNode>node;
                         this.renderText(<sys.TextNode>node, buffer);
-                        buffer._debugCurrentTextNode = null;
+                        //buffer._debugCurrentTextNode = null;
                         break;
                     case sys.RenderNodeType.GraphicsNode:
-                        buffer._debugCurrentGraphicsNode = <sys.GraphicsNode>node;
+                        //buffer._debugCurrentGraphicsNode = <sys.GraphicsNode>node;
                         this.renderGraphics(<sys.GraphicsNode>node, buffer);
-                        buffer._debugCurrentGraphicsNode = null;
+                        //buffer._debugCurrentGraphicsNode = null;
                         break;
                     case sys.RenderNodeType.GroupNode:
                         this.renderGroup(displayObject, <sys.GroupNode>node, buffer);
@@ -666,7 +673,8 @@ namespace egret.web {
                         this.renderNormalBitmap(<sys.NormalBitmapNode>node, buffer);
                         break;
                 }
-                buffer._debugCurrentTransform = null;
+                //buffer._debugCurrentTransform = null;
+                buffer._debugCurrentRenderNode = null;
             }
             let children = displayObject.$children;
             if (children) {
@@ -705,21 +713,26 @@ namespace egret.web {
         private renderNode(displayObject: DisplayObject, node: sys.RenderNode, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, forHitTest?: boolean): void {
             buffer.$offsetX = offsetX;
             buffer.$offsetY = offsetY;
-            buffer._debugCurrentTransform = null;
+            if (displayObject) {
+                displayObject.transform.__$offsetX__ = offsetX;
+                displayObject.transform.__$offsetY__ = offsetY;
+            }
+            //buffer._debugCurrentTransform = null;
+            buffer._debugCurrentRenderNode = node;
             this.__displayObjectToRenderNode__(displayObject, node, buffer);
             switch (node.type) {
                 case sys.RenderNodeType.BitmapNode:
                     this.renderBitmap(<sys.BitmapNode>node, buffer);
                     break;
                 case sys.RenderNodeType.TextNode:
-                    buffer._debugCurrentTextNode = <sys.TextNode>node;
+                    //buffer._debugCurrentTextNode = <sys.TextNode>node;
                     this.renderText(<sys.TextNode>node, buffer);
-                    buffer._debugCurrentTextNode = null;
+                    //buffer._debugCurrentTextNode = null;
                     break;
                 case sys.RenderNodeType.GraphicsNode:
-                    buffer._debugCurrentGraphicsNode = <sys.GraphicsNode>node;
+                    //buffer._debugCurrentGraphicsNode = <sys.GraphicsNode>node;
                     this.renderGraphics(<sys.GraphicsNode>node, buffer, forHitTest);
-                    buffer._debugCurrentGraphicsNode = null;
+                    //buffer._debugCurrentGraphicsNode = null;
                     break;
                 case sys.RenderNodeType.GroupNode:
                     this.renderGroup(displayObject, <sys.GroupNode>node, buffer);
@@ -731,6 +744,7 @@ namespace egret.web {
                     this.renderNormalBitmap(<sys.NormalBitmapNode>node, buffer);
                     break;
             }
+            buffer._debugCurrentRenderNode = null;
         }
 
         /**
@@ -1129,11 +1143,114 @@ namespace egret.web {
             if (!displayObject || !_node) {
                 return;
             }
-
+            const globalMatrix = buffer.globalMatrix;
             switch (_node.type) {
-                case sys.RenderNodeType.BitmapNode:
+                case sys.RenderNodeType.BitmapNode: {
+
+                    const node = <sys.BitmapNode>_node;
+                    const trans = displayObject.transform;//
+                    node.__$offsetX__ = trans.__$offsetX__;
+                    node.__$offsetY__ = trans.__$offsetY__;
+                    //this.renderNormalBitmap(<sys.NormalBitmapNode>node, buffer);
+                    const wt = trans.worldTransform;
+                    node.renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
+
+                    let om = node.renderMatrix;
+                    if (!NumberUtils.fequal(globalMatrix.a, om.a)
+                        || !NumberUtils.fequal(globalMatrix.b, om.b)
+                        || !NumberUtils.fequal(globalMatrix.c, om.c)
+                        || !NumberUtils.fequal(globalMatrix.d, om.d)
+                        || !NumberUtils.fequal(globalMatrix.tx, om.tx)
+                        || !NumberUtils.fequal(globalMatrix.ty, om.ty)
+                        || !NumberUtils.fequal(buffer.$offsetX, node.__$offsetX__)
+                        || !NumberUtils.fequal(buffer.$offsetY, node.__$offsetY__)
+                    ) {
+                        egret.error('check ????? failed');
+                    }
+                    else {
+                        // check is ok
+                    }
+
+                    if (node.matrix) {
+                        const m = node.matrix;
+                        //useoffset
+                        node.renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                        // trans.__$offsetX__ = 0;
+                        // trans.__$offsetY__ = 0;
+                        node.__$offsetX__ = 0;
+                        node.__$offsetY__ = 0;
+                        //transform
+                        node.renderMatrix.$preMultiplyInto(m, node.renderMatrix);
+
+
+                        //
+                        let savedMatrix = Matrix.create();
+                        let curMatrix = buffer.globalMatrix;
+                        savedMatrix.a = curMatrix.a;
+                        savedMatrix.b = curMatrix.b;
+                        savedMatrix.c = curMatrix.c;
+                        savedMatrix.d = curMatrix.d;
+                        savedMatrix.tx = curMatrix.tx;
+                        savedMatrix.ty = curMatrix.ty;
+                        let offsetX = buffer.$offsetX;
+                        let offsetY = buffer.$offsetY;
+                        buffer.useOffset();
+                        buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+
+                        om = node.renderMatrix;
+                        if (!NumberUtils.fequal(curMatrix.a, om.a)
+                            || !NumberUtils.fequal(curMatrix.b, om.b)
+                            || !NumberUtils.fequal(curMatrix.c, om.c)
+                            || !NumberUtils.fequal(curMatrix.d, om.d)
+                            || !NumberUtils.fequal(curMatrix.tx, om.tx)
+                            || !NumberUtils.fequal(curMatrix.ty, om.ty)
+                            || !NumberUtils.fequal(buffer.$offsetX, node.__$offsetX__)
+                            || !NumberUtils.fequal(buffer.$offsetY, node.__$offsetY__)
+                        ) {
+                            egret.error('check ????? failed');
+                        }
+                        else {
+                            // check is ok
+                        }
+
+                        //
+                        let matrix = buffer.globalMatrix;
+                        matrix.a = savedMatrix.a;
+                        matrix.b = savedMatrix.b;
+                        matrix.c = savedMatrix.c;
+                        matrix.d = savedMatrix.d;
+                        matrix.tx = savedMatrix.tx;
+                        matrix.ty = savedMatrix.ty;
+                        buffer.$offsetX = offsetX;
+                        buffer.$offsetY = offsetY;
+                        Matrix.release(savedMatrix);
+                    }
+
+                    /*
+
+                    let self = this;
+                    if (self.$offsetX != 0 || self.$offsetY != 0) {
+                        self.globalMatrix.append(1, 0, 0, 1, self.$offsetX, self.$offsetY);
+                        self.$offsetX = self.$offsetY = 0;
+                    }
+
+                    savedMatrix = Matrix.create();
+                    let curMatrix = buffer.globalMatrix;
+                    savedMatrix.a = curMatrix.a;
+                    savedMatrix.b = curMatrix.b;
+                    savedMatrix.c = curMatrix.c;
+                    savedMatrix.d = curMatrix.d;
+                    savedMatrix.tx = curMatrix.tx;
+                    savedMatrix.ty = curMatrix.ty;
+                    offsetX = buffer.$offsetX;
+                    offsetY = buffer.$offsetY;
+                    buffer.useOffset();
+                    buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+                    */
                     //this.renderBitmap(<sys.BitmapNode>node, buffer);
                     break;
+                }
+
                 case sys.RenderNodeType.TextNode: {
                     /*
                     *******************
@@ -1149,12 +1266,11 @@ namespace egret.web {
                         node.updateOffsetMatrix(sys.DisplayList.$canvasScaleX, sys.DisplayList.$canvasScaleY, buffer.context.$maxTextureSize);
                         renderMatrix.$preMultiplyInto(node.offsetMatrix, renderMatrix);
                     }
-                    /*
+                    node.__$offsetX__ = trans.__$offsetX__;
+                    node.__$offsetY__ = trans.__$offsetY__;
+                    /*  
                     *******************
                     */
-                    //buffer._debugCurrentTextNode = <sys.TextNode>node;
-                    // this.renderText(<sys.TextNode>node, buffer);
-                    // buffer._debugCurrentTextNode = null;
                     break;
                 }
 
@@ -1163,7 +1279,7 @@ namespace egret.web {
                     *******************
                     */
                     const node = <sys.GraphicsNode>_node;
-                    const trans = buffer._debugCurrentTransform;
+                    const trans = displayObject.transform;//buffer._debugCurrentTransform;
                     if (trans && (trans._worldID !== node.offsetMatrixLastWorldID || node.offsetMatrixDirty)) {
                         node.offsetMatrixDirty = false;
                         node.offsetMatrixLastWorldID = trans._worldID;
@@ -1172,24 +1288,191 @@ namespace egret.web {
                         renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
                         renderMatrix.$preMultiplyInto(node.offsetMatrix, renderMatrix);
                     }
+                    node.__$offsetX__ = trans.__$offsetX__;
+                    node.__$offsetY__ = trans.__$offsetY__;
                     /*
                     *******************
                     */
-                    // buffer._debugCurrentGraphicsNode = <sys.GraphicsNode>node;
-                    // this.renderGraphics(<sys.GraphicsNode>node, buffer);
-                    // buffer._debugCurrentGraphicsNode = null;
                     break;
                 }
-                    
-                case sys.RenderNodeType.GroupNode:
+
+                case sys.RenderNodeType.GroupNode: {
+
+                    const node = <sys.GroupNode>_node;
+                    const trans = displayObject.transform;//
+                    node.__$offsetX__ = trans.__$offsetX__;
+                    node.__$offsetY__ = trans.__$offsetY__;
+                    //this.renderNormalBitmap(<sys.NormalBitmapNode>node, buffer);
+                    const wt = trans.worldTransform;
+                    node.renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
+
+                    let om = node.renderMatrix;
+                    if (!NumberUtils.fequal(globalMatrix.a, om.a)
+                        || !NumberUtils.fequal(globalMatrix.b, om.b)
+                        || !NumberUtils.fequal(globalMatrix.c, om.c)
+                        || !NumberUtils.fequal(globalMatrix.d, om.d)
+                        || !NumberUtils.fequal(globalMatrix.tx, om.tx)
+                        || !NumberUtils.fequal(globalMatrix.ty, om.ty)
+                        || !NumberUtils.fequal(buffer.$offsetX, node.__$offsetX__)
+                        || !NumberUtils.fequal(buffer.$offsetY, node.__$offsetY__)
+                    ) {
+                        egret.error('check ????? failed');
+                    }
+                    else {
+                        // check is ok
+                    }
+
+                    if (node.matrix) {
+                        const m = node.matrix;
+                        //useoffset
+                        node.renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                        // trans.__$offsetX__ = 0;
+                        // trans.__$offsetY__ = 0;
+                        node.__$offsetX__ = 0;
+                        node.__$offsetY__ = 0;
+                        //transform
+                        node.renderMatrix.$preMultiplyInto(m, node.renderMatrix);
+
+
+
+                        //
+                        let savedMatrix = Matrix.create();
+                        let curMatrix = buffer.globalMatrix;
+                        savedMatrix.a = curMatrix.a;
+                        savedMatrix.b = curMatrix.b;
+                        savedMatrix.c = curMatrix.c;
+                        savedMatrix.d = curMatrix.d;
+                        savedMatrix.tx = curMatrix.tx;
+                        savedMatrix.ty = curMatrix.ty;
+                        let offsetX = buffer.$offsetX;
+                        let offsetY = buffer.$offsetY;
+                        buffer.useOffset();
+                        buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+
+                        let om = node.renderMatrix;
+                        if (!NumberUtils.fequal(curMatrix.a, om.a)
+                            || !NumberUtils.fequal(curMatrix.b, om.b)
+                            || !NumberUtils.fequal(curMatrix.c, om.c)
+                            || !NumberUtils.fequal(curMatrix.d, om.d)
+                            || !NumberUtils.fequal(curMatrix.tx, om.tx)
+                            || !NumberUtils.fequal(curMatrix.ty, om.ty)
+                            || !NumberUtils.fequal(buffer.$offsetX, node.__$offsetX__)
+                            || !NumberUtils.fequal(buffer.$offsetY, node.__$offsetY__)
+                        ) {
+                            egret.error('check ????? failed');
+                        }
+                        else {
+                            // check is ok
+                        }
+
+                        //
+                        let matrix = buffer.globalMatrix;
+                        matrix.a = savedMatrix.a;
+                        matrix.b = savedMatrix.b;
+                        matrix.c = savedMatrix.c;
+                        matrix.d = savedMatrix.d;
+                        matrix.tx = savedMatrix.tx;
+                        matrix.ty = savedMatrix.ty;
+                        buffer.$offsetX = offsetX;
+                        buffer.$offsetY = offsetY;
+                        Matrix.release(savedMatrix);
+
+                    }
                     //this.renderGroup(displayObject, <sys.GroupNode>node, buffer);
+
+
+                    /*
+
+                    //buffer.imageSmoothingEnabled = node.smoothing;
+            let data = node.drawData;
+            let length = data.length;
+            let pos = 0;
+            let m = node.matrix;
+            let blendMode = node.blendMode;
+            let alpha = node.alpha;
+            let savedMatrix;
+            let offsetX;
+            let offsetY;
+            if (m) {
+                savedMatrix = Matrix.create();
+                let curMatrix = buffer.globalMatrix;
+                savedMatrix.a = curMatrix.a;
+                savedMatrix.b = curMatrix.b;
+                savedMatrix.c = curMatrix.c;
+                savedMatrix.d = curMatrix.d;
+                savedMatrix.tx = curMatrix.tx;
+                savedMatrix.ty = curMatrix.ty;
+                offsetX = buffer.$offsetX;
+                offsetY = buffer.$offsetY;
+                buffer.useOffset();
+                buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+            }
+            //这里不考虑嵌套
+            if (blendMode) {
+                buffer.context.setGlobalCompositeOperation(blendModes[blendMode]);
+            }
+            let originAlpha: number;
+            if (alpha == alpha) {
+                originAlpha = buffer.globalAlpha;
+                buffer.globalAlpha *= alpha;
+            }
+            if (node.filter) {
+                buffer.context.$filter = node.filter;
+                while (pos < length) {
+                    buffer.context.drawImage(image, data[pos++], data[pos++], data[pos++], data[pos++],
+                        data[pos++], data[pos++], data[pos++], data[pos++], node.imageWidth, node.imageHeight, node.rotated, node.smoothing);
+                }
+                buffer.context.$filter = null;
+            }
+            else {
+                while (pos < length) {
+                    buffer.context.drawImage(image, data[pos++], data[pos++], data[pos++], data[pos++],
+                        data[pos++], data[pos++], data[pos++], data[pos++], node.imageWidth, node.imageHeight, node.rotated, node.smoothing);
+                }
+            }
+            if (blendMode) {
+                buffer.context.setGlobalCompositeOperation(defaultCompositeOp);
+            }
+            if (alpha == alpha) {
+                buffer.globalAlpha = originAlpha;
+            }
+            if (m) {
+                let matrix = buffer.globalMatrix;
+                matrix.a = savedMatrix.a;
+                matrix.b = savedMatrix.b;
+                matrix.c = savedMatrix.c;
+                matrix.d = savedMatrix.d;
+                matrix.tx = savedMatrix.tx;
+                matrix.ty = savedMatrix.ty;
+                buffer.$offsetX = offsetX;
+                buffer.$offsetY = offsetY;
+                Matrix.release(savedMatrix);
+            }
+
+
+                    */
+
+
+
+
                     break;
-                case sys.RenderNodeType.MeshNode:
+                }
+
+                case sys.RenderNodeType.MeshNode: {
                     //this.renderMesh(<sys.MeshNode>node, buffer);
                     break;
-                case sys.RenderNodeType.NormalBitmapNode:
+                }
+
+                case sys.RenderNodeType.NormalBitmapNode: {
+                    const node = <sys.NormalBitmapNode>_node;
+                    const trans = displayObject.transform;//
+                    node.__$offsetX__ = trans.__$offsetX__;
+                    node.__$offsetY__ = trans.__$offsetY__;
                     //this.renderNormalBitmap(<sys.NormalBitmapNode>node, buffer);
+                    const wt = trans.worldTransform;
+                    node.renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
                     break;
+                }
 
                 default: {
                     console.error('undefined node.type = ' + _node.type);

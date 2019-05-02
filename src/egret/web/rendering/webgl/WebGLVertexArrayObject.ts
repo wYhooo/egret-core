@@ -133,61 +133,25 @@ namespace egret.web {
             destX: number, destY: number, destWidth: number, destHeight: number, textureSourceWidth: number, textureSourceHeight: number,
             meshUVs?: number[], meshVertices?: number[], meshIndices?: number[], rotated?: boolean): void {
             //--------------------------------------------------------------------------------------
-            if (DEBUG && buffer._debugCurrentTransform) {
-                const trans = buffer._debugCurrentTransform;
+            if (DEBUG && buffer._debugCurrentRenderNode) {
+                //const trans = buffer._debugCurrentTransform;
+                const renderNode = buffer._debugCurrentRenderNode;
+                const om = renderNode.renderMatrix;
                 const globalMatrix = buffer.globalMatrix;
-                if (buffer._debugCurrentGraphicsNode) {
-                    const om = buffer._debugCurrentGraphicsNode.renderMatrix;
-                    if (!NumberUtils.fequal(globalMatrix.a, om.a)
-                        || !NumberUtils.fequal(globalMatrix.b, om.b)
-                        || !NumberUtils.fequal(globalMatrix.c, om.c)
-                        || !NumberUtils.fequal(globalMatrix.d, om.d)
-                        || !NumberUtils.fequal(globalMatrix.tx, om.tx)
-                        || !NumberUtils.fequal(globalMatrix.ty, om.ty)
-                        || !NumberUtils.fequal(buffer.$offsetX, trans.__$offsetX__)
-                        || !NumberUtils.fequal(buffer.$offsetY, trans.__$offsetY__)
-                    ) {
-                        egret.error('check _debugCurrentGraphicsNode failed');
-                    }
-                    else {
-                        // check is ok
-                    }
-                }
-                else if (buffer._debugCurrentTextNode) {
-                    const om = buffer._debugCurrentTextNode.renderMatrix;
-                    if (!NumberUtils.fequal(globalMatrix.a, om.a)
-                        || !NumberUtils.fequal(globalMatrix.b, om.b)
-                        || !NumberUtils.fequal(globalMatrix.c, om.c)
-                        || !NumberUtils.fequal(globalMatrix.d, om.d)
-                        || !NumberUtils.fequal(globalMatrix.tx, om.tx)
-                        || !NumberUtils.fequal(globalMatrix.ty, om.ty)
-                        || !NumberUtils.fequal(buffer.$offsetX, trans.__$offsetX__)
-                        || !NumberUtils.fequal(buffer.$offsetY, trans.__$offsetY__)
-                    ) {
-                        egret.error('check _debugCurrentTextNode failed');
-                    }
-                    else {
-                        // check is ok
-                    }
+                if (!NumberUtils.fequal(globalMatrix.a, om.a)
+                    || !NumberUtils.fequal(globalMatrix.b, om.b)
+                    || !NumberUtils.fequal(globalMatrix.c, om.c)
+                    || !NumberUtils.fequal(globalMatrix.d, om.d)
+                    || !NumberUtils.fequal(globalMatrix.tx, om.tx)
+                    || !NumberUtils.fequal(globalMatrix.ty, om.ty)
+                    || !NumberUtils.fequal(buffer.$offsetX, renderNode.__$offsetX__)
+                    || !NumberUtils.fequal(buffer.$offsetY, renderNode.__$offsetY__)
+                ) {
+                    egret.error('check _debugCurrentGraphicsNode failed');
                 }
                 else {
-                    const wt = trans.worldTransform;
-                    if (!NumberUtils.fequal(globalMatrix.a, wt.a)
-                        || !NumberUtils.fequal(globalMatrix.b, wt.b)
-                        || !NumberUtils.fequal(globalMatrix.c, wt.c)
-                        || !NumberUtils.fequal(globalMatrix.d, wt.d)
-                        || !NumberUtils.fequal(globalMatrix.tx, wt.tx)
-                        || !NumberUtils.fequal(globalMatrix.ty, wt.ty)
-                        || !NumberUtils.fequal(buffer.$offsetX, trans.__$offsetX__)
-                        || !NumberUtils.fequal(buffer.$offsetY, trans.__$offsetY__)
-                    ) {
-                        egret.error('check _debugCurrentTransform failed');
-                    }
-                    else {
-                        // check is ok
-                    }
+                    // check is ok
                 }
-
             }
             //--------------------------------------------------------------------------------------
 
