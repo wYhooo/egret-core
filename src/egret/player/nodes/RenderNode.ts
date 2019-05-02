@@ -65,6 +65,13 @@ namespace egret.sys {
      */
     export class RenderNode {
 
+        public readonly offsetMatrix: egret.Matrix = new Matrix;
+        public readonly renderMatrix: egret.Matrix = new Matrix;
+        public offsetMatrixLastWorldID: number = -1;
+        public offsetMatrixDirty: boolean = true;
+        public __$offsetX__: number = 0;
+        public __$offsetY__: number = 0;
+
         /**
          * 节点类型..
          */

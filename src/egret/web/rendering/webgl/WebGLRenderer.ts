@@ -79,8 +79,8 @@ namespace egret.web {
             //计算一下全局
             virtualRenderingRoot._updateTransformAsVirtualRenderingRoot();
             //这个仿照 下面 this.drawDisplayObject(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
-            virtualRenderingRoot.transform.__$offsetX__ = matrix.tx;
-            virtualRenderingRoot.transform.__$offsetY__ = matrix.ty;
+            // virtualRenderingRoot.transform.__$offsetX__ = matrix.tx;
+            // virtualRenderingRoot.transform.__$offsetY__ = matrix.ty;
             //
             displayObject.$setParent(this.virtualRenderingRoot);
             displayObject.updateTransform();
@@ -88,6 +88,10 @@ namespace egret.web {
 
             //绘制显示对象
             webglBuffer.transform(matrix.a, matrix.b, matrix.c, matrix.d, 0, 0);
+
+            ///
+            displayObject.transform.__$offsetX__ = matrix.tx;
+            displayObject.transform.__$offsetY__ = matrix.ty;
             this.drawDisplayObject(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
             webglBufferContext.$drawWebGL();
             let drawCall = webglBuffer.$drawCalls;
@@ -96,8 +100,8 @@ namespace egret.web {
             ////-------------------------------------------------------------------------------------------------------
             //还原回去,保持stage没有parent
             displayObject.$setParent(cacheParent);
-            virtualRenderingRoot.transform.__$offsetX__ = 0;
-            virtualRenderingRoot.transform.__$offsetY__ = 0;
+            // virtualRenderingRoot.transform.__$offsetX__ = 0;
+            // virtualRenderingRoot.transform.__$offsetY__ = 0;
             /////-------------------------------------------------------------------------------------------------------
 
             webglBufferContext.popBuffer();
@@ -150,6 +154,7 @@ namespace egret.web {
                 buffer.$offsetX = offsetX;
                 buffer.$offsetY = offsetY;
                 buffer._debugCurrentTransform = displayObject.transform;
+                this.__displayObjectToRenderNode__(displayObject, node, buffer);
                 switch (node.type) {
                     case sys.RenderNodeType.BitmapNode:
                         this.renderBitmap(<sys.BitmapNode>node, buffer);
@@ -165,7 +170,7 @@ namespace egret.web {
                         buffer._debugCurrentGraphicsNode = null;
                         break;
                     case sys.RenderNodeType.GroupNode:
-                        this.renderGroup(<sys.GroupNode>node, buffer);
+                        this.renderGroup(displayObject, <sys.GroupNode>node, buffer);
                         break;
                     case sys.RenderNodeType.MeshNode:
                         this.renderMesh(<sys.MeshNode>node, buffer);
@@ -606,7 +611,7 @@ namespace egret.web {
             webglBuffer.context.pushBuffer(webglBuffer);
 
             webglBuffer.setTransform(matrix.a, matrix.b, matrix.c, matrix.d, matrix.tx, matrix.ty);
-            this.renderNode(node, buffer, 0, 0, forHitTest);
+            this.renderNode(null, node, buffer, 0, 0, forHitTest);
             webglBuffer.context.$drawWebGL();
             webglBuffer.onRenderFinish();
 
@@ -636,6 +641,7 @@ namespace egret.web {
             if (node) {
                 drawCalls++;
                 buffer._debugCurrentTransform = displayObject.transform;
+                this.__displayObjectToRenderNode__(displayObject, node, buffer);
                 switch (node.type) {
                     case sys.RenderNodeType.BitmapNode:
                         this.renderBitmap(<sys.BitmapNode>node, buffer);
@@ -651,7 +657,7 @@ namespace egret.web {
                         buffer._debugCurrentGraphicsNode = null;
                         break;
                     case sys.RenderNodeType.GroupNode:
-                        this.renderGroup(<sys.GroupNode>node, buffer);
+                        this.renderGroup(displayObject, <sys.GroupNode>node, buffer);
                         break;
                     case sys.RenderNodeType.MeshNode:
                         this.renderMesh(<sys.MeshNode>node, buffer);
@@ -696,10 +702,11 @@ namespace egret.web {
         /**
          * @private
          */
-        private renderNode(node: sys.RenderNode, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, forHitTest?: boolean): void {
+        private renderNode(displayObject: DisplayObject, node: sys.RenderNode, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, forHitTest?: boolean): void {
             buffer.$offsetX = offsetX;
             buffer.$offsetY = offsetY;
             buffer._debugCurrentTransform = null;
+            this.__displayObjectToRenderNode__(displayObject, node, buffer);
             switch (node.type) {
                 case sys.RenderNodeType.BitmapNode:
                     this.renderBitmap(<sys.BitmapNode>node, buffer);
@@ -715,7 +722,7 @@ namespace egret.web {
                     buffer._debugCurrentGraphicsNode = null;
                     break;
                 case sys.RenderNodeType.GroupNode:
-                    this.renderGroup(<sys.GroupNode>node, buffer);
+                    this.renderGroup(displayObject, <sys.GroupNode>node, buffer);
                     break;
                 case sys.RenderNodeType.MeshNode:
                     this.renderMesh(<sys.MeshNode>node, buffer);
@@ -892,23 +899,6 @@ namespace egret.web {
          * @private
          */
         private renderText(node: sys.TextNode, buffer: WebGLRenderBuffer): void {
-            /*
-            *******************
-            */
-            const trans = buffer._debugCurrentTransform;
-            if (trans && (trans._worldID !== node.offsetMatrixLastWorldID || node.offsetMatrixDirty)) {
-                node.offsetMatrixDirty = false;
-                node.offsetMatrixLastWorldID = trans._worldID;
-                const wt = trans.worldTransform;
-                const renderMatrix = node.renderMatrix;
-                renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
-                node.updateOffsetMatrix(sys.DisplayList.$canvasScaleX, sys.DisplayList.$canvasScaleY, buffer.context.$maxTextureSize);
-                renderMatrix.$preMultiplyInto(node.offsetMatrix, renderMatrix);
-            }
-            /*
-            *******************
-            */
-
             let width = node.width - node.x;
             let height = node.height - node.y;
             if (width <= 0 || height <= 0 || !width || !height || node.drawData.length == 0) {
@@ -1036,21 +1026,6 @@ namespace egret.web {
                 }
                 buffer.transform(1, 0, 0, 1, node.x, node.y);
             }
-            /*
-            *******************
-            */
-            const trans = buffer._debugCurrentTransform;
-            if (trans && (trans._worldID !== node.offsetMatrixLastWorldID || node.offsetMatrixDirty)) {
-                node.offsetMatrixDirty = false;
-                node.offsetMatrixLastWorldID = trans._worldID;
-                const wt = trans.worldTransform;
-                const renderMatrix = node.renderMatrix;
-                renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
-                renderMatrix.$preMultiplyInto(node.offsetMatrix, renderMatrix);
-            }
-            /*
-            *******************
-            */
             let surface = this.canvasRenderBuffer.surface;
             if (forHitTest) {
                 this.canvasRenderer.renderGraphics(node, this.canvasRenderBuffer.context, true);
@@ -1090,7 +1065,7 @@ namespace egret.web {
             }
         }
 
-        private renderGroup(groupNode: sys.GroupNode, buffer: WebGLRenderBuffer): void {
+        private renderGroup(displayObject: DisplayObject, groupNode: sys.GroupNode, buffer: WebGLRenderBuffer): void {
             let m = groupNode.matrix;
             let savedMatrix;
             let offsetX;
@@ -1114,7 +1089,7 @@ namespace egret.web {
             let length = children.length;
             for (let i = 0; i < length; i++) {
                 let node: sys.RenderNode = children[i];
-                this.renderNode(node, buffer, buffer.$offsetX, buffer.$offsetY);
+                this.renderNode(displayObject, node, buffer, buffer.$offsetX, buffer.$offsetY);
             }
             if (m) {
                 let matrix = buffer.globalMatrix;
@@ -1144,5 +1119,91 @@ namespace egret.web {
             }
             return buffer;
         }
+
+
+        /**
+         * @private
+         * 绘制一个显示对象
+         */
+        private __displayObjectToRenderNode__(displayObject: DisplayObject, _node: egret.sys.RenderNode, buffer: WebGLRenderBuffer): void {
+            if (!displayObject || !_node) {
+                return;
+            }
+
+            switch (_node.type) {
+                case sys.RenderNodeType.BitmapNode:
+                    //this.renderBitmap(<sys.BitmapNode>node, buffer);
+                    break;
+                case sys.RenderNodeType.TextNode: {
+                    /*
+                    *******************
+                    */
+                    const node = <sys.TextNode>_node;
+                    const trans = displayObject.transform;//buffer._debugCurrentTransform;
+                    if (trans && (trans._worldID !== node.offsetMatrixLastWorldID || node.offsetMatrixDirty)) {
+                        node.offsetMatrixDirty = false;
+                        node.offsetMatrixLastWorldID = trans._worldID;
+                        const wt = trans.worldTransform;
+                        const renderMatrix = node.renderMatrix;
+                        renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
+                        node.updateOffsetMatrix(sys.DisplayList.$canvasScaleX, sys.DisplayList.$canvasScaleY, buffer.context.$maxTextureSize);
+                        renderMatrix.$preMultiplyInto(node.offsetMatrix, renderMatrix);
+                    }
+                    /*
+                    *******************
+                    */
+                    //buffer._debugCurrentTextNode = <sys.TextNode>node;
+                    // this.renderText(<sys.TextNode>node, buffer);
+                    // buffer._debugCurrentTextNode = null;
+                    break;
+                }
+
+                case sys.RenderNodeType.GraphicsNode: {
+                    /*
+                    *******************
+                    */
+                    const node = <sys.GraphicsNode>_node;
+                    const trans = buffer._debugCurrentTransform;
+                    if (trans && (trans._worldID !== node.offsetMatrixLastWorldID || node.offsetMatrixDirty)) {
+                        node.offsetMatrixDirty = false;
+                        node.offsetMatrixLastWorldID = trans._worldID;
+                        const wt = trans.worldTransform;
+                        const renderMatrix = node.renderMatrix;
+                        renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
+                        renderMatrix.$preMultiplyInto(node.offsetMatrix, renderMatrix);
+                    }
+                    /*
+                    *******************
+                    */
+                    // buffer._debugCurrentGraphicsNode = <sys.GraphicsNode>node;
+                    // this.renderGraphics(<sys.GraphicsNode>node, buffer);
+                    // buffer._debugCurrentGraphicsNode = null;
+                    break;
+                }
+                    
+                case sys.RenderNodeType.GroupNode:
+                    //this.renderGroup(displayObject, <sys.GroupNode>node, buffer);
+                    break;
+                case sys.RenderNodeType.MeshNode:
+                    //this.renderMesh(<sys.MeshNode>node, buffer);
+                    break;
+                case sys.RenderNodeType.NormalBitmapNode:
+                    //this.renderNormalBitmap(<sys.NormalBitmapNode>node, buffer);
+                    break;
+
+                default: {
+                    console.error('undefined node.type = ' + _node.type);
+                    break;
+                }
+            }
+        }
+
+
+
+
+
+
+
+
     }
 }

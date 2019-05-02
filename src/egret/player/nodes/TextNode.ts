@@ -36,12 +36,6 @@ namespace egret.sys {
     export class TextNode extends RenderNode {
 
         //
-        public readonly offsetMatrix: egret.Matrix = new Matrix;
-        public readonly renderMatrix: egret.Matrix = new Matrix;
-        public offsetMatrixLastWorldID: number = -1;
-        public offsetMatrixDirty: boolean = true;
-
-        //
         public constructor() {
             super();
             this.type = RenderNodeType.TextNode;

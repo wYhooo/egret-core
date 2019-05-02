@@ -3378,6 +3378,12 @@ declare namespace egret.sys {
      * 渲染节点基类
      */
     class RenderNode {
+        readonly offsetMatrix: egret.Matrix;
+        readonly renderMatrix: egret.Matrix;
+        offsetMatrixLastWorldID: number;
+        offsetMatrixDirty: boolean;
+        __$offsetX__: number;
+        __$offsetY__: number;
         /**
          * 节点类型..
          */
@@ -9993,10 +9999,6 @@ declare namespace egret.sys {
      * 矢量渲染节点
      */
     class GraphicsNode extends RenderNode {
-        readonly offsetMatrix: egret.Matrix;
-        readonly renderMatrix: egret.Matrix;
-        offsetMatrixLastWorldID: number;
-        offsetMatrixDirty: boolean;
         constructor();
         /**
          * 指定一种简单的单一颜色填充，在绘制时该填充将在随后对其他 Graphics 方法（如 lineTo() 或 drawCircle()）的调用中使用。
@@ -10272,10 +10274,6 @@ declare namespace egret.sys {
      * 文本渲染节点
      */
     class TextNode extends RenderNode {
-        readonly offsetMatrix: egret.Matrix;
-        readonly renderMatrix: egret.Matrix;
-        offsetMatrixLastWorldID: number;
-        offsetMatrixDirty: boolean;
         constructor();
         /**
          * 颜色值

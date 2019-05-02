@@ -7185,14 +7185,17 @@ var egret;
                 //计算一下全局
                 virtualRenderingRoot._updateTransformAsVirtualRenderingRoot();
                 //这个仿照 下面 this.drawDisplayObject(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
-                virtualRenderingRoot.transform.__$offsetX__ = matrix.tx;
-                virtualRenderingRoot.transform.__$offsetY__ = matrix.ty;
+                // virtualRenderingRoot.transform.__$offsetX__ = matrix.tx;
+                // virtualRenderingRoot.transform.__$offsetY__ = matrix.ty;
                 //
                 displayObject.$setParent(this.virtualRenderingRoot);
                 displayObject.updateTransform();
                 //-------------------------------------------------------------------------------------------------------
                 //绘制显示对象
                 webglBuffer.transform(matrix.a, matrix.b, matrix.c, matrix.d, 0, 0);
+                ///
+                displayObject.transform.__$offsetX__ = matrix.tx;
+                displayObject.transform.__$offsetY__ = matrix.ty;
                 this.drawDisplayObject(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
                 webglBufferContext.$drawWebGL();
                 var drawCall = webglBuffer.$drawCalls;
@@ -7200,8 +7203,8 @@ var egret;
                 ////-------------------------------------------------------------------------------------------------------
                 //还原回去,保持stage没有parent
                 displayObject.$setParent(cacheParent);
-                virtualRenderingRoot.transform.__$offsetX__ = 0;
-                virtualRenderingRoot.transform.__$offsetY__ = 0;
+                // virtualRenderingRoot.transform.__$offsetX__ = 0;
+                // virtualRenderingRoot.transform.__$offsetY__ = 0;
                 /////-------------------------------------------------------------------------------------------------------
                 webglBufferContext.popBuffer();
                 var invert = egret.Matrix.create();
@@ -7251,6 +7254,7 @@ var egret;
                     buffer.$offsetX = offsetX;
                     buffer.$offsetY = offsetY;
                     buffer._debugCurrentTransform = displayObject.transform;
+                    this.__displayObjectToRenderNode__(displayObject, node, buffer);
                     switch (node.type) {
                         case 1 /* BitmapNode */:
                             this.renderBitmap(node, buffer);
@@ -7266,7 +7270,7 @@ var egret;
                             buffer._debugCurrentGraphicsNode = null;
                             break;
                         case 4 /* GroupNode */:
-                            this.renderGroup(node, buffer);
+                            this.renderGroup(displayObject, node, buffer);
                             break;
                         case 5 /* MeshNode */:
                             this.renderMesh(node, buffer);
@@ -7682,7 +7686,7 @@ var egret;
                 //pushRenderTARGET
                 webglBuffer.context.pushBuffer(webglBuffer);
                 webglBuffer.setTransform(matrix.a, matrix.b, matrix.c, matrix.d, matrix.tx, matrix.ty);
-                this.renderNode(node, buffer, 0, 0, forHitTest);
+                this.renderNode(null, node, buffer, 0, 0, forHitTest);
                 webglBuffer.context.$drawWebGL();
                 webglBuffer.onRenderFinish();
                 //popRenderTARGET
@@ -7710,6 +7714,7 @@ var egret;
                 if (node) {
                     drawCalls++;
                     buffer._debugCurrentTransform = displayObject.transform;
+                    this.__displayObjectToRenderNode__(displayObject, node, buffer);
                     switch (node.type) {
                         case 1 /* BitmapNode */:
                             this.renderBitmap(node, buffer);
@@ -7725,7 +7730,7 @@ var egret;
                             buffer._debugCurrentGraphicsNode = null;
                             break;
                         case 4 /* GroupNode */:
-                            this.renderGroup(node, buffer);
+                            this.renderGroup(displayObject, node, buffer);
                             break;
                         case 5 /* MeshNode */:
                             this.renderMesh(node, buffer);
@@ -7767,22 +7772,27 @@ var egret;
             /**
              * @private
              */
-            WebGLRenderer.prototype.renderNode = function (node, buffer, offsetX, offsetY, forHitTest) {
+            WebGLRenderer.prototype.renderNode = function (displayObject, node, buffer, offsetX, offsetY, forHitTest) {
                 buffer.$offsetX = offsetX;
                 buffer.$offsetY = offsetY;
                 buffer._debugCurrentTransform = null;
+                this.__displayObjectToRenderNode__(displayObject, node, buffer);
                 switch (node.type) {
                     case 1 /* BitmapNode */:
                         this.renderBitmap(node, buffer);
                         break;
                     case 2 /* TextNode */:
+                        buffer._debugCurrentTextNode = node;
                         this.renderText(node, buffer);
+                        buffer._debugCurrentTextNode = null;
                         break;
                     case 3 /* GraphicsNode */:
+                        buffer._debugCurrentGraphicsNode = node;
                         this.renderGraphics(node, buffer, forHitTest);
+                        buffer._debugCurrentGraphicsNode = null;
                         break;
                     case 4 /* GroupNode */:
-                        this.renderGroup(node, buffer);
+                        this.renderGroup(displayObject, node, buffer);
                         break;
                     case 5 /* MeshNode */:
                         this.renderMesh(node, buffer);
@@ -7947,22 +7957,6 @@ var egret;
              * @private
              */
             WebGLRenderer.prototype.renderText = function (node, buffer) {
-                /*
-                *******************
-                */
-                var trans = buffer._debugCurrentTransform;
-                if (trans && (trans._worldID !== node.offsetMatrixLastWorldID || node.offsetMatrixDirty)) {
-                    node.offsetMatrixDirty = false;
-                    node.offsetMatrixLastWorldID = trans._worldID;
-                    var wt = trans.worldTransform;
-                    var renderMatrix = node.renderMatrix;
-                    renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
-                    node.updateOffsetMatrix(egret.sys.DisplayList.$canvasScaleX, egret.sys.DisplayList.$canvasScaleY, buffer.context.$maxTextureSize);
-                    renderMatrix.$preMultiplyInto(node.offsetMatrix, renderMatrix);
-                }
-                /*
-                *******************
-                */
                 var width = node.width - node.x;
                 var height = node.height - node.y;
                 if (width <= 0 || height <= 0 || !width || !height || node.drawData.length == 0) {
@@ -8083,21 +8077,6 @@ var egret;
                     }
                     buffer.transform(1, 0, 0, 1, node.x, node.y);
                 }
-                /*
-                *******************
-                */
-                var trans = buffer._debugCurrentTransform;
-                if (trans && (trans._worldID !== node.offsetMatrixLastWorldID || node.offsetMatrixDirty)) {
-                    node.offsetMatrixDirty = false;
-                    node.offsetMatrixLastWorldID = trans._worldID;
-                    var wt = trans.worldTransform;
-                    var renderMatrix = node.renderMatrix;
-                    renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
-                    renderMatrix.$preMultiplyInto(node.offsetMatrix, renderMatrix);
-                }
-                /*
-                *******************
-                */
                 var surface = this.canvasRenderBuffer.surface;
                 if (forHitTest) {
                     this.canvasRenderer.renderGraphics(node, this.canvasRenderBuffer.context, true);
@@ -8136,7 +8115,7 @@ var egret;
                     node.dirtyRender = false;
                 }
             };
-            WebGLRenderer.prototype.renderGroup = function (groupNode, buffer) {
+            WebGLRenderer.prototype.renderGroup = function (displayObject, groupNode, buffer) {
                 var m = groupNode.matrix;
                 var savedMatrix;
                 var offsetX;
@@ -8159,7 +8138,7 @@ var egret;
                 var length = children.length;
                 for (var i = 0; i < length; i++) {
                     var node = children[i];
-                    this.renderNode(node, buffer, buffer.$offsetX, buffer.$offsetY);
+                    this.renderNode(displayObject, node, buffer, buffer.$offsetX, buffer.$offsetY);
                 }
                 if (m) {
                     var matrix = buffer.globalMatrix;
@@ -8187,6 +8166,78 @@ var egret;
                     buffer.$computeDrawCall = false;
                 }
                 return buffer;
+            };
+            /**
+             * @private
+             * 绘制一个显示对象
+             */
+            WebGLRenderer.prototype.__displayObjectToRenderNode__ = function (displayObject, _node, buffer) {
+                if (!displayObject || !_node) {
+                    return;
+                }
+                switch (_node.type) {
+                    case 1 /* BitmapNode */:
+                        //this.renderBitmap(<sys.BitmapNode>node, buffer);
+                        break;
+                    case 2 /* TextNode */: {
+                        /*
+                        *******************
+                        */
+                        var node = _node;
+                        var trans = displayObject.transform; //buffer._debugCurrentTransform;
+                        if (trans && (trans._worldID !== node.offsetMatrixLastWorldID || node.offsetMatrixDirty)) {
+                            node.offsetMatrixDirty = false;
+                            node.offsetMatrixLastWorldID = trans._worldID;
+                            var wt = trans.worldTransform;
+                            var renderMatrix = node.renderMatrix;
+                            renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
+                            node.updateOffsetMatrix(egret.sys.DisplayList.$canvasScaleX, egret.sys.DisplayList.$canvasScaleY, buffer.context.$maxTextureSize);
+                            renderMatrix.$preMultiplyInto(node.offsetMatrix, renderMatrix);
+                        }
+                        /*
+                        *******************
+                        */
+                        //buffer._debugCurrentTextNode = <sys.TextNode>node;
+                        // this.renderText(<sys.TextNode>node, buffer);
+                        // buffer._debugCurrentTextNode = null;
+                        break;
+                    }
+                    case 3 /* GraphicsNode */: {
+                        /*
+                        *******************
+                        */
+                        var node = _node;
+                        var trans = buffer._debugCurrentTransform;
+                        if (trans && (trans._worldID !== node.offsetMatrixLastWorldID || node.offsetMatrixDirty)) {
+                            node.offsetMatrixDirty = false;
+                            node.offsetMatrixLastWorldID = trans._worldID;
+                            var wt = trans.worldTransform;
+                            var renderMatrix = node.renderMatrix;
+                            renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
+                            renderMatrix.$preMultiplyInto(node.offsetMatrix, renderMatrix);
+                        }
+                        /*
+                        *******************
+                        */
+                        // buffer._debugCurrentGraphicsNode = <sys.GraphicsNode>node;
+                        // this.renderGraphics(<sys.GraphicsNode>node, buffer);
+                        // buffer._debugCurrentGraphicsNode = null;
+                        break;
+                    }
+                    case 4 /* GroupNode */:
+                        //this.renderGroup(displayObject, <sys.GroupNode>node, buffer);
+                        break;
+                    case 5 /* MeshNode */:
+                        //this.renderMesh(<sys.MeshNode>node, buffer);
+                        break;
+                    case 6 /* NormalBitmapNode */:
+                        //this.renderNormalBitmap(<sys.NormalBitmapNode>node, buffer);
+                        break;
+                    default: {
+                        console.error('undefined node.type = ' + _node.type);
+                        break;
+                    }
+                }
             };
             return WebGLRenderer;
         }());

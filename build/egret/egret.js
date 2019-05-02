@@ -6087,6 +6087,12 @@ var egret;
          */
         var RenderNode = (function () {
             function RenderNode() {
+                this.offsetMatrix = new egret.Matrix;
+                this.renderMatrix = new egret.Matrix;
+                this.offsetMatrixLastWorldID = -1;
+                this.offsetMatrixDirty = true;
+                this.__$offsetX__ = 0;
+                this.__$offsetY__ = 0;
                 /**
                  * 节点类型..
                  */
@@ -15608,10 +15614,6 @@ var egret;
             __extends(GraphicsNode, _super);
             function GraphicsNode() {
                 var _this = _super.call(this) || this;
-                _this.offsetMatrix = new egret.Matrix;
-                _this.renderMatrix = new egret.Matrix;
-                _this.offsetMatrixLastWorldID = -1;
-                _this.offsetMatrixDirty = true;
                 /**
                  * 脏渲染标记
                  * 暂时调用lineStyle,beginFill,beginGradientFill标记,实际应该draw时候标记在Path2D
@@ -16202,11 +16204,6 @@ var egret;
             //
             function TextNode() {
                 var _this = _super.call(this) || this;
-                //
-                _this.offsetMatrix = new egret.Matrix;
-                _this.renderMatrix = new egret.Matrix;
-                _this.offsetMatrixLastWorldID = -1;
-                _this.offsetMatrixDirty = true;
                 /**
                  * 颜色值
                  */
