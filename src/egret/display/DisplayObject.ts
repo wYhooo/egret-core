@@ -2288,6 +2288,21 @@ namespace egret {
             return false;
         }
 
+        public __$offsetX__: number = 0;
+        public __$offsetY__: number = 0;
+        public readonly globalMatrix: Matrix = new Matrix;
+        public transform(offsetX: number, offsetY: number): void {
+            this.__$offsetX__ = offsetX;
+            this.__$offsetY__ = offsetY;
+        }
+
+        public transformAsRenderRoot(offsetX: number, offsetY: number, globalMatrix: Matrix): void {
+            console.error('transformAsRenderRoot');
+            // this.__$offsetX__ = offsetX;
+            // this.__$offsetY__ = offsetY;
+            // this.globalMatrix._setTo_(globalMatrix);
+        }
     }
 
+    export const transformRefactor: boolean = true;
 }

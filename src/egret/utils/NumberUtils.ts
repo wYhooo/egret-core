@@ -52,8 +52,8 @@ namespace egret {
          * @platform Web,Native
          * @language zh_CN
          */
-        public static isNumber(value:any):boolean {
-            return typeof(value) === "number" && !isNaN(value);
+        public static isNumber(value: any): boolean {
+            return typeof (value) === "number" && !isNaN(value);
         }
 
         /**
@@ -72,14 +72,14 @@ namespace egret {
          * @platform Web,Native
          * @language zh_CN
          */
-        public static sin(value:number):number {
-            let valueFloor:number = Math.floor(value);
-            let valueCeil:number = valueFloor + 1;
-            let resultFloor:number = NumberUtils.sinInt(valueFloor);
+        public static sin(value: number): number {
+            let valueFloor: number = Math.floor(value);
+            let valueCeil: number = valueFloor + 1;
+            let resultFloor: number = NumberUtils.sinInt(valueFloor);
             if (valueFloor == value) {
                 return resultFloor;
             }
-            let resultCeil:number = NumberUtils.sinInt(valueCeil);
+            let resultCeil: number = NumberUtils.sinInt(valueCeil);
 
             return (value - valueFloor) * resultCeil + (valueCeil - value) * resultFloor;
         }
@@ -90,8 +90,7 @@ namespace egret {
          * @param value 
          * @returns 
          */
-        private static sinInt(value:number):number
-        {
+        private static sinInt(value: number): number {
             value = value % 360;
             if (value < 0) {
                 value += 360;
@@ -115,14 +114,14 @@ namespace egret {
          * @platform Web,Native
          * @language zh_CN
          */
-        public static cos(value:number):number {
-            let valueFloor:number = Math.floor(value);
-            let valueCeil:number = valueFloor + 1;
-            let resultFloor:number = NumberUtils.cosInt(valueFloor);
+        public static cos(value: number): number {
+            let valueFloor: number = Math.floor(value);
+            let valueCeil: number = valueFloor + 1;
+            let resultFloor: number = NumberUtils.cosInt(valueFloor);
             if (valueFloor == value) {
                 return resultFloor;
             }
-            let resultCeil:number = NumberUtils.cosInt(valueCeil);
+            let resultCeil: number = NumberUtils.cosInt(valueCeil);
 
             return (value - valueFloor) * resultCeil + (valueCeil - value) * resultFloor;
         }
@@ -133,8 +132,7 @@ namespace egret {
          * @param value 
          * @returns 
          */
-        private static cosInt(value:number):number
-        {
+        private static cosInt(value: number): number {
             value = value % 360;
             if (value < 0) {
                 value += 360;
@@ -142,6 +140,36 @@ namespace egret {
             return egret_cos_map[value];
         }
 
+        //
+        private static readonly EPSILON = 0.000001 //根据精度需要;
+        public static fequal(left: number, right: number) {
+            return Math.abs(left - right) < NumberUtils.EPSILON;
+        }
+        //
+        public static __transform__(globalMatrix: Matrix, a: number, b: number, c: number, d: number, tx: number, ty: number): void {
+            //globalMatrix = globalMatrix * [a: number, b: number, c: number, d: number, tx: number, ty: number]
+            let matrix = globalMatrix;//this.globalMatrix;
+            let a1 = matrix.a;
+            let b1 = matrix.b;
+            let c1 = matrix.c;
+            let d1 = matrix.d;
+            if (a !== 1 || b !== 0 || c !== 0 || d !== 1) {
+                matrix.a = a * a1 + b * c1;
+                matrix.b = a * b1 + b * d1;
+                matrix.c = c * a1 + d * c1;
+                matrix.d = c * b1 + d * d1;
+            }
+            matrix.tx = tx * a1 + ty * c1 + matrix.tx;
+            matrix.ty = tx * b1 + ty * d1 + matrix.ty;
+        }
+        public static matrixEqual(left: Matrix, right: Matrix) {
+            return NumberUtils.fequal(left.a, right.a)
+                && NumberUtils.fequal(left.b, right.b)
+                && NumberUtils.fequal(left.c, right.c)
+                && NumberUtils.fequal(left.d, right.d)
+                && NumberUtils.fequal(left.tx, right.tx)
+                && NumberUtils.fequal(left.ty, right.ty);
+        }
     }
 }
 
@@ -156,7 +184,7 @@ let egret_cos_map = {};
 /**
  * @private
  */
-let DEG_TO_RAD:number = Math.PI / 180;
+let DEG_TO_RAD: number = Math.PI / 180;
 
 for (let NumberUtils_i = 0; NumberUtils_i < 360; NumberUtils_i++) {
     egret_sin_map[NumberUtils_i] = Math.sin(NumberUtils_i * DEG_TO_RAD);
@@ -183,8 +211,8 @@ if (!Function.prototype.bind) {
             },
             fBound = function () {
                 return fToBind.apply(this instanceof fNOP && oThis
-                        ? this
-                        : oThis,
+                    ? this
+                    : oThis,
                     aArgs.concat(Array.prototype.slice.call(arguments)));
             };
 

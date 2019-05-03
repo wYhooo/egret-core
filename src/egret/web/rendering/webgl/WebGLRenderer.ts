@@ -64,6 +64,12 @@ namespace egret.web {
 
             //绘制显示对象
             webglBuffer.transform(matrix.a, matrix.b, matrix.c, matrix.d, 0, 0);
+            //
+            if (egret.transformRefactor) {
+                displayObject.transformAsRenderRoot(matrix.tx, matrix.ty, webglBuffer.globalMatrix);
+                displayObject.transform(matrix.tx, matrix.ty);
+            }
+            //
             this.drawDisplayObject(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
             webglBufferContext.$drawWebGL();
             let drawCall = webglBuffer.$drawCalls;
@@ -118,6 +124,19 @@ namespace egret.web {
                 drawCalls++;
                 buffer.$offsetX = offsetX;
                 buffer.$offsetY = offsetY;
+                /*
+                *************************************************
+                */
+                if (egret.transformRefactor) {
+                    if (!NumberUtils.matrixEqual(buffer.globalMatrix, displayObject.globalMatrix)
+                    || buffer.$offsetX !== displayObject.__$offsetX__
+                    || buffer.$offsetY !== displayObject.__$offsetY__) {
+                        console.error('transform failed');
+                    }
+                }
+                /*
+                *************************************************
+                */
                 switch (node.type) {
                     case sys.RenderNodeType.BitmapNode:
                         this.renderBitmap(<sys.BitmapNode>node, buffer);

@@ -7112,6 +7112,12 @@ var egret;
                 webglBufferContext.pushBuffer(webglBuffer);
                 //绘制显示对象
                 webglBuffer.transform(matrix.a, matrix.b, matrix.c, matrix.d, 0, 0);
+                //
+                if (egret.transformRefactor) {
+                    displayObject.transformAsRenderRoot(matrix.tx, matrix.ty, webglBuffer.globalMatrix);
+                    displayObject.transform(matrix.tx, matrix.ty);
+                }
+                //
                 this.drawDisplayObject(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
                 webglBufferContext.$drawWebGL();
                 var drawCall = webglBuffer.$drawCalls;
@@ -7163,6 +7169,19 @@ var egret;
                     drawCalls++;
                     buffer.$offsetX = offsetX;
                     buffer.$offsetY = offsetY;
+                    /*
+                    *************************************************
+                    */
+                    if (egret.transformRefactor) {
+                        if (!egret.NumberUtils.matrixEqual(buffer.globalMatrix, displayObject.globalMatrix)
+                            || buffer.$offsetX !== displayObject.__$offsetX__
+                            || buffer.$offsetY !== displayObject.__$offsetY__) {
+                            console.error('transform failed');
+                        }
+                    }
+                    /*
+                    *************************************************
+                    */
                     switch (node.type) {
                         case 1 /* BitmapNode */:
                             this.renderBitmap(node, buffer);

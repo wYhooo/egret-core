@@ -836,5 +836,41 @@ namespace egret {
             }
             return super.$hitTest(stageX, stageY);
         }
+
+        public transform(offsetX: number, offsetY: number): void {
+            this.__$offsetX__ = offsetX;
+            this.__$offsetY__ = offsetY;
+            let children = this.$children;
+            if (children) {
+                let length = children.length;
+                for (let i = 0; i < length; i++) {
+                    let child = children[i];
+                    let offsetX2 = 0;
+                    let offsetY2 = 0;
+                    child.globalMatrix._setTo_(this.globalMatrix);
+                    if (child.$useTranslate) {
+                        let m = child.$getMatrix();
+                        offsetX2 = offsetX + child.$x;
+                        offsetY2 = offsetY + child.$y;
+                        NumberUtils.__transform__(child.globalMatrix, m.a, m.b, m.c, m.d, offsetX2, offsetY2);
+                        offsetX2 = -child.$anchorOffsetX;
+                        offsetY2 = -child.$anchorOffsetY;
+                    }
+                    else {
+                        offsetX2 = offsetX + child.$x - child.$anchorOffsetX;
+                        offsetY2 = offsetY + child.$y - child.$anchorOffsetY;
+                    }
+                    child.transform(offsetX2, offsetY2);
+                }
+            }
+        }
+
+        public transformAsRenderRoot(offsetX: number, offsetY: number, globalMatrix: Matrix): void {
+            this.__$offsetX__ = offsetX;
+            this.__$offsetY__ = offsetY;
+            this.globalMatrix._setTo_(globalMatrix);
+            const local = this.$getMatrix();
+            NumberUtils.__transform__(this.globalMatrix, local.a, local.b, local.c, local.d, local.tx, local.ty);
+        }
     }
 }

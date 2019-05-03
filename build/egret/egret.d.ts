@@ -1291,7 +1291,13 @@ declare namespace egret {
          * @platform Web,Native
          */
         willTrigger(type: string): boolean;
+        __$offsetX__: number;
+        __$offsetY__: number;
+        readonly globalMatrix: Matrix;
+        transform(offsetX: number, offsetY: number): void;
+        transformAsRenderRoot(offsetX: number, offsetY: number, globalMatrix: Matrix): void;
     }
+    const transformRefactor: boolean;
 }
 declare namespace egret {
     let $TextureScaleFactor: number;
@@ -2941,6 +2947,8 @@ declare namespace egret {
          * @private
          */
         $hitTest(stageX: number, stageY: number): DisplayObject;
+        transform(offsetX: number, offsetY: number): void;
+        transformAsRenderRoot(offsetX: number, offsetY: number, globalMatrix: Matrix): void;
     }
 }
 declare namespace egret {
@@ -7234,6 +7242,7 @@ declare namespace egret {
          * @language zh_CN
          */
         setTo(a: number, b: number, c: number, d: number, tx: number, ty: number): Matrix;
+        _setTo_(other: Matrix): Matrix;
         /**
          * Returns the result of applying the geometric transformation represented by the Matrix object to the specified point.
          * @param pointX The x coordinate for which you want to get the result of the Matrix transformation.
@@ -14294,6 +14303,10 @@ declare namespace egret {
          * @returns
          */
         private static cosInt(value);
+        private static readonly EPSILON;
+        static fequal(left: number, right: number): boolean;
+        static __transform__(globalMatrix: Matrix, a: number, b: number, c: number, d: number, tx: number, ty: number): void;
+        static matrixEqual(left: Matrix, right: Matrix): boolean;
     }
 }
 /**

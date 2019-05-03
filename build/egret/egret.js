@@ -687,6 +687,9 @@ var egret;
             _this.$renderNode = null;
             _this.$renderDirty = false;
             _this.$renderMode = null;
+            _this.__$offsetX__ = 0;
+            _this.__$offsetY__ = 0;
+            _this.globalMatrix = new egret.Matrix;
             if (egret.nativeRender) {
                 _this.createNativeDisplayObject();
             }
@@ -2679,6 +2682,16 @@ var egret;
             }
             return false;
         };
+        DisplayObject.prototype.transform = function (offsetX, offsetY) {
+            this.__$offsetX__ = offsetX;
+            this.__$offsetY__ = offsetY;
+        };
+        DisplayObject.prototype.transformAsRenderRoot = function (offsetX, offsetY, globalMatrix) {
+            console.error('transformAsRenderRoot');
+            // this.__$offsetX__ = offsetX;
+            // this.__$offsetY__ = offsetY;
+            // this.globalMatrix._setTo_(globalMatrix);
+        };
         /**
          * @private
          * The default touchEnabled property of DisplayObject
@@ -2708,6 +2721,7 @@ var egret;
     }(egret.EventDispatcher));
     egret.DisplayObject = DisplayObject;
     __reflect(DisplayObject.prototype, "egret.DisplayObject");
+    egret.transformRefactor = true;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
@@ -5105,6 +5119,40 @@ var egret;
                 return this;
             }
             return _super.prototype.$hitTest.call(this, stageX, stageY);
+        };
+        DisplayObjectContainer.prototype.transform = function (offsetX, offsetY) {
+            this.__$offsetX__ = offsetX;
+            this.__$offsetY__ = offsetY;
+            var children = this.$children;
+            if (children) {
+                var length_2 = children.length;
+                for (var i = 0; i < length_2; i++) {
+                    var child = children[i];
+                    var offsetX2 = 0;
+                    var offsetY2 = 0;
+                    child.globalMatrix._setTo_(this.globalMatrix);
+                    if (child.$useTranslate) {
+                        var m = child.$getMatrix();
+                        offsetX2 = offsetX + child.$x;
+                        offsetY2 = offsetY + child.$y;
+                        egret.NumberUtils.__transform__(child.globalMatrix, m.a, m.b, m.c, m.d, offsetX2, offsetY2);
+                        offsetX2 = -child.$anchorOffsetX;
+                        offsetY2 = -child.$anchorOffsetY;
+                    }
+                    else {
+                        offsetX2 = offsetX + child.$x - child.$anchorOffsetX;
+                        offsetY2 = offsetY + child.$y - child.$anchorOffsetY;
+                    }
+                    child.transform(offsetX2, offsetY2);
+                }
+            }
+        };
+        DisplayObjectContainer.prototype.transformAsRenderRoot = function (offsetX, offsetY, globalMatrix) {
+            this.__$offsetX__ = offsetX;
+            this.__$offsetY__ = offsetY;
+            this.globalMatrix._setTo_(globalMatrix);
+            var local = this.$getMatrix();
+            egret.NumberUtils.__transform__(this.globalMatrix, local.a, local.b, local.c, local.d, local.tx, local.ty);
         };
         /**
          * @private
@@ -11478,6 +11526,15 @@ var egret;
             this.ty = ty;
             return this;
         };
+        Matrix.prototype._setTo_ = function (other) {
+            this.a = other.a;
+            this.b = other.b;
+            this.c = other.c;
+            this.d = other.d;
+            this.tx = other.tx;
+            this.ty = other.ty;
+            return this;
+        };
         /**
          * Returns the result of applying the geometric transformation represented by the Matrix object to the specified point.
          * @param pointX The x coordinate for which you want to get the result of the Matrix transformation.
@@ -14745,8 +14802,8 @@ var egret;
                     egret.$callLaterArgsList = [];
                 }
                 if (functionList) {
-                    var length_2 = functionList.length;
-                    for (var i = 0; i < length_2; i++) {
+                    var length_3 = functionList.length;
+                    for (var i = 0; i < length_3; i++) {
                         var func = functionList[i];
                         if (func != null) {
                             func.apply(thisList[i], argsList[i]);
@@ -16155,8 +16212,8 @@ var egret;
                 if (renderBufferPool.length > 6) {
                     renderBufferPool.length = 6;
                 }
-                var length_3 = renderBufferPool.length;
-                for (var i = 0; i < length_3; i++) {
+                var length_4 = renderBufferPool.length;
+                for (var i = 0; i < length_4; i++) {
                     renderBufferPool[i].resize(0, 0);
                 }
             }
@@ -16219,8 +16276,8 @@ var egret;
             }
             var children = displayObject.$children;
             if (children) {
-                var length_4 = children.length;
-                for (var i = 0; i < length_4; i++) {
+                var length_5 = children.length;
+                for (var i = 0; i < length_5; i++) {
                     var child = children[i];
                     var offsetX2 = void 0;
                     var offsetY2 = void 0;
@@ -16549,8 +16606,8 @@ var egret;
             }
             var children = displayObject.$children;
             if (children) {
-                var length_5 = children.length;
-                for (var i = 0; i < length_5; i++) {
+                var length_6 = children.length;
+                for (var i = 0; i < length_6; i++) {
                     var child = children[i];
                     switch (child.$renderMode) {
                         case 1 /* NONE */:
@@ -18150,7 +18207,7 @@ var egret;
          */
         BitmapFont.prototype.getConfigByKey = function (configText, key) {
             var itemConfigTextList = configText.split(" ");
-            for (var i = 0, length_6 = itemConfigTextList.length; i < length_6; i++) {
+            for (var i = 0, length_7 = itemConfigTextList.length; i < length_7; i++) {
                 var itemConfigText = itemConfigTextList[i];
                 if (key == itemConfigText.substring(0, key.length)) {
                     var value = itemConfigText.substring(key.length + 1);
@@ -20972,8 +21029,8 @@ var egret;
                 if (lines && lines.length > 0) {
                     var textColor = values[2 /* textColor */];
                     var lastColor = -1;
-                    var length_7 = lines.length;
-                    for (var i = 0; i < length_7; i += 4) {
+                    var length_8 = lines.length;
+                    for (var i = 0; i < length_8; i += 4) {
                         var x = lines[i];
                         var y = lines[i + 1];
                         var w = lines[i + 2];
@@ -23750,8 +23807,8 @@ var egret;
         }
         var superTypes = prototype.__types__;
         if (prototype.__types__) {
-            var length_8 = superTypes.length;
-            for (var i = 0; i < length_8; i++) {
+            var length_9 = superTypes.length;
+            for (var i = 0; i < length_9; i++) {
                 var name_1 = superTypes[i];
                 if (types.indexOf(name_1) == -1) {
                     types.push(name_1);
@@ -24156,6 +24213,36 @@ var egret;
             }
             return egret_cos_map[value];
         };
+        NumberUtils.fequal = function (left, right) {
+            return Math.abs(left - right) < NumberUtils.EPSILON;
+        };
+        //
+        NumberUtils.__transform__ = function (globalMatrix, a, b, c, d, tx, ty) {
+            //globalMatrix = globalMatrix * [a: number, b: number, c: number, d: number, tx: number, ty: number]
+            var matrix = globalMatrix; //this.globalMatrix;
+            var a1 = matrix.a;
+            var b1 = matrix.b;
+            var c1 = matrix.c;
+            var d1 = matrix.d;
+            if (a !== 1 || b !== 0 || c !== 0 || d !== 1) {
+                matrix.a = a * a1 + b * c1;
+                matrix.b = a * b1 + b * d1;
+                matrix.c = c * a1 + d * c1;
+                matrix.d = c * b1 + d * d1;
+            }
+            matrix.tx = tx * a1 + ty * c1 + matrix.tx;
+            matrix.ty = tx * b1 + ty * d1 + matrix.ty;
+        };
+        NumberUtils.matrixEqual = function (left, right) {
+            return NumberUtils.fequal(left.a, right.a)
+                && NumberUtils.fequal(left.b, right.b)
+                && NumberUtils.fequal(left.c, right.c)
+                && NumberUtils.fequal(left.d, right.d)
+                && NumberUtils.fequal(left.tx, right.tx)
+                && NumberUtils.fequal(left.ty, right.ty);
+        };
+        //
+        NumberUtils.EPSILON = 0.000001; //根据精度需要;
         return NumberUtils;
     }());
     egret.NumberUtils = NumberUtils;

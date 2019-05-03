@@ -480,6 +480,15 @@ namespace egret {
             this.ty = ty;
             return this;
         }
+        public _setTo_(other: Matrix): Matrix {
+            this.a = other.a;
+            this.b = other.b;
+            this.c = other.c;
+            this.d = other.d;
+            this.tx = other.tx;
+            this.ty = other.ty;
+            return this;
+        }
 
         /**
          * Returns the result of applying the geometric transformation represented by the Matrix object to the specified point.
