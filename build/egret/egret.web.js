@@ -7710,6 +7710,7 @@ var egret;
             WebGLRenderer.prototype.renderNode = function (displayObject, node, buffer, offsetX, offsetY, forHitTest) {
                 buffer.$offsetX = offsetX;
                 buffer.$offsetY = offsetY;
+                this.__displayObjectToRenderNode__(displayObject, node, buffer);
                 switch (node.type) {
                     case 1 /* BitmapNode */:
                         this.renderBitmap(node, buffer);
@@ -8163,13 +8164,44 @@ var egret;
                         //
                         if (node.matrix) {
                             var m = node.matrix;
-                            //useoffset
-                            renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
-                            node.__$offsetX__ = 0;
-                            node.__$offsetY__ = 0;
-                            //transform
-                            renderMatrix.$preMultiplyInto(m, renderMatrix);
+                            //buffer.useOffset();
+                            if (node.__$offsetX__ !== 0 || node.__$offsetY__ !== 0) {
+                                renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                                node.__$offsetX__ = 0;
+                                node.__$offsetY__ = 0;
+                            }
+                            //buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+                            egret.NumberUtils.__transform__(renderMatrix, m.a, m.b, m.c, m.d, m.tx, m.ty);
                         }
+                        /*
+                        buffer.useOffset();
+                        buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+    
+                        public useOffset(): void {
+                            let self = this;
+                            if (self.$offsetX != 0 || self.$offsetY != 0) {
+                                self.globalMatrix.append(1, 0, 0, 1, self.$offsetX, self.$offsetY);
+                                self.$offsetX = self.$offsetY = 0;
+                            }
+                        }
+    
+                        public transform(a: number, b: number, c: number, d: number, tx: number, ty: number): void {
+                            let matrix = this.globalMatrix;
+                            let a1 = matrix.a;
+                            let b1 = matrix.b;
+                            let c1 = matrix.c;
+                            let d1 = matrix.d;
+                            if (a != 1 || b != 0 || c != 0 || d != 1) {
+                                matrix.a = a * a1 + b * c1;
+                                matrix.b = a * b1 + b * d1;
+                                matrix.c = c * a1 + d * c1;
+                                matrix.d = c * b1 + d * d1;
+                            }
+                            matrix.tx = tx * a1 + ty * c1 + matrix.tx;
+                            matrix.ty = tx * b1 + ty * d1 + matrix.ty;
+                        }
+    
+                        */
                         break;
                     }
                     case 5 /* MeshNode */: {
@@ -8180,8 +8212,7 @@ var egret;
                         var node = _node;
                         node.__$offsetX__ = displayObject.__$offsetX__;
                         node.__$offsetY__ = displayObject.__$offsetY__;
-                        var globalMatrix = displayObject.globalMatrix;
-                        node.renderMatrix.setTo(globalMatrix.a, globalMatrix.b, globalMatrix.c, globalMatrix.d, globalMatrix.tx, globalMatrix.ty);
+                        node.renderMatrix._setTo_(displayObject.globalMatrix);
                         break;
                     }
                     default: {

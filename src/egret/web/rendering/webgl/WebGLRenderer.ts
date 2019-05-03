@@ -677,6 +677,7 @@ namespace egret.web {
         private renderNode(displayObject: DisplayObject, node: sys.RenderNode, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, forHitTest?: boolean): void {
             buffer.$offsetX = offsetX;
             buffer.$offsetY = offsetY;
+            this.__displayObjectToRenderNode__(displayObject, node, buffer);
             switch (node.type) {
                 case sys.RenderNodeType.BitmapNode:
                     this.renderBitmap(<sys.BitmapNode>node, buffer);
@@ -1156,18 +1157,19 @@ namespace egret.web {
                     //
                     if (node.matrix) {
                         const m = node.matrix;
-                        //useoffset
-                        renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
-                        node.__$offsetX__ = 0;
-                        node.__$offsetY__ = 0;
-                        //transform
-                        renderMatrix.$preMultiplyInto(m, renderMatrix);
+                        //buffer.useOffset();
+                        if (node.__$offsetX__ !== 0 || node.__$offsetY__ !== 0) {
+                            renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                            node.__$offsetX__ = 0;
+                            node.__$offsetY__ = 0;
+                        }
+                        //buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+                        NumberUtils.__transform__(renderMatrix, m.a, m.b, m.c, m.d, m.tx, m.ty);
                     }
                     break;
                 }
 
                 case sys.RenderNodeType.MeshNode: {
-                    //this.renderMesh(<sys.MeshNode>node, buffer);
                     break;
                 }
 
@@ -1175,8 +1177,7 @@ namespace egret.web {
                     const node = <sys.NormalBitmapNode>_node;
                     node.__$offsetX__ = displayObject.__$offsetX__;
                     node.__$offsetY__ = displayObject.__$offsetY__;
-                    const globalMatrix = displayObject.globalMatrix;
-                    node.renderMatrix.setTo(globalMatrix.a, globalMatrix.b, globalMatrix.c, globalMatrix.d, globalMatrix.tx, globalMatrix.ty);
+                    node.renderMatrix._setTo_(displayObject.globalMatrix);
                     break;
                 }
 

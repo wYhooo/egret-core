@@ -21090,6 +21090,7 @@ var egret;
                 graphics.y = bounds.y;
                 graphics.width = bounds.width;
                 graphics.height = bounds.height;
+                graphics.graphicsOffsetMatrix.setTo(1, 0, 0, 1, graphics.x, graphics.y);
                 egret.Rectangle.release(bounds);
             }
         };
