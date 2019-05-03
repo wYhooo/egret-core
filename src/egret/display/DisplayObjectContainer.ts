@@ -841,15 +841,20 @@ namespace egret {
             this.__$offsetX__ = offsetX;
             this.__$offsetY__ = offsetY;
             let children = this.$children;
-            if (children) {
-                let length = children.length;
-                for (let i = 0; i < length; i++) {
-                    let child = children[i];
-                    let offsetX2 = 0;
-                    let offsetY2 = 0;
-                    child.globalMatrix._setTo_(this.globalMatrix);
+            if (children && children.length > 0) {
+                const length = children.length;
+                let child: DisplayObject = null;
+                let offsetX2 = 0;
+                let offsetY2 = 0;
+                let m: Matrix = null;
+                const globalMatrix = this.globalMatrix;
+                for (let i = 0; i < length; ++i) {
+                    child = children[i];
+                    offsetX2 = 0;
+                    offsetY2 = 0;
+                    child.globalMatrix._setTo_(globalMatrix);
                     if (child.$useTranslate) {
-                        let m = child.$getMatrix();
+                        m = child.$getMatrix();
                         offsetX2 = offsetX + child.$x;
                         offsetY2 = offsetY + child.$y;
                         NumberUtils.__transform__(child.globalMatrix, m.a, m.b, m.c, m.d, offsetX2, offsetY2);

@@ -5124,15 +5124,20 @@ var egret;
             this.__$offsetX__ = offsetX;
             this.__$offsetY__ = offsetY;
             var children = this.$children;
-            if (children) {
+            if (children && children.length > 0) {
                 var length_2 = children.length;
-                for (var i = 0; i < length_2; i++) {
-                    var child = children[i];
-                    var offsetX2 = 0;
-                    var offsetY2 = 0;
-                    child.globalMatrix._setTo_(this.globalMatrix);
+                var child = null;
+                var offsetX2 = 0;
+                var offsetY2 = 0;
+                var m = null;
+                var globalMatrix = this.globalMatrix;
+                for (var i = 0; i < length_2; ++i) {
+                    child = children[i];
+                    offsetX2 = 0;
+                    offsetY2 = 0;
+                    child.globalMatrix._setTo_(globalMatrix);
                     if (child.$useTranslate) {
-                        var m = child.$getMatrix();
+                        m = child.$getMatrix();
                         offsetX2 = offsetX + child.$x;
                         offsetY2 = offsetY + child.$y;
                         egret.NumberUtils.__transform__(child.globalMatrix, m.a, m.b, m.c, m.d, offsetX2, offsetY2);
