@@ -1103,20 +1103,19 @@ namespace egret.web {
             }
             switch (_node.type) {
                 case sys.RenderNodeType.BitmapNode: {
-                    // const node = <sys.BitmapNode>_node;
-                    // const trans = displayObject.transform;
-                    // node.__$offsetX__ = trans.__$offsetX__;
-                    // node.__$offsetY__ = trans.__$offsetY__;
-                    // const wt = trans.worldTransform;
-                    // node.renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
-                    // //
-                    // if (node.matrix) {
-                    //     const m = node.matrix;
-                    //     node.renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
-                    //     node.__$offsetX__ = 0;
-                    //     node.__$offsetY__ = 0;
-                    //     node.renderMatrix.$preMultiplyInto(m, node.renderMatrix);
-                    // }
+                    const node = <sys.BitmapNode>_node;
+                    node.__$offsetX__ = displayObject.__$offsetX__;
+                    node.__$offsetY__ = displayObject.__$offsetY__;
+                    const renderMatrix = node.renderMatrix;
+                    renderMatrix._setTo_(displayObject.globalMatrix);
+                    //
+                    if (node.matrix) {
+                        const m = node.matrix;
+                        renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                        node.__$offsetX__ = 0;
+                        node.__$offsetY__ = 0;
+                        renderMatrix.$preMultiplyInto(m, renderMatrix);
+                    }
                     break;
                 }
 
@@ -1150,23 +1149,21 @@ namespace egret.web {
                 }
 
                 case sys.RenderNodeType.GroupNode: {
+                    const node = <sys.GroupNode>_node;
+                    node.__$offsetX__ = displayObject.__$offsetX__;
+                    node.__$offsetY__ = displayObject.__$offsetY__;
+                    const renderMatrix = node.renderMatrix;
+                    renderMatrix._setTo_(displayObject.globalMatrix);
                     //
-                    // const node = <sys.GroupNode>_node;
-                    // const trans = displayObject.transform;
-                    // node.__$offsetX__ = trans.__$offsetX__;
-                    // node.__$offsetY__ = trans.__$offsetY__;
-                    // const wt = trans.worldTransform;
-                    // node.renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
-                    // //
-                    // if (node.matrix) {
-                    //     const m = node.matrix;
-                    //     //useoffset
-                    //     node.renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
-                    //     node.__$offsetX__ = 0;
-                    //     node.__$offsetY__ = 0;
-                    //     //transform
-                    //     node.renderMatrix.$preMultiplyInto(m, node.renderMatrix);
-                    // }
+                    if (node.matrix) {
+                        const m = node.matrix;
+                        //useoffset
+                        renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                        node.__$offsetX__ = 0;
+                        node.__$offsetY__ = 0;
+                        //transform
+                        renderMatrix.$preMultiplyInto(m, renderMatrix);
+                    }
                     break;
                 }
 

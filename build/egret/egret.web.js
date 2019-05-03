@@ -8113,20 +8113,19 @@ var egret;
                 }
                 switch (_node.type) {
                     case 1 /* BitmapNode */: {
-                        // const node = <sys.BitmapNode>_node;
-                        // const trans = displayObject.transform;
-                        // node.__$offsetX__ = trans.__$offsetX__;
-                        // node.__$offsetY__ = trans.__$offsetY__;
-                        // const wt = trans.worldTransform;
-                        // node.renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
-                        // //
-                        // if (node.matrix) {
-                        //     const m = node.matrix;
-                        //     node.renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
-                        //     node.__$offsetX__ = 0;
-                        //     node.__$offsetY__ = 0;
-                        //     node.renderMatrix.$preMultiplyInto(m, node.renderMatrix);
-                        // }
+                        var node = _node;
+                        node.__$offsetX__ = displayObject.__$offsetX__;
+                        node.__$offsetY__ = displayObject.__$offsetY__;
+                        var renderMatrix = node.renderMatrix;
+                        renderMatrix._setTo_(displayObject.globalMatrix);
+                        //
+                        if (node.matrix) {
+                            var m = node.matrix;
+                            renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                            node.__$offsetX__ = 0;
+                            node.__$offsetY__ = 0;
+                            renderMatrix.$preMultiplyInto(m, renderMatrix);
+                        }
                         break;
                     }
                     case 2 /* TextNode */: {
@@ -8157,23 +8156,21 @@ var egret;
                         break;
                     }
                     case 4 /* GroupNode */: {
+                        var node = _node;
+                        node.__$offsetX__ = displayObject.__$offsetX__;
+                        node.__$offsetY__ = displayObject.__$offsetY__;
+                        var renderMatrix = node.renderMatrix;
+                        renderMatrix._setTo_(displayObject.globalMatrix);
                         //
-                        // const node = <sys.GroupNode>_node;
-                        // const trans = displayObject.transform;
-                        // node.__$offsetX__ = trans.__$offsetX__;
-                        // node.__$offsetY__ = trans.__$offsetY__;
-                        // const wt = trans.worldTransform;
-                        // node.renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
-                        // //
-                        // if (node.matrix) {
-                        //     const m = node.matrix;
-                        //     //useoffset
-                        //     node.renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
-                        //     node.__$offsetX__ = 0;
-                        //     node.__$offsetY__ = 0;
-                        //     //transform
-                        //     node.renderMatrix.$preMultiplyInto(m, node.renderMatrix);
-                        // }
+                        if (node.matrix) {
+                            var m = node.matrix;
+                            //useoffset
+                            renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                            node.__$offsetX__ = 0;
+                            node.__$offsetY__ = 0;
+                            //transform
+                            renderMatrix.$preMultiplyInto(m, renderMatrix);
+                        }
                         break;
                     }
                     case 5 /* MeshNode */: {
