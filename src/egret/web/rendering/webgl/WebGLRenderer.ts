@@ -77,21 +77,25 @@ namespace egret.web {
             virtualRenderingRoot.$setMatrix(m1, true);
             Matrix.release(m1);
             //计算一下全局
-            virtualRenderingRoot._updateTransformAsVirtualRenderingRoot();
+            virtualRenderingRoot._updateTransformAsVirtualRenderingRoot(matrix.tx, matrix.ty);
             //这个仿照 下面 this.drawDisplayObject(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
             // virtualRenderingRoot.transform.__$offsetX__ = matrix.tx;
             // virtualRenderingRoot.transform.__$offsetY__ = matrix.ty;
             //
             displayObject.$setParent(this.virtualRenderingRoot);
-            displayObject.updateTransform();
+
+            if (window['yh']) {
+                egret.warn('11111');
+            }
+            displayObject.updateTransform(matrix.tx, matrix.ty, matrix);
             //-------------------------------------------------------------------------------------------------------
 
             //绘制显示对象
             webglBuffer.transform(matrix.a, matrix.b, matrix.c, matrix.d, 0, 0);
 
             ///
-            displayObject.transform.__$offsetX__ = matrix.tx;
-            displayObject.transform.__$offsetY__ = matrix.ty;
+            // displayObject.transform.__$offsetX__ = matrix.tx;
+            // displayObject.transform.__$offsetY__ = matrix.ty;
             this.drawDisplayObject(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
             webglBufferContext.$drawWebGL();
             let drawCall = webglBuffer.$drawCalls;
@@ -153,8 +157,8 @@ namespace egret.web {
                 drawCalls++;
                 buffer.$offsetX = offsetX;
                 buffer.$offsetY = offsetY;
-                displayObject.transform.__$offsetX__ = offsetX;
-                displayObject.transform.__$offsetY__ = offsetY;
+                // displayObject.transform.__$offsetX__ = offsetX;
+                // displayObject.transform.__$offsetY__ = offsetY;
                 //buffer._debugCurrentTransform = displayObject.transform;
                 buffer._debugCurrentRenderNode = node;
                 this.__displayObjectToRenderNode__(displayObject, node, buffer);
@@ -191,9 +195,15 @@ namespace egret.web {
                 return drawCalls;
             }
             let children = displayObject.$children;
+            if (window['yh'] && (displayObject.name === '47' || displayObject.name === 'testView')) {
+                let pp = 0;
+            }
             if (children) {
                 let length = children.length;
                 for (let i = 0; i < length; i++) {
+                    if (window['yh'] && i === 23) {
+                        let pp = 0;
+                    }
                     let child = children[i];
                     let offsetX2;
                     let offsetY2;
@@ -338,8 +348,8 @@ namespace egret.web {
                 // 绘制结果的时候，应用滤镜
                 buffer.$offsetX = offsetX + displayBoundsX;
                 buffer.$offsetY = offsetY + displayBoundsY;
-                displayObject.transform.__$offsetX__ = offsetX + displayBoundsX;
-                displayObject.transform.__$offsetY__ = offsetY + displayBoundsY;
+                // displayObject.transform.__$offsetX__ = offsetX + displayBoundsX;
+                // displayObject.transform.__$offsetY__ = offsetY + displayBoundsY;
                 let savedMatrix = Matrix.create();
                 let curMatrix = buffer.globalMatrix;
                 savedMatrix.a = curMatrix.a;
@@ -713,10 +723,10 @@ namespace egret.web {
         private renderNode(displayObject: DisplayObject, node: sys.RenderNode, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, forHitTest?: boolean): void {
             buffer.$offsetX = offsetX;
             buffer.$offsetY = offsetY;
-            if (displayObject) {
-                displayObject.transform.__$offsetX__ = offsetX;
-                displayObject.transform.__$offsetY__ = offsetY;
-            }
+            // if (displayObject) {
+            //     displayObject.transform.__$offsetX__ = offsetX;
+            //     displayObject.transform.__$offsetY__ = offsetY;
+            // }
             //buffer._debugCurrentTransform = null;
             buffer._debugCurrentRenderNode = node;
             this.__displayObjectToRenderNode__(displayObject, node, buffer);
@@ -1144,6 +1154,21 @@ namespace egret.web {
                 return;
             }
             const globalMatrix = buffer.globalMatrix;
+            let wt = displayObject.transform.worldTransform;
+            if (!NumberUtils.fequal(globalMatrix.a, wt.a)
+                || !NumberUtils.fequal(globalMatrix.b, wt.b)
+                || !NumberUtils.fequal(globalMatrix.c, wt.c)
+                || !NumberUtils.fequal(globalMatrix.d, wt.d)
+                || !NumberUtils.fequal(globalMatrix.tx, wt.tx)
+                || !NumberUtils.fequal(globalMatrix.ty, wt.ty)
+                || !NumberUtils.fequal(buffer.$offsetX, displayObject.transform.__$offsetX__)
+                || !NumberUtils.fequal(buffer.$offsetY, displayObject.transform.__$offsetY__)
+            ) {
+                egret.error('check 23333 failed');
+            }
+            else {
+                // check is ok
+            }
             switch (_node.type) {
                 case sys.RenderNodeType.BitmapNode: {
 

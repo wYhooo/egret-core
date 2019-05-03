@@ -1297,8 +1297,8 @@ declare namespace egret {
          *
          * TODO - Optimization pass!
          */
-        updateTransform(): void;
-        _updateTransformAsVirtualRenderingRoot(): void;
+        updateTransform(offsetX: number, offsetY: number, globalMatrix: Matrix): void;
+        _updateTransformAsVirtualRenderingRoot(offsetX: number, offsetY: number): void;
     }
 }
 declare namespace egret {
@@ -2952,8 +2952,9 @@ declare namespace egret {
         /**
          * Updates the transform on all children of this container for rendering
          */
-        updateTransform(): void;
-        _updateTransformAsVirtualRenderingRoot(): void;
+        __transform__(globalMatrix: Matrix, a: number, b: number, c: number, d: number, tx: number, ty: number): void;
+        updateTransform(offsetX: number, offsetY: number, globalMatrix: Matrix): void;
+        _updateTransformAsVirtualRenderingRoot(offsetX: number, offsetY: number): void;
     }
 }
 declare namespace egret {

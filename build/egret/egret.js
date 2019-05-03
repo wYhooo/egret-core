@@ -2696,16 +2696,19 @@ var egret;
          *
          * TODO - Optimization pass!
          */
-        DisplayObject.prototype.updateTransform = function () {
+        DisplayObject.prototype.updateTransform = function (offsetX, offsetY, globalMatrix) {
+            this.transform.__$offsetX__ = offsetX;
+            this.transform.__$offsetY__ = offsetY;
+            this.transform.worldTransform.setTo(globalMatrix.a, globalMatrix.b, globalMatrix.c, globalMatrix.d, globalMatrix.tx, globalMatrix.ty);
             // if (!this.parent) {
             //     return;
             // }
-            this.transform.updateTransform(this, this.parent.transform);
+            //this.transform.updateTransform(this, this.parent.transform);
             // multiply the alphas..
             //this.worldAlpha = this.alpha * this.parent.worldAlpha;
             //this._bounds.updateID++;
         };
-        DisplayObject.prototype._updateTransformAsVirtualRenderingRoot = function () {
+        DisplayObject.prototype._updateTransformAsVirtualRenderingRoot = function (offsetX, offsetY) {
         };
         /**
          * @private
@@ -5139,7 +5142,82 @@ var egret;
         /**
          * Updates the transform on all children of this container for rendering
          */
-        DisplayObjectContainer.prototype.updateTransform = function () {
+        DisplayObjectContainer.prototype.__transform__ = function (globalMatrix, a, b, c, d, tx, ty) {
+            var matrix = globalMatrix; //this.globalMatrix;
+            var a1 = matrix.a;
+            var b1 = matrix.b;
+            var c1 = matrix.c;
+            var d1 = matrix.d;
+            if (a != 1 || b != 0 || c != 0 || d != 1) {
+                matrix.a = a * a1 + b * c1;
+                matrix.b = a * b1 + b * d1;
+                matrix.c = c * a1 + d * c1;
+                matrix.d = c * b1 + d * d1;
+            }
+            matrix.tx = tx * a1 + ty * c1 + matrix.tx;
+            matrix.ty = tx * b1 + ty * d1 + matrix.ty;
+        };
+        DisplayObjectContainer.prototype.updateTransform = function (offsetX, offsetY, globalMatrix) {
+            //
+            this.transform.__$offsetX__ = offsetX;
+            this.transform.__$offsetY__ = offsetY;
+            this.transform.worldTransform.setTo(globalMatrix.a, globalMatrix.b, globalMatrix.c, globalMatrix.d, globalMatrix.tx, globalMatrix.ty);
+            //
+            var children = this.$children;
+            var length = children.length;
+            for (var i = 0; i < length; i++) {
+                if (window['yh'] && i === 23) {
+                    var pp = 0;
+                }
+                var child = children[i];
+                var offsetX2 = 0;
+                var offsetY2 = 0;
+                //let savedMatrix: Matrix;
+                if (child.$useTranslate) {
+                    var m = child.$getMatrix();
+                    offsetX2 = offsetX + child.$x;
+                    offsetY2 = offsetY + child.$y;
+                    //let m2 = globalMatrix;//buffer.globalMatrix;
+                    // savedMatrix = Matrix.create();
+                    // savedMatrix.a = m2.a;
+                    // savedMatrix.b = m2.b;
+                    // savedMatrix.c = m2.c;
+                    // savedMatrix.d = m2.d;
+                    // savedMatrix.tx = m2.tx;
+                    // savedMatrix.ty = m2.ty;
+                    egret.$TempMatrix.setTo(globalMatrix.a, globalMatrix.b, globalMatrix.c, globalMatrix.d, globalMatrix.tx, globalMatrix.ty);
+                    //$TempMatrix.$preMultiplyInto(globalMatrix, child.transform.worldTransform);
+                    //buffer.transform(m.a, m.b, m.c, m.d, offsetX2, offsetY2);
+                    this.__transform__(egret.$TempMatrix, m.a, m.b, m.c, m.d, offsetX2, offsetY2);
+                    child.transform.worldTransform.setTo(egret.$TempMatrix.a, egret.$TempMatrix.b, egret.$TempMatrix.c, egret.$TempMatrix.d, egret.$TempMatrix.tx, egret.$TempMatrix.ty);
+                    ////
+                    // public transform(a: number, b: number, c: number, d: number, tx: number, ty: number): void {
+                    //     let matrix = this.globalMatrix;
+                    //     let a1 = matrix.a;
+                    //     let b1 = matrix.b;
+                    //     let c1 = matrix.c;
+                    //     let d1 = matrix.d;
+                    //     if (a != 1 || b != 0 || c != 0 || d != 1) {
+                    //         matrix.a = a * a1 + b * c1;
+                    //         matrix.b = a * b1 + b * d1;
+                    //         matrix.c = c * a1 + d * c1;
+                    //         matrix.d = c * b1 + d * d1;
+                    //     }
+                    //     matrix.tx = tx * a1 + ty * c1 + matrix.tx;
+                    //     matrix.ty = tx * b1 + ty * d1 + matrix.ty;
+                    // }
+                    ////
+                    offsetX2 = -child.$anchorOffsetX;
+                    offsetY2 = -child.$anchorOffsetY;
+                }
+                else {
+                    offsetX2 = offsetX + child.$x - child.$anchorOffsetX;
+                    offsetY2 = offsetY + child.$y - child.$anchorOffsetY;
+                    child.transform.worldTransform.setTo(globalMatrix.a, globalMatrix.b, globalMatrix.c, globalMatrix.d, 0, 0);
+                }
+                child.updateTransform(offsetX2, offsetY2, child.transform.worldTransform);
+            }
+            /*
             // if (!this.parent) {
             //     return;
             // }
@@ -5147,13 +5225,22 @@ var egret;
             //     this.sortChildren();
             // }
             // this._boundsID++;
+
+            if (window['yh'] && this.name === '47') {
+                let oo = 0;
+            }
+
             this.transform.updateTransform(this, this.parent.transform);
+
             // TODO: check render flags, how to process stuff here
             //this.worldAlpha = this.alpha * this.parent.worldAlpha;
-            var children = this.$children;
+            const children = this.$children;
             if (children && children.length) {
-                for (var i = 0, j = children.length; i < j; ++i) {
-                    var child = children[i];
+                for (let i = 0, j = children.length; i < j; ++i) {
+                    if (window['yh'] && i === 23) {
+                        let oo = 0;
+                    }
+                    const child = children[i];
                     if (child.visible) {
                         child.updateTransform();
                     }
@@ -5165,12 +5252,13 @@ var egret;
             //         child.updateTransform();
             //     }
             // }
+            */
         };
-        DisplayObjectContainer.prototype._updateTransformAsVirtualRenderingRoot = function () {
+        DisplayObjectContainer.prototype._updateTransformAsVirtualRenderingRoot = function (offsetX, offsetY) {
             var transform = this.transform;
             //this.world = parent.world * this.local
-            transform.__$offsetX__ = this.$x; //没有父级
-            transform.__$offsetY__ = this.$y; //没有父级
+            transform.__$offsetX__ = offsetX; //没有父级
+            transform.__$offsetY__ = offsetY; //没有父级
             //
             var wt = egret.Matrix.create(); //虚拟一个identity的父级别
             wt.identity();
@@ -12863,11 +12951,11 @@ var egret;
             }
             */
             //const lt = this.localTransform;
+            ///
+            var sm = displayObject.$getMatrix();
+            var lm = this.localTransform;
+            lm.setTo(sm.a, sm.b, sm.c, sm.d, sm.tx, sm.ty);
             if (this._localID !== this._currentLocalID) {
-                ///
-                var sm = displayObject.$getMatrix();
-                var lm = this.localTransform;
-                lm.setTo(sm.a, sm.b, sm.c, sm.d, sm.tx, sm.ty);
                 // get the matrix values of the displayobject based on its transform properties..
                 // lt.a = this._cx * this.scale._x;
                 // lt.b = this._sx * this.scale._x;
@@ -12903,6 +12991,33 @@ var egret;
                 this._parentID = -1;
             }
             */
+            //this.world = parent.world * this.local
+            this.__$offsetX__ = parentTransform.__$offsetX__ + displayObject.$x;
+            this.__$offsetY__ = parentTransform.__$offsetY__ + displayObject.$y;
+            //
+            var wt = parentTransform.worldTransform;
+            var lt = this.localTransform; //this.$getMatrix();
+            var worldtransform = this.worldTransform;
+            if (displayObject.$useTranslate) {
+                worldtransform.a = lt.a * wt.a + lt.b * wt.c;
+                worldtransform.b = lt.a * wt.b + lt.b * wt.d;
+                worldtransform.c = lt.c * wt.a + lt.d * wt.c;
+                worldtransform.d = lt.c * wt.b + lt.d * wt.d;
+                worldtransform.tx = this.__$offsetX__ * wt.a + this.__$offsetY__ * wt.c + wt.tx;
+                worldtransform.ty = this.__$offsetX__ * wt.b + this.__$offsetY__ * wt.d + wt.ty;
+                this.__$offsetX__ = -displayObject.$anchorOffsetX;
+                this.__$offsetY__ = -displayObject.$anchorOffsetY;
+            }
+            else {
+                worldtransform.a = wt.a;
+                worldtransform.b = wt.b;
+                worldtransform.c = wt.c;
+                worldtransform.d = wt.d;
+                // worldtransform.tx = 0;
+                // worldtransform.ty = 0;
+                this.__$offsetX__ += -displayObject.$anchorOffsetX;
+                this.__$offsetY__ += -displayObject.$anchorOffsetY;
+            }
             //const lt = this.localTransform;
             if (this._parentID !== parentTransform._worldID) {
                 /*
@@ -12917,31 +13032,6 @@ var egret;
                 wt.tx = (lt.tx * pt.a) + (lt.ty * pt.c) + pt.tx;
                 wt.ty = (lt.tx * pt.b) + (lt.ty * pt.d) + pt.ty;
                 */
-                //this.world = parent.world * this.local
-                this.__$offsetX__ = parentTransform.__$offsetX__ + displayObject.$x;
-                this.__$offsetY__ = parentTransform.__$offsetY__ + displayObject.$y;
-                //
-                var wt = parentTransform.worldTransform;
-                var lt = this.localTransform; //this.$getMatrix();
-                var worldtransform = this.worldTransform;
-                if (displayObject.$useTranslate) {
-                    worldtransform.a = lt.a * wt.a + lt.b * wt.c;
-                    worldtransform.b = lt.a * wt.b + lt.b * wt.d;
-                    worldtransform.c = lt.c * wt.a + lt.d * wt.c;
-                    worldtransform.d = lt.c * wt.b + lt.d * wt.d;
-                    worldtransform.tx = lt.tx * wt.a + lt.ty * wt.c + wt.tx;
-                    worldtransform.ty = lt.tx * wt.b + lt.ty * wt.d + wt.ty;
-                    this.__$offsetX__ = -displayObject.$anchorOffsetX;
-                    this.__$offsetY__ = -displayObject.$anchorOffsetY;
-                }
-                else {
-                    worldtransform.a = wt.a;
-                    worldtransform.b = wt.b;
-                    worldtransform.c = wt.c;
-                    worldtransform.d = wt.d;
-                    this.__$offsetX__ += -displayObject.$anchorOffsetX;
-                    this.__$offsetY__ += -displayObject.$anchorOffsetY;
-                }
                 this._parentID = parentTransform._worldID;
                 // update the id of the transform..
                 ++this._worldID;

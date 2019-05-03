@@ -171,11 +171,13 @@ namespace egret {
             }
             */
             //const lt = this.localTransform;
+            ///
+            const sm = displayObject.$getMatrix();
+            const lm = this.localTransform;
+            lm.setTo(sm.a, sm.b, sm.c, sm.d, sm.tx, sm.ty);
+
             if (this._localID !== this._currentLocalID) {
-                ///
-                const sm = displayObject.$getMatrix();
-                const lm = this.localTransform;
-                lm.setTo(sm.a, sm.b, sm.c, sm.d, sm.tx, sm.ty);
+                
                 // get the matrix values of the displayobject based on its transform properties..
                 // lt.a = this._cx * this.scale._x;
                 // lt.b = this._sx * this.scale._x;
@@ -214,6 +216,39 @@ namespace egret {
                 this._parentID = -1;
             }
             */
+
+
+
+            //this.world = parent.world * this.local
+            this.__$offsetX__ = parentTransform.__$offsetX__ + displayObject.$x;
+            this.__$offsetY__ = parentTransform.__$offsetY__ + displayObject.$y;
+            //
+            const wt = parentTransform.worldTransform;
+            const lt = this.localTransform;//this.$getMatrix();
+            const worldtransform = this.worldTransform;
+            if (displayObject.$useTranslate) {
+                worldtransform.a = lt.a * wt.a + lt.b * wt.c;
+                worldtransform.b = lt.a * wt.b + lt.b * wt.d;
+                worldtransform.c = lt.c * wt.a + lt.d * wt.c;
+                worldtransform.d = lt.c * wt.b + lt.d * wt.d;
+                worldtransform.tx = this.__$offsetX__ * wt.a + this.__$offsetY__ * wt.c + wt.tx;
+                worldtransform.ty = this.__$offsetX__ * wt.b + this.__$offsetY__ * wt.d + wt.ty;
+                this.__$offsetX__ = -displayObject.$anchorOffsetX;
+                this.__$offsetY__ = -displayObject.$anchorOffsetY;
+            }
+            else {
+                worldtransform.a = wt.a;
+                worldtransform.b = wt.b;
+                worldtransform.c = wt.c;
+                worldtransform.d = wt.d;
+                // worldtransform.tx = 0;
+                // worldtransform.ty = 0;
+                this.__$offsetX__ += -displayObject.$anchorOffsetX;
+                this.__$offsetY__ += -displayObject.$anchorOffsetY;
+            }
+
+
+
             //const lt = this.localTransform;
             if (this._parentID !== parentTransform._worldID) {
                 /*
@@ -228,31 +263,7 @@ namespace egret {
                 wt.tx = (lt.tx * pt.a) + (lt.ty * pt.c) + pt.tx;
                 wt.ty = (lt.tx * pt.b) + (lt.ty * pt.d) + pt.ty;
                 */
-                //this.world = parent.world * this.local
-                this.__$offsetX__ = parentTransform.__$offsetX__ + displayObject.$x;
-                this.__$offsetY__ = parentTransform.__$offsetY__ + displayObject.$y;
-                //
-                const wt = parentTransform.worldTransform;
-                const lt = this.localTransform;//this.$getMatrix();
-                const worldtransform = this.worldTransform;
-                if (displayObject.$useTranslate) {
-                    worldtransform.a = lt.a * wt.a + lt.b * wt.c;
-                    worldtransform.b = lt.a * wt.b + lt.b * wt.d;
-                    worldtransform.c = lt.c * wt.a + lt.d * wt.c;
-                    worldtransform.d = lt.c * wt.b + lt.d * wt.d;
-                    worldtransform.tx = lt.tx * wt.a + lt.ty * wt.c + wt.tx;
-                    worldtransform.ty = lt.tx * wt.b + lt.ty * wt.d + wt.ty;
-                    this.__$offsetX__ = -displayObject.$anchorOffsetX;
-                    this.__$offsetY__ = -displayObject.$anchorOffsetY;
-                }
-                else {
-                    worldtransform.a = wt.a;
-                    worldtransform.b = wt.b;
-                    worldtransform.c = wt.c;
-                    worldtransform.d = wt.d;
-                    this.__$offsetX__ += -displayObject.$anchorOffsetX;
-                    this.__$offsetY__ += -displayObject.$anchorOffsetY;
-                }
+                
                 this._parentID = parentTransform._worldID;
                 // update the id of the transform..
                 ++this._worldID;
