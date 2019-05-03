@@ -5326,6 +5326,22 @@ var egret;
              * 缓存一组顶点
              */
             WebGLVertexArrayObject.prototype.cacheArrays = function (buffer, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight, textureSourceWidth, textureSourceHeight, meshUVs, meshVertices, meshIndices, rotated) {
+                /*
+                *************************************************
+                */
+                if (egret.transformRefactor) {
+                    var debugCurrentRenderNode = buffer.debugCurrentRenderNode;
+                    var renderMatrix = debugCurrentRenderNode.renderMatrix;
+                    if (!egret.NumberUtils.matrixEqual(buffer.globalMatrix, renderMatrix)
+                        || buffer.$offsetX !== debugCurrentRenderNode.__$offsetX__
+                        || buffer.$offsetY !== debugCurrentRenderNode.__$offsetY__) {
+                        console.error('cacheArrays transform check failed');
+                    }
+                }
+                //this.__displayObjectToRenderNode__(displayObject, node, buffer);
+                /*
+                *************************************************
+                */
                 var alpha = buffer.globalAlpha;
                 //计算出绘制矩阵，之后把矩阵还原回之前的
                 var locWorldTransform = buffer.globalMatrix;
@@ -6716,6 +6732,8 @@ var egret;
                 _this.savedGlobalMatrix = new egret.Matrix();
                 _this.$offsetX = 0;
                 _this.$offsetY = 0;
+                //
+                _this.debugCurrentRenderNode = null;
                 // 获取webglRenderContext
                 _this.context = web.WebGLRenderContext.getInstance(width, height);
                 if (egret.nativeRender) {
@@ -7179,6 +7197,7 @@ var egret;
                             console.error('transform failed');
                         }
                     }
+                    this.__displayObjectToRenderNode__(displayObject, node, buffer);
                     /*
                     *************************************************
                     */
@@ -7193,7 +7212,7 @@ var egret;
                             this.renderGraphics(node, buffer);
                             break;
                         case 4 /* GroupNode */:
-                            this.renderGroup(node, buffer);
+                            this.renderGroup(displayObject, node, buffer);
                             break;
                         case 5 /* MeshNode */:
                             this.renderMesh(node, buffer);
@@ -7608,7 +7627,7 @@ var egret;
                 //pushRenderTARGET
                 webglBuffer.context.pushBuffer(webglBuffer);
                 webglBuffer.setTransform(matrix.a, matrix.b, matrix.c, matrix.d, matrix.tx, matrix.ty);
-                this.renderNode(node, buffer, 0, 0, forHitTest);
+                this.renderNode(null, node, buffer, 0, 0, forHitTest);
                 webglBuffer.context.$drawWebGL();
                 webglBuffer.onRenderFinish();
                 //popRenderTARGET
@@ -7635,6 +7654,7 @@ var egret;
                 var drawCalls = 0;
                 if (node) {
                     drawCalls++;
+                    this.__displayObjectToRenderNode__(displayObject, node, buffer);
                     switch (node.type) {
                         case 1 /* BitmapNode */:
                             this.renderBitmap(node, buffer);
@@ -7646,7 +7666,7 @@ var egret;
                             this.renderGraphics(node, buffer);
                             break;
                         case 4 /* GroupNode */:
-                            this.renderGroup(node, buffer);
+                            this.renderGroup(displayObject, node, buffer);
                             break;
                         case 5 /* MeshNode */:
                             this.renderMesh(node, buffer);
@@ -7687,9 +7707,10 @@ var egret;
             /**
              * @private
              */
-            WebGLRenderer.prototype.renderNode = function (node, buffer, offsetX, offsetY, forHitTest) {
+            WebGLRenderer.prototype.renderNode = function (displayObject, node, buffer, offsetX, offsetY, forHitTest) {
                 buffer.$offsetX = offsetX;
                 buffer.$offsetY = offsetY;
+                this.__displayObjectToRenderNode__(displayObject, node, buffer);
                 switch (node.type) {
                     case 1 /* BitmapNode */:
                         this.renderBitmap(node, buffer);
@@ -7701,7 +7722,7 @@ var egret;
                         this.renderGraphics(node, buffer, forHitTest);
                         break;
                     case 4 /* GroupNode */:
-                        this.renderGroup(node, buffer);
+                        this.renderGroup(displayObject, node, buffer);
                         break;
                     case 5 /* MeshNode */:
                         this.renderMesh(node, buffer);
@@ -8024,7 +8045,7 @@ var egret;
                     node.dirtyRender = false;
                 }
             };
-            WebGLRenderer.prototype.renderGroup = function (groupNode, buffer) {
+            WebGLRenderer.prototype.renderGroup = function (displayObject, groupNode, buffer) {
                 var m = groupNode.matrix;
                 var savedMatrix;
                 var offsetX;
@@ -8047,7 +8068,7 @@ var egret;
                 var length = children.length;
                 for (var i = 0; i < length; i++) {
                     var node = children[i];
-                    this.renderNode(node, buffer, buffer.$offsetX, buffer.$offsetY);
+                    this.renderNode(displayObject, node, buffer, buffer.$offsetX, buffer.$offsetY);
                 }
                 if (m) {
                     var matrix = buffer.globalMatrix;
@@ -8075,6 +8096,103 @@ var egret;
                     buffer.$computeDrawCall = false;
                 }
                 return buffer;
+            };
+            /**
+             * @private
+             * 绘制一个显示对象
+             */
+            WebGLRenderer.prototype.__displayObjectToRenderNode__ = function (displayObject, _node, buffer) {
+                if (!egret.transformRefactor) {
+                    return;
+                }
+                if (!displayObject || !_node) {
+                    return;
+                }
+                if (buffer) {
+                    buffer.debugCurrentRenderNode = _node;
+                }
+                switch (_node.type) {
+                    case 1 /* BitmapNode */: {
+                        // const node = <sys.BitmapNode>_node;
+                        // const trans = displayObject.transform;
+                        // node.__$offsetX__ = trans.__$offsetX__;
+                        // node.__$offsetY__ = trans.__$offsetY__;
+                        // const wt = trans.worldTransform;
+                        // node.renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
+                        // //
+                        // if (node.matrix) {
+                        //     const m = node.matrix;
+                        //     node.renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                        //     node.__$offsetX__ = 0;
+                        //     node.__$offsetY__ = 0;
+                        //     node.renderMatrix.$preMultiplyInto(m, node.renderMatrix);
+                        // }
+                        break;
+                    }
+                    case 2 /* TextNode */: {
+                        /*
+                        *******************
+                        */
+                        var node = _node;
+                        node.updateTextOffsetMatrix(egret.sys.DisplayList.$canvasScaleX, egret.sys.DisplayList.$canvasScaleY, buffer.context.$maxTextureSize);
+                        displayObject.globalMatrix.$preMultiplyInto(node.textOffsetMatrix, node.renderMatrix);
+                        node.__$offsetX__ = displayObject.__$offsetX__;
+                        node.__$offsetY__ = displayObject.__$offsetY__;
+                        /*
+                        *******************
+                        */
+                        break;
+                    }
+                    case 3 /* GraphicsNode */: {
+                        /*
+                        *******************
+                        */
+                        var node = _node;
+                        displayObject.globalMatrix.$preMultiplyInto(node.graphicsOffsetMatrix, node.renderMatrix);
+                        node.__$offsetX__ = displayObject.__$offsetX__;
+                        node.__$offsetY__ = displayObject.__$offsetY__;
+                        /*
+                        *******************
+                        */
+                        break;
+                    }
+                    case 4 /* GroupNode */: {
+                        //
+                        // const node = <sys.GroupNode>_node;
+                        // const trans = displayObject.transform;
+                        // node.__$offsetX__ = trans.__$offsetX__;
+                        // node.__$offsetY__ = trans.__$offsetY__;
+                        // const wt = trans.worldTransform;
+                        // node.renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
+                        // //
+                        // if (node.matrix) {
+                        //     const m = node.matrix;
+                        //     //useoffset
+                        //     node.renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                        //     node.__$offsetX__ = 0;
+                        //     node.__$offsetY__ = 0;
+                        //     //transform
+                        //     node.renderMatrix.$preMultiplyInto(m, node.renderMatrix);
+                        // }
+                        break;
+                    }
+                    case 5 /* MeshNode */: {
+                        //this.renderMesh(<sys.MeshNode>node, buffer);
+                        break;
+                    }
+                    case 6 /* NormalBitmapNode */: {
+                        var node = _node;
+                        node.__$offsetX__ = displayObject.__$offsetX__;
+                        node.__$offsetY__ = displayObject.__$offsetY__;
+                        var globalMatrix = displayObject.globalMatrix;
+                        node.renderMatrix.setTo(globalMatrix.a, globalMatrix.b, globalMatrix.c, globalMatrix.d, globalMatrix.tx, globalMatrix.ty);
+                        break;
+                    }
+                    default: {
+                        console.error('undefined node.type = ' + _node.type);
+                        break;
+                    }
+                }
             };
             return WebGLRenderer;
         }());

@@ -37,6 +37,8 @@ namespace egret.sys {
      */
     export class GraphicsNode extends RenderNode {
 
+        public readonly graphicsOffsetMatrix: egret.Matrix = new Matrix;
+
         public constructor() {
             super();
             this.type = RenderNodeType.GraphicsNode;
@@ -143,6 +145,9 @@ namespace egret.sys {
             this.drawData.length = 0;
             this.dirtyRender = true;
             this.renderCount = 0;
+
+            //
+            this.graphicsOffsetMatrix.identity();
         }
 
         /**

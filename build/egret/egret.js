@@ -6048,6 +6048,10 @@ var egret;
          */
         var RenderNode = (function () {
             function RenderNode() {
+                //
+                this.renderMatrix = new egret.Matrix;
+                this.__$offsetX__ = 0;
+                this.__$offsetY__ = 0;
                 /**
                  * 节点类型..
                  */
@@ -11082,6 +11086,7 @@ var egret;
             node.y = this.minY;
             node.width = Math.ceil(this.maxX - this.minX);
             node.height = Math.ceil(this.maxY - this.minY);
+            node.graphicsOffsetMatrix.setTo(1, 0, 0, 1, node.x, node.y);
         };
         /**
          * 更新当前的lineX和lineY值，并标记尺寸失效。
@@ -15310,6 +15315,7 @@ var egret;
             __extends(GraphicsNode, _super);
             function GraphicsNode() {
                 var _this = _super.call(this) || this;
+                _this.graphicsOffsetMatrix = new egret.Matrix;
                 /**
                  * 脏渲染标记
                  * 暂时调用lineStyle,beginFill,beginGradientFill标记,实际应该draw时候标记在Path2D
@@ -15418,6 +15424,8 @@ var egret;
                 this.drawData.length = 0;
                 this.dirtyRender = true;
                 this.renderCount = 0;
+                //
+                this.graphicsOffsetMatrix.identity();
             };
             /**
              * 覆盖父类方法，不自动清空缓存的绘图数据，改为手动调用clear()方法清空。
@@ -15893,6 +15901,7 @@ var egret;
             __extends(TextNode, _super);
             function TextNode() {
                 var _this = _super.call(this) || this;
+                _this.textOffsetMatrix = new egret.Matrix;
                 /**
                  * 颜色值
                  */
@@ -15952,6 +15961,32 @@ var egret;
             TextNode.prototype.cleanBeforeRender = function () {
                 _super.prototype.cleanBeforeRender.call(this);
                 this.dirtyRender = true;
+            };
+            TextNode.prototype.updateTextOffsetMatrix = function (canvasScaleX, canvasScaleY, maxTextureSize) {
+                if (!canvasScaleX || !canvasScaleY || !maxTextureSize) {
+                    egret.warn('canvasScaleX = ' + canvasScaleX);
+                    egret.warn('canvasScaleY = ' + canvasScaleY);
+                    egret.warn('maxTextureSize = ' + maxTextureSize);
+                    return;
+                }
+                var width = this.width - this.x;
+                var height = this.height - this.y;
+                if (width <= 0 || height <= 0 || !width || !height || this.drawData.length == 0) {
+                    return;
+                }
+                if (width * canvasScaleX > maxTextureSize) {
+                    canvasScaleX *= maxTextureSize / (width * canvasScaleX);
+                }
+                if (height * canvasScaleY > maxTextureSize) {
+                    canvasScaleY *= maxTextureSize / (height * canvasScaleY);
+                }
+                width *= canvasScaleX;
+                height *= canvasScaleY;
+                var x = this.x * canvasScaleX;
+                var y = this.y * canvasScaleY;
+                if (x || y) {
+                    this.textOffsetMatrix.setTo(1, 0, 0, 1, x / canvasScaleX, y / canvasScaleY);
+                }
             };
             return TextNode;
         }(sys.RenderNode));

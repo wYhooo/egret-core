@@ -440,6 +440,9 @@ namespace egret.web {
             renderBufferPool.push(buffer);
         }
 
+        //
+        public debugCurrentRenderNode: egret.sys.RenderNode = null;
+
     }
 
     let renderBufferPool: WebGLRenderBuffer[] = [];//渲染缓冲区对象池

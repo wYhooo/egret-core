@@ -132,6 +132,22 @@ namespace egret.web {
         public cacheArrays(buffer: WebGLRenderBuffer, sourceX: number, sourceY: number, sourceWidth: number, sourceHeight: number,
             destX: number, destY: number, destWidth: number, destHeight: number, textureSourceWidth: number, textureSourceHeight: number,
             meshUVs?: number[], meshVertices?: number[], meshIndices?: number[], rotated?: boolean): void {
+            /*
+            *************************************************
+            */
+            if (egret.transformRefactor) {
+                const debugCurrentRenderNode = buffer.debugCurrentRenderNode;
+                const renderMatrix = debugCurrentRenderNode.renderMatrix;
+                if (!NumberUtils.matrixEqual(buffer.globalMatrix, renderMatrix)
+                    || buffer.$offsetX !== debugCurrentRenderNode.__$offsetX__
+                    || buffer.$offsetY !== debugCurrentRenderNode.__$offsetY__) {
+                    console.error('cacheArrays transform check failed');
+                }
+            }
+            //this.__displayObjectToRenderNode__(displayObject, node, buffer);
+            /*
+            *************************************************
+            */
             let alpha = buffer.globalAlpha;
             //计算出绘制矩阵，之后把矩阵还原回之前的
             let locWorldTransform = buffer.globalMatrix;

@@ -3373,6 +3373,9 @@ declare namespace egret.sys {
      * 渲染节点基类
      */
     class RenderNode {
+        readonly renderMatrix: egret.Matrix;
+        __$offsetX__: number;
+        __$offsetY__: number;
         /**
          * 节点类型..
          */
@@ -9913,6 +9916,7 @@ declare namespace egret.sys {
      * 矢量渲染节点
      */
     class GraphicsNode extends RenderNode {
+        readonly graphicsOffsetMatrix: egret.Matrix;
         constructor();
         /**
          * 指定一种简单的单一颜色填充，在绘制时该填充将在随后对其他 Graphics 方法（如 lineTo() 或 drawCircle()）的调用中使用。
@@ -10188,6 +10192,7 @@ declare namespace egret.sys {
      * 文本渲染节点
      */
     class TextNode extends RenderNode {
+        readonly textOffsetMatrix: egret.Matrix;
         constructor();
         /**
          * 颜色值
@@ -10254,6 +10259,7 @@ declare namespace egret.sys {
          * 在显示对象的$updateRenderNode()方法被调用前，自动清空自身的drawData数据。
          */
         cleanBeforeRender(): void;
+        updateTextOffsetMatrix(canvasScaleX: number, canvasScaleY: number, maxTextureSize: number): void;
     }
 }
 declare namespace egret.sys {

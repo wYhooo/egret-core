@@ -129,11 +129,12 @@ namespace egret.web {
                 */
                 if (egret.transformRefactor) {
                     if (!NumberUtils.matrixEqual(buffer.globalMatrix, displayObject.globalMatrix)
-                    || buffer.$offsetX !== displayObject.__$offsetX__
-                    || buffer.$offsetY !== displayObject.__$offsetY__) {
+                        || buffer.$offsetX !== displayObject.__$offsetX__
+                        || buffer.$offsetY !== displayObject.__$offsetY__) {
                         console.error('transform failed');
                     }
                 }
+                this.__displayObjectToRenderNode__(displayObject, node, buffer);
                 /*
                 *************************************************
                 */
@@ -148,7 +149,7 @@ namespace egret.web {
                         this.renderGraphics(<sys.GraphicsNode>node, buffer);
                         break;
                     case sys.RenderNodeType.GroupNode:
-                        this.renderGroup(<sys.GroupNode>node, buffer);
+                        this.renderGroup(displayObject, <sys.GroupNode>node, buffer);
                         break;
                     case sys.RenderNodeType.MeshNode:
                         this.renderMesh(<sys.MeshNode>node, buffer);
@@ -588,7 +589,7 @@ namespace egret.web {
             webglBuffer.context.pushBuffer(webglBuffer);
 
             webglBuffer.setTransform(matrix.a, matrix.b, matrix.c, matrix.d, matrix.tx, matrix.ty);
-            this.renderNode(node, buffer, 0, 0, forHitTest);
+            this.renderNode(null, node, buffer, 0, 0, forHitTest);
             webglBuffer.context.$drawWebGL();
             webglBuffer.onRenderFinish();
 
@@ -617,6 +618,7 @@ namespace egret.web {
             let drawCalls = 0;
             if (node) {
                 drawCalls++;
+                this.__displayObjectToRenderNode__(displayObject, node, buffer);
                 switch (node.type) {
                     case sys.RenderNodeType.BitmapNode:
                         this.renderBitmap(<sys.BitmapNode>node, buffer);
@@ -628,7 +630,7 @@ namespace egret.web {
                         this.renderGraphics(<sys.GraphicsNode>node, buffer);
                         break;
                     case sys.RenderNodeType.GroupNode:
-                        this.renderGroup(<sys.GroupNode>node, buffer);
+                        this.renderGroup(displayObject, <sys.GroupNode>node, buffer);
                         break;
                     case sys.RenderNodeType.MeshNode:
                         this.renderMesh(<sys.MeshNode>node, buffer);
@@ -672,9 +674,10 @@ namespace egret.web {
         /**
          * @private
          */
-        private renderNode(node: sys.RenderNode, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, forHitTest?: boolean): void {
+        private renderNode(displayObject: DisplayObject, node: sys.RenderNode, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, forHitTest?: boolean): void {
             buffer.$offsetX = offsetX;
             buffer.$offsetY = offsetY;
+            this.__displayObjectToRenderNode__(displayObject, node, buffer);
             switch (node.type) {
                 case sys.RenderNodeType.BitmapNode:
                     this.renderBitmap(<sys.BitmapNode>node, buffer);
@@ -686,7 +689,7 @@ namespace egret.web {
                     this.renderGraphics(<sys.GraphicsNode>node, buffer, forHitTest);
                     break;
                 case sys.RenderNodeType.GroupNode:
-                    this.renderGroup(<sys.GroupNode>node, buffer);
+                    this.renderGroup(displayObject, <sys.GroupNode>node, buffer);
                     break;
                 case sys.RenderNodeType.MeshNode:
                     this.renderMesh(<sys.MeshNode>node, buffer);
@@ -1029,7 +1032,7 @@ namespace egret.web {
             }
         }
 
-        private renderGroup(groupNode: sys.GroupNode, buffer: WebGLRenderBuffer): void {
+        private renderGroup(displayObject: DisplayObject, groupNode: sys.GroupNode, buffer: WebGLRenderBuffer): void {
             let m = groupNode.matrix;
             let savedMatrix;
             let offsetX;
@@ -1053,7 +1056,7 @@ namespace egret.web {
             let length = children.length;
             for (let i = 0; i < length; i++) {
                 let node: sys.RenderNode = children[i];
-                this.renderNode(node, buffer, buffer.$offsetX, buffer.$offsetY);
+                this.renderNode(displayObject, node, buffer, buffer.$offsetX, buffer.$offsetY);
             }
             if (m) {
                 let matrix = buffer.globalMatrix;
@@ -1082,6 +1085,110 @@ namespace egret.web {
                 buffer.$computeDrawCall = false;
             }
             return buffer;
+        }
+
+        /**
+         * @private
+         * 绘制一个显示对象
+         */
+        private __displayObjectToRenderNode__(displayObject: DisplayObject, _node: egret.sys.RenderNode, buffer: WebGLRenderBuffer): void {
+            if (!egret.transformRefactor) {
+                return;
+            }
+            if (!displayObject || !_node) {
+                return;
+            }
+            if (buffer) {
+                buffer.debugCurrentRenderNode = _node;
+            }
+            switch (_node.type) {
+                case sys.RenderNodeType.BitmapNode: {
+                    // const node = <sys.BitmapNode>_node;
+                    // const trans = displayObject.transform;
+                    // node.__$offsetX__ = trans.__$offsetX__;
+                    // node.__$offsetY__ = trans.__$offsetY__;
+                    // const wt = trans.worldTransform;
+                    // node.renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
+                    // //
+                    // if (node.matrix) {
+                    //     const m = node.matrix;
+                    //     node.renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                    //     node.__$offsetX__ = 0;
+                    //     node.__$offsetY__ = 0;
+                    //     node.renderMatrix.$preMultiplyInto(m, node.renderMatrix);
+                    // }
+                    break;
+                }
+
+                case sys.RenderNodeType.TextNode: {
+                    /*
+                    *******************
+                    */
+                    const node = <sys.TextNode>_node;
+                    node.updateTextOffsetMatrix(sys.DisplayList.$canvasScaleX, sys.DisplayList.$canvasScaleY, buffer.context.$maxTextureSize);
+                    displayObject.globalMatrix.$preMultiplyInto(node.textOffsetMatrix, node.renderMatrix);
+                    node.__$offsetX__ = displayObject.__$offsetX__;
+                    node.__$offsetY__ = displayObject.__$offsetY__;
+                    /*  
+                    *******************
+                    */
+                    break;
+                }
+
+                case sys.RenderNodeType.GraphicsNode: {
+                    /*
+                    *******************
+                    */
+                    const node = <sys.GraphicsNode>_node;
+                    displayObject.globalMatrix.$preMultiplyInto(node.graphicsOffsetMatrix, node.renderMatrix);
+                    node.__$offsetX__ = displayObject.__$offsetX__;
+                    node.__$offsetY__ = displayObject.__$offsetY__;
+                    /*
+                    *******************
+                    */
+                    break;
+                }
+
+                case sys.RenderNodeType.GroupNode: {
+                    //
+                    // const node = <sys.GroupNode>_node;
+                    // const trans = displayObject.transform;
+                    // node.__$offsetX__ = trans.__$offsetX__;
+                    // node.__$offsetY__ = trans.__$offsetY__;
+                    // const wt = trans.worldTransform;
+                    // node.renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
+                    // //
+                    // if (node.matrix) {
+                    //     const m = node.matrix;
+                    //     //useoffset
+                    //     node.renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                    //     node.__$offsetX__ = 0;
+                    //     node.__$offsetY__ = 0;
+                    //     //transform
+                    //     node.renderMatrix.$preMultiplyInto(m, node.renderMatrix);
+                    // }
+                    break;
+                }
+
+                case sys.RenderNodeType.MeshNode: {
+                    //this.renderMesh(<sys.MeshNode>node, buffer);
+                    break;
+                }
+
+                case sys.RenderNodeType.NormalBitmapNode: {
+                    const node = <sys.NormalBitmapNode>_node;
+                    node.__$offsetX__ = displayObject.__$offsetX__;
+                    node.__$offsetY__ = displayObject.__$offsetY__;
+                    const globalMatrix = displayObject.globalMatrix;
+                    node.renderMatrix.setTo(globalMatrix.a, globalMatrix.b, globalMatrix.c, globalMatrix.d, globalMatrix.tx, globalMatrix.ty);
+                    break;
+                }
+
+                default: {
+                    console.error('undefined node.type = ' + _node.type);
+                    break;
+                }
+            }
         }
     }
 }

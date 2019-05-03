@@ -35,6 +35,8 @@ namespace egret.sys {
      */
     export class TextNode extends RenderNode {
 
+        public readonly textOffsetMatrix: egret.Matrix = new Matrix;
+
         public constructor() {
             super();
             this.type = RenderNodeType.TextNode;
@@ -124,5 +126,31 @@ namespace egret.sys {
             this.dirtyRender = true;
         }
 
+        public updateTextOffsetMatrix(canvasScaleX: number, canvasScaleY: number, maxTextureSize: number): void {
+            if (!canvasScaleX || !canvasScaleY || !maxTextureSize) {
+                egret.warn('canvasScaleX = ' + canvasScaleX);
+                egret.warn('canvasScaleY = ' + canvasScaleY);
+                egret.warn('maxTextureSize = ' + maxTextureSize);
+                return;
+            }
+            let width = this.width - this.x;
+            let height = this.height - this.y;
+            if (width <= 0 || height <= 0 || !width || !height || this.drawData.length == 0) {
+                return;
+            }
+            if (width * canvasScaleX > maxTextureSize) {
+                canvasScaleX *= maxTextureSize / (width * canvasScaleX);
+            }
+            if (height * canvasScaleY > maxTextureSize) {
+                canvasScaleY *= maxTextureSize / (height * canvasScaleY);
+            }
+            width *= canvasScaleX;
+            height *= canvasScaleY;
+            const x = this.x * canvasScaleX;
+            const y = this.y * canvasScaleY;
+            if (x || y) {
+                this.textOffsetMatrix.setTo(1, 0, 0, 1, x / canvasScaleX, y / canvasScaleY);
+            }
+        }
     }
 }
