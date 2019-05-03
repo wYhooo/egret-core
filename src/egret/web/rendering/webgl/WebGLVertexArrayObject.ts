@@ -147,7 +147,7 @@ namespace egret.web {
                     || !NumberUtils.fequal(buffer.$offsetX, renderNode.__$offsetX__)
                     || !NumberUtils.fequal(buffer.$offsetY, renderNode.__$offsetY__)
                 ) {
-                    egret.error('check _debugCurrentGraphicsNode failed');
+                    egret.error('check globalMatrix failed');
                 }
                 else {
                     // check is ok

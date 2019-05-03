@@ -2300,28 +2300,9 @@ namespace egret {
         * transform refactor
         */
         public transform: Transform2D = new Transform2D;
-
-        /**
-         * Updates the object transform for rendering.
-         *
-         * TODO - Optimization pass!
-         */
         public updateTransform(offsetX: number, offsetY: number, globalMatrix: Matrix): void {
             this.transform.__$offsetX__ = offsetX;
             this.transform.__$offsetY__ = offsetY;
-            this.transform.worldTransform.setTo(
-                globalMatrix.a, globalMatrix.b, globalMatrix.c, globalMatrix.d, globalMatrix.tx, globalMatrix.ty
-            );
-            // if (!this.parent) {
-            //     return;
-            // }
-            //this.transform.updateTransform(this, this.parent.transform);
-            // multiply the alphas..
-            //this.worldAlpha = this.alpha * this.parent.worldAlpha;
-            //this._bounds.updateID++;
-        }
-
-        public _updateTransformAsVirtualRenderingRoot(offsetX: number, offsetY: number): void {
         }
     }
 }

@@ -5340,7 +5340,7 @@ var egret;
                         || !egret.NumberUtils.fequal(globalMatrix.ty, om.ty)
                         || !egret.NumberUtils.fequal(buffer.$offsetX, renderNode.__$offsetX__)
                         || !egret.NumberUtils.fequal(buffer.$offsetY, renderNode.__$offsetY__)) {
-                        egret.error('check _debugCurrentGraphicsNode failed');
+                        egret.error('check globalMatrix failed');
                     }
                     else {
                         // check is ok
@@ -7141,29 +7141,28 @@ var egret;
                 //-------------------------------------------------------------------------------------------------------
                 ///重构对一个没有父节点的stage做虚拟父级，写的比较脏，以后整理
                 //缓存下来
-                var cacheParent = displayObject.parent;
-                //准备修改虚拟父级的矩阵
-                var virtualRenderingRoot = this.virtualRenderingRoot;
-                //仿照下面这一句 webglBuffer.transform(matrix.a, matrix.b, matrix.c, matrix.d, 0, 0);   
-                //local设置为偏移矩阵，同时tx,ty = 0;
-                var m1 = egret.Matrix.create();
-                m1.setTo(matrix.a, matrix.b, matrix.c, matrix.d, 0, 0);
-                virtualRenderingRoot.$setMatrix(m1, true);
-                egret.Matrix.release(m1);
-                //计算一下全局
-                virtualRenderingRoot._updateTransformAsVirtualRenderingRoot(matrix.tx, matrix.ty);
-                //这个仿照 下面 this.drawDisplayObject(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
-                // virtualRenderingRoot.transform.__$offsetX__ = matrix.tx;
-                // virtualRenderingRoot.transform.__$offsetY__ = matrix.ty;
+                // const cacheParent = displayObject.parent;
+                // //准备修改虚拟父级的矩阵
+                // const virtualRenderingRoot = this.virtualRenderingRoot;
+                // //仿照下面这一句 webglBuffer.transform(matrix.a, matrix.b, matrix.c, matrix.d, 0, 0);   
+                // //local设置为偏移矩阵，同时tx,ty = 0;
+                // const m1 = Matrix.create();
+                // m1.setTo(matrix.a, matrix.b, matrix.c, matrix.d, 0, 0);
+                // virtualRenderingRoot.$setMatrix(m1, true);
+                // Matrix.release(m1);
+                // //计算一下全局
+                // virtualRenderingRoot._updateTransformAsVirtualRenderingRoot(matrix.tx, matrix.ty);
+                // //这个仿照 下面 this.drawDisplayObject(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
+                // // virtualRenderingRoot.transform.__$offsetX__ = matrix.tx;
+                // // virtualRenderingRoot.transform.__$offsetY__ = matrix.ty;
+                // //
+                // displayObject.$setParent(this.virtualRenderingRoot);
                 //
-                displayObject.$setParent(this.virtualRenderingRoot);
-                if (window['yh']) {
-                    egret.warn('11111');
-                }
-                displayObject.updateTransform(matrix.tx, matrix.ty, matrix);
+                //displayObject.updateTransform(matrix.tx, matrix.ty, matrix);
                 //-------------------------------------------------------------------------------------------------------
                 //绘制显示对象
                 webglBuffer.transform(matrix.a, matrix.b, matrix.c, matrix.d, 0, 0);
+                displayObject.updateTransform(matrix.tx, matrix.ty, webglBuffer.globalMatrix);
                 ///
                 // displayObject.transform.__$offsetX__ = matrix.tx;
                 // displayObject.transform.__$offsetY__ = matrix.ty;
@@ -7173,7 +7172,7 @@ var egret;
                 webglBuffer.onRenderFinish();
                 ////-------------------------------------------------------------------------------------------------------
                 //还原回去,保持stage没有parent
-                displayObject.$setParent(cacheParent);
+                //displayObject.$setParent(cacheParent);
                 // virtualRenderingRoot.transform.__$offsetX__ = 0;
                 // virtualRenderingRoot.transform.__$offsetY__ = 0;
                 /////-------------------------------------------------------------------------------------------------------
@@ -7224,9 +7223,6 @@ var egret;
                     drawCalls++;
                     buffer.$offsetX = offsetX;
                     buffer.$offsetY = offsetY;
-                    // displayObject.transform.__$offsetX__ = offsetX;
-                    // displayObject.transform.__$offsetY__ = offsetY;
-                    //buffer._debugCurrentTransform = displayObject.transform;
                     buffer._debugCurrentRenderNode = node;
                     this.__displayObjectToRenderNode__(displayObject, node, buffer);
                     switch (node.type) {
@@ -7234,14 +7230,10 @@ var egret;
                             this.renderBitmap(node, buffer);
                             break;
                         case 2 /* TextNode */:
-                            //buffer._debugCurrentTextNode = <sys.TextNode>node;
                             this.renderText(node, buffer);
-                            //buffer._debugCurrentTextNode = null;
                             break;
                         case 3 /* GraphicsNode */:
-                            //buffer._debugCurrentGraphicsNode = <sys.GraphicsNode>node;
                             this.renderGraphics(node, buffer);
-                            //buffer._debugCurrentGraphicsNode = null;
                             break;
                         case 4 /* GroupNode */:
                             this.renderGroup(displayObject, node, buffer);
@@ -7255,22 +7247,15 @@ var egret;
                     }
                     buffer.$offsetX = 0;
                     buffer.$offsetY = 0;
-                    //buffer._debugCurrentTransform = null;
                     buffer._debugCurrentRenderNode = null;
                 }
                 if (displayList && !isStage) {
                     return drawCalls;
                 }
                 var children = displayObject.$children;
-                if (window['yh'] && (displayObject.name === '47' || displayObject.name === 'testView')) {
-                    var pp = 0;
-                }
                 if (children) {
                     var length_8 = children.length;
                     for (var i = 0; i < length_8; i++) {
-                        if (window['yh'] && i === 23) {
-                            var pp = 0;
-                        }
                         var child = children[i];
                         var offsetX2 = void 0;
                         var offsetY2 = void 0;
@@ -7696,7 +7681,6 @@ var egret;
                 var drawCalls = 0;
                 if (node) {
                     drawCalls++;
-                    //buffer._debugCurrentTransform = displayObject.transform;
                     buffer._debugCurrentRenderNode = node;
                     this.__displayObjectToRenderNode__(displayObject, node, buffer);
                     switch (node.type) {
@@ -7704,14 +7688,10 @@ var egret;
                             this.renderBitmap(node, buffer);
                             break;
                         case 2 /* TextNode */:
-                            //buffer._debugCurrentTextNode = <sys.TextNode>node;
                             this.renderText(node, buffer);
-                            //buffer._debugCurrentTextNode = null;
                             break;
                         case 3 /* GraphicsNode */:
-                            //buffer._debugCurrentGraphicsNode = <sys.GraphicsNode>node;
                             this.renderGraphics(node, buffer);
-                            //buffer._debugCurrentGraphicsNode = null;
                             break;
                         case 4 /* GroupNode */:
                             this.renderGroup(displayObject, node, buffer);
@@ -7723,7 +7703,6 @@ var egret;
                             this.renderNormalBitmap(node, buffer);
                             break;
                     }
-                    //buffer._debugCurrentTransform = null;
                     buffer._debugCurrentRenderNode = null;
                 }
                 var children = displayObject.$children;
@@ -7760,11 +7739,6 @@ var egret;
             WebGLRenderer.prototype.renderNode = function (displayObject, node, buffer, offsetX, offsetY, forHitTest) {
                 buffer.$offsetX = offsetX;
                 buffer.$offsetY = offsetY;
-                // if (displayObject) {
-                //     displayObject.transform.__$offsetX__ = offsetX;
-                //     displayObject.transform.__$offsetY__ = offsetY;
-                // }
-                //buffer._debugCurrentTransform = null;
                 buffer._debugCurrentRenderNode = node;
                 this.__displayObjectToRenderNode__(displayObject, node, buffer);
                 switch (node.type) {
@@ -7772,14 +7746,10 @@ var egret;
                         this.renderBitmap(node, buffer);
                         break;
                     case 2 /* TextNode */:
-                        //buffer._debugCurrentTextNode = <sys.TextNode>node;
                         this.renderText(node, buffer);
-                        //buffer._debugCurrentTextNode = null;
                         break;
                     case 3 /* GraphicsNode */:
-                        //buffer._debugCurrentGraphicsNode = <sys.GraphicsNode>node;
                         this.renderGraphics(node, buffer, forHitTest);
-                        //buffer._debugCurrentGraphicsNode = null;
                         break;
                     case 4 /* GroupNode */:
                         this.renderGroup(displayObject, node, buffer);
@@ -8166,115 +8136,22 @@ var egret;
                 if (!displayObject || !_node) {
                     return;
                 }
-                var globalMatrix = buffer.globalMatrix;
-                var wt = displayObject.transform.worldTransform;
-                if (!egret.NumberUtils.fequal(globalMatrix.a, wt.a)
-                    || !egret.NumberUtils.fequal(globalMatrix.b, wt.b)
-                    || !egret.NumberUtils.fequal(globalMatrix.c, wt.c)
-                    || !egret.NumberUtils.fequal(globalMatrix.d, wt.d)
-                    || !egret.NumberUtils.fequal(globalMatrix.tx, wt.tx)
-                    || !egret.NumberUtils.fequal(globalMatrix.ty, wt.ty)
-                    || !egret.NumberUtils.fequal(buffer.$offsetX, displayObject.transform.__$offsetX__)
-                    || !egret.NumberUtils.fequal(buffer.$offsetY, displayObject.transform.__$offsetY__)) {
-                    egret.error('check 23333 failed');
-                }
-                else {
-                    // check is ok
-                }
                 switch (_node.type) {
                     case 1 /* BitmapNode */: {
                         var node = _node;
-                        var trans = displayObject.transform; //
+                        var trans = displayObject.transform;
                         node.__$offsetX__ = trans.__$offsetX__;
                         node.__$offsetY__ = trans.__$offsetY__;
-                        //this.renderNormalBitmap(<sys.NormalBitmapNode>node, buffer);
-                        var wt_1 = trans.worldTransform;
-                        node.renderMatrix.setTo(wt_1.a, wt_1.b, wt_1.c, wt_1.d, wt_1.tx, wt_1.ty);
-                        var om = node.renderMatrix;
-                        if (!egret.NumberUtils.fequal(globalMatrix.a, om.a)
-                            || !egret.NumberUtils.fequal(globalMatrix.b, om.b)
-                            || !egret.NumberUtils.fequal(globalMatrix.c, om.c)
-                            || !egret.NumberUtils.fequal(globalMatrix.d, om.d)
-                            || !egret.NumberUtils.fequal(globalMatrix.tx, om.tx)
-                            || !egret.NumberUtils.fequal(globalMatrix.ty, om.ty)
-                            || !egret.NumberUtils.fequal(buffer.$offsetX, node.__$offsetX__)
-                            || !egret.NumberUtils.fequal(buffer.$offsetY, node.__$offsetY__)) {
-                            egret.error('check ????? failed');
-                        }
-                        else {
-                            // check is ok
-                        }
+                        var wt = trans.worldTransform;
+                        node.renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
+                        //
                         if (node.matrix) {
                             var m = node.matrix;
-                            //useoffset
                             node.renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
-                            // trans.__$offsetX__ = 0;
-                            // trans.__$offsetY__ = 0;
                             node.__$offsetX__ = 0;
                             node.__$offsetY__ = 0;
-                            //transform
                             node.renderMatrix.$preMultiplyInto(m, node.renderMatrix);
-                            //
-                            var savedMatrix = egret.Matrix.create();
-                            var curMatrix = buffer.globalMatrix;
-                            savedMatrix.a = curMatrix.a;
-                            savedMatrix.b = curMatrix.b;
-                            savedMatrix.c = curMatrix.c;
-                            savedMatrix.d = curMatrix.d;
-                            savedMatrix.tx = curMatrix.tx;
-                            savedMatrix.ty = curMatrix.ty;
-                            var offsetX = buffer.$offsetX;
-                            var offsetY = buffer.$offsetY;
-                            buffer.useOffset();
-                            buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-                            om = node.renderMatrix;
-                            if (!egret.NumberUtils.fequal(curMatrix.a, om.a)
-                                || !egret.NumberUtils.fequal(curMatrix.b, om.b)
-                                || !egret.NumberUtils.fequal(curMatrix.c, om.c)
-                                || !egret.NumberUtils.fequal(curMatrix.d, om.d)
-                                || !egret.NumberUtils.fequal(curMatrix.tx, om.tx)
-                                || !egret.NumberUtils.fequal(curMatrix.ty, om.ty)
-                                || !egret.NumberUtils.fequal(buffer.$offsetX, node.__$offsetX__)
-                                || !egret.NumberUtils.fequal(buffer.$offsetY, node.__$offsetY__)) {
-                                egret.error('check ????? failed');
-                            }
-                            else {
-                                // check is ok
-                            }
-                            //
-                            var matrix = buffer.globalMatrix;
-                            matrix.a = savedMatrix.a;
-                            matrix.b = savedMatrix.b;
-                            matrix.c = savedMatrix.c;
-                            matrix.d = savedMatrix.d;
-                            matrix.tx = savedMatrix.tx;
-                            matrix.ty = savedMatrix.ty;
-                            buffer.$offsetX = offsetX;
-                            buffer.$offsetY = offsetY;
-                            egret.Matrix.release(savedMatrix);
                         }
-                        /*
-    
-                        let self = this;
-                        if (self.$offsetX != 0 || self.$offsetY != 0) {
-                            self.globalMatrix.append(1, 0, 0, 1, self.$offsetX, self.$offsetY);
-                            self.$offsetX = self.$offsetY = 0;
-                        }
-    
-                        savedMatrix = Matrix.create();
-                        let curMatrix = buffer.globalMatrix;
-                        savedMatrix.a = curMatrix.a;
-                        savedMatrix.b = curMatrix.b;
-                        savedMatrix.c = curMatrix.c;
-                        savedMatrix.d = curMatrix.d;
-                        savedMatrix.tx = curMatrix.tx;
-                        savedMatrix.ty = curMatrix.ty;
-                        offsetX = buffer.$offsetX;
-                        offsetY = buffer.$offsetY;
-                        buffer.useOffset();
-                        buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-                        */
-                        //this.renderBitmap(<sys.BitmapNode>node, buffer);
                         break;
                     }
                     case 2 /* TextNode */: {
@@ -8286,9 +8163,9 @@ var egret;
                         if (trans && (trans._worldID !== node.offsetMatrixLastWorldID || node.offsetMatrixDirty)) {
                             node.offsetMatrixDirty = false;
                             node.offsetMatrixLastWorldID = trans._worldID;
-                            var wt_2 = trans.worldTransform;
+                            var wt = trans.worldTransform;
                             var renderMatrix = node.renderMatrix;
-                            renderMatrix.setTo(wt_2.a, wt_2.b, wt_2.c, wt_2.d, wt_2.tx, wt_2.ty);
+                            renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
                             node.updateOffsetMatrix(egret.sys.DisplayList.$canvasScaleX, egret.sys.DisplayList.$canvasScaleY, buffer.context.$maxTextureSize);
                             renderMatrix.$preMultiplyInto(node.offsetMatrix, renderMatrix);
                         }
@@ -8308,9 +8185,9 @@ var egret;
                         if (trans && (trans._worldID !== node.offsetMatrixLastWorldID || node.offsetMatrixDirty)) {
                             node.offsetMatrixDirty = false;
                             node.offsetMatrixLastWorldID = trans._worldID;
-                            var wt_3 = trans.worldTransform;
+                            var wt = trans.worldTransform;
                             var renderMatrix = node.renderMatrix;
-                            renderMatrix.setTo(wt_3.a, wt_3.b, wt_3.c, wt_3.d, wt_3.tx, wt_3.ty);
+                            renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
                             renderMatrix.$preMultiplyInto(node.offsetMatrix, renderMatrix);
                         }
                         node.__$offsetX__ = trans.__$offsetX__;
@@ -8321,147 +8198,23 @@ var egret;
                         break;
                     }
                     case 4 /* GroupNode */: {
+                        //
                         var node = _node;
-                        var trans = displayObject.transform; //
+                        var trans = displayObject.transform;
                         node.__$offsetX__ = trans.__$offsetX__;
                         node.__$offsetY__ = trans.__$offsetY__;
-                        //this.renderNormalBitmap(<sys.NormalBitmapNode>node, buffer);
-                        var wt_4 = trans.worldTransform;
-                        node.renderMatrix.setTo(wt_4.a, wt_4.b, wt_4.c, wt_4.d, wt_4.tx, wt_4.ty);
-                        var om = node.renderMatrix;
-                        if (!egret.NumberUtils.fequal(globalMatrix.a, om.a)
-                            || !egret.NumberUtils.fequal(globalMatrix.b, om.b)
-                            || !egret.NumberUtils.fequal(globalMatrix.c, om.c)
-                            || !egret.NumberUtils.fequal(globalMatrix.d, om.d)
-                            || !egret.NumberUtils.fequal(globalMatrix.tx, om.tx)
-                            || !egret.NumberUtils.fequal(globalMatrix.ty, om.ty)
-                            || !egret.NumberUtils.fequal(buffer.$offsetX, node.__$offsetX__)
-                            || !egret.NumberUtils.fequal(buffer.$offsetY, node.__$offsetY__)) {
-                            egret.error('check ????? failed');
-                        }
-                        else {
-                            // check is ok
-                        }
+                        var wt = trans.worldTransform;
+                        node.renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
+                        //
                         if (node.matrix) {
                             var m = node.matrix;
                             //useoffset
                             node.renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
-                            // trans.__$offsetX__ = 0;
-                            // trans.__$offsetY__ = 0;
                             node.__$offsetX__ = 0;
                             node.__$offsetY__ = 0;
                             //transform
                             node.renderMatrix.$preMultiplyInto(m, node.renderMatrix);
-                            //
-                            var savedMatrix = egret.Matrix.create();
-                            var curMatrix = buffer.globalMatrix;
-                            savedMatrix.a = curMatrix.a;
-                            savedMatrix.b = curMatrix.b;
-                            savedMatrix.c = curMatrix.c;
-                            savedMatrix.d = curMatrix.d;
-                            savedMatrix.tx = curMatrix.tx;
-                            savedMatrix.ty = curMatrix.ty;
-                            var offsetX = buffer.$offsetX;
-                            var offsetY = buffer.$offsetY;
-                            buffer.useOffset();
-                            buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-                            var om_1 = node.renderMatrix;
-                            if (!egret.NumberUtils.fequal(curMatrix.a, om_1.a)
-                                || !egret.NumberUtils.fequal(curMatrix.b, om_1.b)
-                                || !egret.NumberUtils.fequal(curMatrix.c, om_1.c)
-                                || !egret.NumberUtils.fequal(curMatrix.d, om_1.d)
-                                || !egret.NumberUtils.fequal(curMatrix.tx, om_1.tx)
-                                || !egret.NumberUtils.fequal(curMatrix.ty, om_1.ty)
-                                || !egret.NumberUtils.fequal(buffer.$offsetX, node.__$offsetX__)
-                                || !egret.NumberUtils.fequal(buffer.$offsetY, node.__$offsetY__)) {
-                                egret.error('check ????? failed');
-                            }
-                            else {
-                                // check is ok
-                            }
-                            //
-                            var matrix = buffer.globalMatrix;
-                            matrix.a = savedMatrix.a;
-                            matrix.b = savedMatrix.b;
-                            matrix.c = savedMatrix.c;
-                            matrix.d = savedMatrix.d;
-                            matrix.tx = savedMatrix.tx;
-                            matrix.ty = savedMatrix.ty;
-                            buffer.$offsetX = offsetX;
-                            buffer.$offsetY = offsetY;
-                            egret.Matrix.release(savedMatrix);
                         }
-                        //this.renderGroup(displayObject, <sys.GroupNode>node, buffer);
-                        /*
-    
-                        //buffer.imageSmoothingEnabled = node.smoothing;
-                let data = node.drawData;
-                let length = data.length;
-                let pos = 0;
-                let m = node.matrix;
-                let blendMode = node.blendMode;
-                let alpha = node.alpha;
-                let savedMatrix;
-                let offsetX;
-                let offsetY;
-                if (m) {
-                    savedMatrix = Matrix.create();
-                    let curMatrix = buffer.globalMatrix;
-                    savedMatrix.a = curMatrix.a;
-                    savedMatrix.b = curMatrix.b;
-                    savedMatrix.c = curMatrix.c;
-                    savedMatrix.d = curMatrix.d;
-                    savedMatrix.tx = curMatrix.tx;
-                    savedMatrix.ty = curMatrix.ty;
-                    offsetX = buffer.$offsetX;
-                    offsetY = buffer.$offsetY;
-                    buffer.useOffset();
-                    buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-                }
-                //这里不考虑嵌套
-                if (blendMode) {
-                    buffer.context.setGlobalCompositeOperation(blendModes[blendMode]);
-                }
-                let originAlpha: number;
-                if (alpha == alpha) {
-                    originAlpha = buffer.globalAlpha;
-                    buffer.globalAlpha *= alpha;
-                }
-                if (node.filter) {
-                    buffer.context.$filter = node.filter;
-                    while (pos < length) {
-                        buffer.context.drawImage(image, data[pos++], data[pos++], data[pos++], data[pos++],
-                            data[pos++], data[pos++], data[pos++], data[pos++], node.imageWidth, node.imageHeight, node.rotated, node.smoothing);
-                    }
-                    buffer.context.$filter = null;
-                }
-                else {
-                    while (pos < length) {
-                        buffer.context.drawImage(image, data[pos++], data[pos++], data[pos++], data[pos++],
-                            data[pos++], data[pos++], data[pos++], data[pos++], node.imageWidth, node.imageHeight, node.rotated, node.smoothing);
-                    }
-                }
-                if (blendMode) {
-                    buffer.context.setGlobalCompositeOperation(defaultCompositeOp);
-                }
-                if (alpha == alpha) {
-                    buffer.globalAlpha = originAlpha;
-                }
-                if (m) {
-                    let matrix = buffer.globalMatrix;
-                    matrix.a = savedMatrix.a;
-                    matrix.b = savedMatrix.b;
-                    matrix.c = savedMatrix.c;
-                    matrix.d = savedMatrix.d;
-                    matrix.tx = savedMatrix.tx;
-                    matrix.ty = savedMatrix.ty;
-                    buffer.$offsetX = offsetX;
-                    buffer.$offsetY = offsetY;
-                    Matrix.release(savedMatrix);
-                }
-    
-    
-                        */
                         break;
                     }
                     case 5 /* MeshNode */: {
@@ -8470,12 +8223,11 @@ var egret;
                     }
                     case 6 /* NormalBitmapNode */: {
                         var node = _node;
-                        var trans = displayObject.transform; //
+                        var trans = displayObject.transform;
                         node.__$offsetX__ = trans.__$offsetX__;
                         node.__$offsetY__ = trans.__$offsetY__;
-                        //this.renderNormalBitmap(<sys.NormalBitmapNode>node, buffer);
-                        var wt_5 = trans.worldTransform;
-                        node.renderMatrix.setTo(wt_5.a, wt_5.b, wt_5.c, wt_5.d, wt_5.tx, wt_5.ty);
+                        var wt = trans.worldTransform;
+                        node.renderMatrix.setTo(wt.a, wt.b, wt.c, wt.d, wt.tx, wt.ty);
                         break;
                     }
                     default: {

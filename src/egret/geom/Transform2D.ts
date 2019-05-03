@@ -27,15 +27,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////
 
-
 namespace egret {
 
-    /**
-     * Transform that takes care about its versions
-     *
-     * @class
-     * @memberof PIXI
-     */
     export class Transform2D {
 
         public readonly worldTransform: Matrix = new Matrix;
@@ -48,177 +41,25 @@ namespace egret {
         public __$offsetY__: number = 0;
 
         constructor() {
-            /**
-             * The global matrix transform. It can be swapped temporarily by some functions like getLocalBounds()
-             *
-             * @member {PIXI.Matrix}
-             */
-            //this.worldTransform = new Matrix();
-
-            /**
-             * The local matrix transform
-             *
-             * @member {PIXI.Matrix}
-             */
-            //this.localTransform = new Matrix();
-
-            /**
-             * The coordinate of the object relative to the local coordinates of the parent.
-             *
-             * @member {PIXI.ObservablePoint}
-             */
-            //this.position = new ObservablePoint(this.onChange, this, 0, 0);
-
-            /**
-             * The scale factor of the object.
-             *
-             * @member {PIXI.ObservablePoint}
-             */
-            //this.scale = new ObservablePoint(this.onChange, this, 1, 1);
-
-            /**
-             * The pivot point of the displayObject that it rotates around.
-             *
-             * @member {PIXI.ObservablePoint}
-             */
-            //this.pivot = new ObservablePoint(this.onChange, this, 0, 0);
-
-            /**
-             * The skew amount, on the x and y axis.
-             *
-             * @member {PIXI.ObservablePoint}
-             */
-            // this.skew = new ObservablePoint(this.updateSkew, this, 0, 0);
-
-            // this._rotation = 0;
-
-            // this._cx = 1; // cos rotation + skewY;
-            // this._sx = 0; // sin rotation + skewY;
-            // this._cy = 0; // cos rotation + Math.PI/2 - skewX;
-            // this._sy = 1; // sin rotation + Math.PI/2 - skewX;
-
-            // this._localID = 0;
-            // this._currentLocalID = 0;
-
-            // this._worldID = 0;
-            // this._parentID = 0;
-        }
-
-        /**
-         * Called when a value changes.
-         *
-         * @private
-         */
-        onChange() {
-            this._localID++;
-        }
-
-        /**
-         * Called when skew or rotation changes
-         *
-         * @private
-         */
-        updateSkew() {
-            // this._cx = Math.cos(this._rotation + this.skew._y);
-            // this._sx = Math.sin(this._rotation + this.skew._y);
-            // this._cy = -Math.sin(this._rotation - this.skew._x); // cos, added PI/2
-            // this._sy = Math.cos(this._rotation - this.skew._x); // sin, added PI/2
-
-            this._localID++;
         }
 
         /**
          * Updates only local matrix
          */
         updateLocalTransform(displayObject: DisplayObject) {
-            /*
-            if (this._localID !== this._currentLocalID) {
-                this.$getMatrix();//这里有更新,虽然丑点，就这么写吧
-                this._currentLocalID = this._localID;
-                this._parentID = -1;
-            }
-            if (this._parentID !== parent._worldID) {
-                //this.world = parent.world * this.local
-                this.__$offsetX__ = parent.__$offsetX__ + this.$x;
-                this.__$offsetY__ = parent.__$offsetY__ + this.$y;
-                //
-                const wt = parent.$worldTransform;
-                const lt = this.$getMatrix();
-                const worldtransform = this.$worldTransform;
-                if (this.$useTranslate) {
-                    worldtransform.a = lt.a * wt.a + lt.b * wt.c;
-                    worldtransform.b = lt.a * wt.b + lt.b * wt.d;
-                    worldtransform.c = lt.c * wt.a + lt.d * wt.c;
-                    worldtransform.d = lt.c * wt.b + lt.d * wt.d;
-                    worldtransform.tx = lt.tx * wt.a + lt.ty * wt.c + wt.tx;
-                    worldtransform.ty = lt.tx * wt.b + lt.ty * wt.d + wt.ty;
-                    this.__$offsetX__ = -this.$anchorOffsetX;
-                    this.__$offsetY__ = -this.$anchorOffsetY;
-                }
-                else {
-                    worldtransform.a = wt.a;
-                    worldtransform.b = wt.b;
-                    worldtransform.c = wt.c;
-                    worldtransform.d = wt.d;
-                    this.__$offsetX__ += -this.$anchorOffsetX;
-                    this.__$offsetY__ += -this.$anchorOffsetY;
-                }
-                //下放给子类的实现
-                this.onUpdateTransform(parent);
-                this._parentID = parent._worldID;
-                ++this._worldID;
-                this.$offsetMatrixDirty = true;
-            }
-            */
-            //const lt = this.localTransform;
-            ///
             const sm = displayObject.$getMatrix();
             const lm = this.localTransform;
             lm.setTo(sm.a, sm.b, sm.c, sm.d, sm.tx, sm.ty);
 
             if (this._localID !== this._currentLocalID) {
-                
-                // get the matrix values of the displayobject based on its transform properties..
-                // lt.a = this._cx * this.scale._x;
-                // lt.b = this._sx * this.scale._x;
-                // lt.c = this._cy * this.scale._y;
-                // lt.d = this._sy * this.scale._y;
-
-                // lt.tx = this.position._x - ((this.pivot._x * lt.a) + (this.pivot._y * lt.c));
-                // lt.ty = this.position._y - ((this.pivot._x * lt.b) + (this.pivot._y * lt.d));
                 this._currentLocalID = this._localID;
-
                 // force an update..
                 this._parentID = -1;
             }
         }
 
-        /**
-         * Updates the values of the object and applies the parent's transform.
-         *
-         * @param {PIXI.Transform} parentTransform - The transform of the parent of this object
-         */
         public updateTransform(displayObject: DisplayObject, parentTransform: Transform2D): void {
             this.updateLocalTransform(displayObject);
-            /*
-            if (this._localID !== this._currentLocalID) {
-                // get the matrix values of the displayobject based on its transform properties..
-                // lt.a = this._cx * this.scale._x;
-                // lt.b = this._sx * this.scale._x;
-                // lt.c = this._cy * this.scale._y;
-                // lt.d = this._sy * this.scale._y;
-
-                // lt.tx = this.position._x - ((this.pivot._x * lt.a) + (this.pivot._y * lt.c));
-                // lt.ty = this.position._y - ((this.pivot._x * lt.b) + (this.pivot._y * lt.d));
-                this._currentLocalID = this._localID;
-
-                // force an update..
-                this._parentID = -1;
-            }
-            */
-
-
-
             //this.world = parent.world * this.local
             this.__$offsetX__ = parentTransform.__$offsetX__ + displayObject.$x;
             this.__$offsetY__ = parentTransform.__$offsetY__ + displayObject.$y;

@@ -1292,13 +1292,7 @@ declare namespace egret {
          */
         willTrigger(type: string): boolean;
         transform: Transform2D;
-        /**
-         * Updates the object transform for rendering.
-         *
-         * TODO - Optimization pass!
-         */
         updateTransform(offsetX: number, offsetY: number, globalMatrix: Matrix): void;
-        _updateTransformAsVirtualRenderingRoot(offsetX: number, offsetY: number): void;
     }
 }
 declare namespace egret {
@@ -2949,12 +2943,8 @@ declare namespace egret {
          * @private
          */
         $hitTest(stageX: number, stageY: number): DisplayObject;
-        /**
-         * Updates the transform on all children of this container for rendering
-         */
-        __transform__(globalMatrix: Matrix, a: number, b: number, c: number, d: number, tx: number, ty: number): void;
+        private __transform__(globalMatrix, a, b, c, d, tx, ty);
         updateTransform(offsetX: number, offsetY: number, globalMatrix: Matrix): void;
-        _updateTransformAsVirtualRenderingRoot(offsetX: number, offsetY: number): void;
     }
 }
 declare namespace egret {
@@ -8020,12 +8010,6 @@ declare namespace egret {
     let $TempRectangle: Rectangle;
 }
 declare namespace egret {
-    /**
-     * Transform that takes care about its versions
-     *
-     * @class
-     * @memberof PIXI
-     */
     class Transform2D {
         readonly worldTransform: Matrix;
         readonly localTransform: Matrix;
@@ -8037,26 +8021,9 @@ declare namespace egret {
         __$offsetY__: number;
         constructor();
         /**
-         * Called when a value changes.
-         *
-         * @private
-         */
-        onChange(): void;
-        /**
-         * Called when skew or rotation changes
-         *
-         * @private
-         */
-        updateSkew(): void;
-        /**
          * Updates only local matrix
          */
         updateLocalTransform(displayObject: DisplayObject): void;
-        /**
-         * Updates the values of the object and applies the parent's transform.
-         *
-         * @param {PIXI.Transform} parentTransform - The transform of the parent of this object
-         */
         updateTransform(displayObject: DisplayObject, parentTransform: Transform2D): void;
     }
 }
