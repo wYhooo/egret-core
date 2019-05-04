@@ -7378,7 +7378,7 @@ var egret;
                     savedMatrix.tx = curMatrix.tx;
                     savedMatrix.ty = curMatrix.ty;
                     buffer.useOffset();
-                    buffer.debugCurrentRenderNode = null;
+                    buffer.debugCurrentRenderNode = null; //do not render using renderNode
                     buffer.context.drawTargetWidthFilters(filters, displayBuffer);
                     curMatrix.a = savedMatrix.a;
                     curMatrix.b = savedMatrix.b;
@@ -7473,23 +7473,35 @@ var egret;
                     //绘制显示对象自身，若有scrollRect，应用clip
                     var displayBuffer = this.createRenderBuffer(displayBoundsWidth, displayBoundsHeight);
                     displayBuffer.context.pushBuffer(displayBuffer);
+                    //
+                    if (egret.transformRefactor) {
+                        displayObject.transformAsRenderRoot(-displayBoundsX, -displayBoundsY, displayBuffer.globalMatrix);
+                        displayObject.transform(-displayBoundsX, -displayBoundsY);
+                    }
                     drawCalls += this.drawDisplayObject(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
                     //绘制遮罩
                     if (mask) {
                         var maskBuffer = this.createRenderBuffer(displayBoundsWidth, displayBoundsHeight);
                         maskBuffer.context.pushBuffer(maskBuffer);
                         var maskMatrix = egret.Matrix.create();
-                        maskMatrix.copyFrom(mask.$getConcatenatedMatrix());
+                        var maskConcatenatedMatrix = mask.$getConcatenatedMatrix();
+                        maskMatrix.copyFrom(maskConcatenatedMatrix);
                         mask.$getConcatenatedMatrixAt(displayObject, maskMatrix);
                         maskMatrix.translate(-displayBoundsX, -displayBoundsY);
                         maskBuffer.setTransform(maskMatrix.a, maskMatrix.b, maskMatrix.c, maskMatrix.d, maskMatrix.tx, maskMatrix.ty);
                         egret.Matrix.release(maskMatrix);
+                        //
+                        if (egret.transformRefactor) {
+                            mask.transformAsRenderRoot(0, 0, maskBuffer.globalMatrix);
+                            mask.transform(0, 0);
+                        }
                         drawCalls += this.drawDisplayObject(mask, maskBuffer, 0, 0);
                         maskBuffer.context.popBuffer();
                         displayBuffer.context.setGlobalCompositeOperation("destination-in");
                         displayBuffer.setTransform(1, 0, 0, -1, 0, maskBuffer.height);
                         var maskBufferWidth = maskBuffer.rootRenderTarget.width;
                         var maskBufferHeight = maskBuffer.rootRenderTarget.height;
+                        displayBuffer.debugCurrentRenderNode = null;
                         displayBuffer.context.drawTexture(maskBuffer.rootRenderTarget.texture, 0, 0, maskBufferWidth, maskBufferHeight, 0, 0, maskBufferWidth, maskBufferHeight, maskBufferWidth, maskBufferHeight);
                         displayBuffer.setTransform(1, 0, 0, 1, 0, 0);
                         displayBuffer.context.setGlobalCompositeOperation("source-over");
@@ -7518,6 +7530,7 @@ var egret;
                         curMatrix.append(1, 0, 0, -1, offsetX + displayBoundsX, offsetY + displayBoundsY + displayBuffer.height);
                         var displayBufferWidth = displayBuffer.rootRenderTarget.width;
                         var displayBufferHeight = displayBuffer.rootRenderTarget.height;
+                        buffer.debugCurrentRenderNode = null;
                         buffer.context.drawTexture(displayBuffer.rootRenderTarget.texture, 0, 0, displayBufferWidth, displayBufferHeight, 0, 0, displayBufferWidth, displayBufferHeight, displayBufferWidth, displayBufferHeight);
                         if (scrollRect) {
                             displayBuffer.context.popMask();
