@@ -8173,39 +8173,9 @@ var egret;
                             //buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
                             egret.NumberUtils.__transform__(renderMatrix, m.a, m.b, m.c, m.d, m.tx, m.ty);
                         }
-                        /*
-                        buffer.useOffset();
-                        buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-    
-                        public useOffset(): void {
-                            let self = this;
-                            if (self.$offsetX != 0 || self.$offsetY != 0) {
-                                self.globalMatrix.append(1, 0, 0, 1, self.$offsetX, self.$offsetY);
-                                self.$offsetX = self.$offsetY = 0;
-                            }
-                        }
-    
-                        public transform(a: number, b: number, c: number, d: number, tx: number, ty: number): void {
-                            let matrix = this.globalMatrix;
-                            let a1 = matrix.a;
-                            let b1 = matrix.b;
-                            let c1 = matrix.c;
-                            let d1 = matrix.d;
-                            if (a != 1 || b != 0 || c != 0 || d != 1) {
-                                matrix.a = a * a1 + b * c1;
-                                matrix.b = a * b1 + b * d1;
-                                matrix.c = c * a1 + d * c1;
-                                matrix.d = c * b1 + d * d1;
-                            }
-                            matrix.tx = tx * a1 + ty * c1 + matrix.tx;
-                            matrix.ty = tx * b1 + ty * d1 + matrix.ty;
-                        }
-    
-                        */
                         break;
                     }
                     case 5 /* MeshNode */: {
-                        //this.renderMesh(<sys.MeshNode>node, buffer);
                         break;
                     }
                     case 6 /* NormalBitmapNode */: {
