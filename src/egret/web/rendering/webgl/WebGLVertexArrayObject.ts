@@ -137,14 +137,15 @@ namespace egret.web {
             */
             if (egret.transformRefactor) {
                 const debugCurrentRenderNode = buffer.debugCurrentRenderNode;
-                const renderMatrix = debugCurrentRenderNode.renderMatrix;
-                if (!NumberUtils.matrixEqual(buffer.globalMatrix, renderMatrix)
-                    || buffer.$offsetX !== debugCurrentRenderNode.__$offsetX__
-                    || buffer.$offsetY !== debugCurrentRenderNode.__$offsetY__) {
-                    console.error('cacheArrays transform check failed');
+                if (debugCurrentRenderNode) {
+                    const renderMatrix = debugCurrentRenderNode.renderMatrix;
+                    if (!NumberUtils.matrixEqual(buffer.globalMatrix, renderMatrix)
+                        || buffer.$offsetX !== debugCurrentRenderNode.__$offsetX__
+                        || buffer.$offsetY !== debugCurrentRenderNode.__$offsetY__) {
+                        console.error('cacheArrays transform check failed');
+                    }
                 }
             }
-            //this.__displayObjectToRenderNode__(displayObject, node, buffer);
             /*
             *************************************************
             */

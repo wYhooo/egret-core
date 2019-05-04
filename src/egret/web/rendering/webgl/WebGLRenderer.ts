@@ -298,6 +298,10 @@ namespace egret.web {
                 drawCalls += this.drawWithScrollRect(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
             }
             else {
+                if (egret.transformRefactor) {
+                    displayObject.transformAsRenderRoot(-displayBoundsX, -displayBoundsY, displayBuffer.globalMatrix);
+                    displayObject.transform(-displayBoundsX, -displayBoundsY);
+                }
                 drawCalls += this.drawDisplayObject(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
             }
 
@@ -321,6 +325,7 @@ namespace egret.web {
                 savedMatrix.tx = curMatrix.tx;
                 savedMatrix.ty = curMatrix.ty;
                 buffer.useOffset();
+                buffer.debugCurrentRenderNode = null;//do not render using renderNode
                 buffer.context.drawTargetWidthFilters(filters, displayBuffer);
                 curMatrix.a = savedMatrix.a;
                 curMatrix.b = savedMatrix.b;

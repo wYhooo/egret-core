@@ -5331,14 +5331,15 @@ var egret;
                 */
                 if (egret.transformRefactor) {
                     var debugCurrentRenderNode = buffer.debugCurrentRenderNode;
-                    var renderMatrix = debugCurrentRenderNode.renderMatrix;
-                    if (!egret.NumberUtils.matrixEqual(buffer.globalMatrix, renderMatrix)
-                        || buffer.$offsetX !== debugCurrentRenderNode.__$offsetX__
-                        || buffer.$offsetY !== debugCurrentRenderNode.__$offsetY__) {
-                        console.error('cacheArrays transform check failed');
+                    if (debugCurrentRenderNode) {
+                        var renderMatrix = debugCurrentRenderNode.renderMatrix;
+                        if (!egret.NumberUtils.matrixEqual(buffer.globalMatrix, renderMatrix)
+                            || buffer.$offsetX !== debugCurrentRenderNode.__$offsetX__
+                            || buffer.$offsetY !== debugCurrentRenderNode.__$offsetY__) {
+                            console.error('cacheArrays transform check failed');
+                        }
                     }
                 }
-                //this.__displayObjectToRenderNode__(displayObject, node, buffer);
                 /*
                 *************************************************
                 */
@@ -7352,6 +7353,10 @@ var egret;
                     drawCalls += this.drawWithScrollRect(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
                 }
                 else {
+                    if (egret.transformRefactor) {
+                        displayObject.transformAsRenderRoot(-displayBoundsX, -displayBoundsY, displayBuffer.globalMatrix);
+                        displayObject.transform(-displayBoundsX, -displayBoundsY);
+                    }
                     drawCalls += this.drawDisplayObject(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
                 }
                 displayBuffer.context.popBuffer();
@@ -7373,6 +7378,7 @@ var egret;
                     savedMatrix.tx = curMatrix.tx;
                     savedMatrix.ty = curMatrix.ty;
                     buffer.useOffset();
+                    buffer.debugCurrentRenderNode = null;
                     buffer.context.drawTargetWidthFilters(filters, displayBuffer);
                     curMatrix.a = savedMatrix.a;
                     curMatrix.b = savedMatrix.b;
