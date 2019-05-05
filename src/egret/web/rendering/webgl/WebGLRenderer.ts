@@ -197,6 +197,7 @@ namespace egret.web {
                         offsetX2 = offsetX + child.$x - child.$anchorOffsetX;
                         offsetY2 = offsetY + child.$y - child.$anchorOffsetY;
                     }
+                    /*
                     switch (child.$renderMode) {
                         case RenderMode.NONE:
                             break;
@@ -213,6 +214,8 @@ namespace egret.web {
                             drawCalls += this.drawDisplayObject(child, buffer, offsetX2, offsetY2);
                             break;
                     }
+                    */
+                    drawCalls += this.__drawChild__(child, buffer, offsetX2, offsetY2);
                     if (tempAlpha) {
                         buffer.globalAlpha = tempAlpha;
                     }
@@ -668,6 +671,7 @@ namespace egret.web {
                 let length = children.length;
                 for (let i = 0; i < length; i++) {
                     let child = children[i];
+                    /*
                     switch (child.$renderMode) {
                         case RenderMode.NONE:
                             break;
@@ -684,6 +688,8 @@ namespace egret.web {
                             drawCalls += this.drawDisplayObject(child, buffer, 0, 0);
                             break;
                     }
+                    */
+                    drawCalls += this.__drawChild__(child, buffer, 0, 0);
                 }
             }
 
@@ -1226,6 +1232,63 @@ namespace egret.web {
                     break;
                 }
             }
+        }
+
+        private __drawChild__(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX2: number, offsetY2: number): number {
+            let drawCalls = 0;
+            const child = displayObject;
+            /*
+            switch (child.$renderMode) {
+                case RenderMode.NONE:
+                    break;
+                case RenderMode.FILTER:
+                    drawCalls += this.drawWithFilter(child, buffer, offsetX2, offsetY2);
+                    break;
+                case RenderMode.CLIP:
+                    drawCalls += this.drawWithClip(child, buffer, offsetX2, offsetY2);
+                    break;
+                case RenderMode.SCROLLRECT:
+                    drawCalls += this.drawWithScrollRect(child, buffer, offsetX2, offsetY2);
+                    break;
+                default:
+                    drawCalls += this.drawDisplayObject(child, buffer, offsetX2, offsetY2);
+                    break;
+            }
+            */
+            switch (child.$renderMode) {
+                case RenderMode.NONE:
+                    break;
+                case RenderMode.FILTER:
+                case RenderMode.CLIP:
+                case RenderMode.SCROLLRECT:
+                    drawCalls += this.__drawAdvanced__(child, buffer, offsetX2, offsetY2);
+                    break;
+                default:
+                    drawCalls += this.drawDisplayObject(child, buffer, offsetX2, offsetY2);
+                    break;
+            }
+            return drawCalls;
+        }
+
+        private __drawAdvanced__(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX2: number, offsetY2: number): number {
+            let drawCalls = 0;
+            const child = displayObject;
+            switch (child.$renderMode) {
+                case RenderMode.FILTER:
+                    drawCalls += this.drawWithFilter(child, buffer, offsetX2, offsetY2);
+                    break;
+                case RenderMode.CLIP:
+                    drawCalls += this.drawWithClip(child, buffer, offsetX2, offsetY2);
+                    break;
+                case RenderMode.SCROLLRECT:
+                    drawCalls += this.drawWithScrollRect(child, buffer, offsetX2, offsetY2);
+                    break;
+                default: {
+                    console.error('__drawAdvanced__: child.$renderMode = ' + child.$renderMode);
+                    break;
+                }
+            }
+            return drawCalls;
         }
     }
 }

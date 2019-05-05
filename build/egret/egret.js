@@ -9929,6 +9929,11 @@ var egret;
             configurable: true
         });
         CustomFilter.prototype.onPropertyChange = function () {
+            /*
+            This is the padding. If the padding is 0, the entire texture will use the filter shader.
+            Otherwise, the shader of the filter will be used in some areas.
+            You need to re-open a texture.
+            */
             if (egret.nativeRender) {
                 var self_1 = this;
                 egret_native.NativeDisplayObject.setFilterPadding(self_1.$id, self_1.$padding, self_1.$padding, self_1.$padding, self_1.$padding);
