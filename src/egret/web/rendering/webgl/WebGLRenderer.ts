@@ -542,6 +542,11 @@ namespace egret.web {
                     maxY = yMax + ty;
                 }
                 else {
+                    /*
+                    x0---x1
+                    |     |
+                    x3---x2
+                    */
                     let x0 = a * x + tx;
                     let y0 = d * y + ty;
                     let x1 = a * xMax + tx;
