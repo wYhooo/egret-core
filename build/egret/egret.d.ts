@@ -15036,6 +15036,48 @@ declare namespace egret {
      */
     function toColorString(value: number): string;
 }
+/**
+ * System plugin to the renderer to manage filter states.
+ *
+ * @class
+ * @private
+ */
+declare namespace egret.web {
+    /**
+     * System plugin to the renderer to manage the filters.
+     *
+     * @class
+     * @memberof PIXI.systems
+     * @extends PIXI.System
+     */
+    class FilterSystem {
+        /**
+         * @param {PIXI.Renderer} renderer - The renderer this System works for.
+         */
+        constructor();
+        /**
+         * Adds a new filter to the System.
+         *
+         * @param {PIXI.DisplayObject} target - The target of the filter to render.
+         * @param {PIXI.Filter[]} filters - The filters to apply.
+         */
+        push(target: any, filters: any): void;
+        /**
+         * Pops off the filter and applies it.
+         *
+         */
+        pop(): void;
+        /**
+         * Draws a filter.
+         *
+         * @param {PIXI.Filter} filter - The filter to draw.
+         * @param {PIXI.RenderTexture} input - The input render target.
+         * @param {PIXI.RenderTexture} output - The target to output to.
+         * @param {boolean} clear - Should the output be cleared before rendering to it
+         */
+        applyFilter(filter: any, input: any, output: any, clear: any): void;
+    }
+}
 declare namespace egret.sys {
     /**
      * @private

@@ -8292,7 +8292,6 @@ var egret;
                     }
                 }
                 ////
-                //buffer.context.$drawWebGL();
                 //renderer.batch.flush();
                 buffer.context.$drawWebGL();
                 var filters = displayObject.$filters;
