@@ -8195,6 +8195,23 @@ var egret;
                         break;
                     }
                     case 5 /* MeshNode */: {
+                        var node = _node;
+                        node.__$offsetX__ = displayObject.__$offsetX__;
+                        node.__$offsetY__ = displayObject.__$offsetY__;
+                        var renderMatrix = node.renderMatrix;
+                        renderMatrix._setTo_(displayObject.globalMatrix);
+                        //
+                        if (node.matrix) {
+                            var m = node.matrix;
+                            //buffer.useOffset();
+                            if (node.__$offsetX__ !== 0 || node.__$offsetY__ !== 0) {
+                                renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                                node.__$offsetX__ = 0;
+                                node.__$offsetY__ = 0;
+                            }
+                            //buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+                            egret.NumberUtils.__transform__(renderMatrix, m.a, m.b, m.c, m.d, m.tx, m.ty);
+                        }
                         break;
                     }
                     case 6 /* NormalBitmapNode */: {

@@ -1188,6 +1188,23 @@ namespace egret.web {
                 }
 
                 case sys.RenderNodeType.MeshNode: {
+                    const node = <sys.MeshNode>_node;
+                    node.__$offsetX__ = displayObject.__$offsetX__;
+                    node.__$offsetY__ = displayObject.__$offsetY__;
+                    const renderMatrix = node.renderMatrix;
+                    renderMatrix._setTo_(displayObject.globalMatrix);
+                    //
+                    if (node.matrix) {
+                        const m = node.matrix;
+                        //buffer.useOffset();
+                        if (node.__$offsetX__ !== 0 || node.__$offsetY__ !== 0) {
+                            renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                            node.__$offsetX__ = 0;
+                            node.__$offsetY__ = 0;
+                        }
+                        //buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+                        NumberUtils.__transform__(renderMatrix, m.a, m.b, m.c, m.d, m.tx, m.ty);
+                    }
                     break;
                 }
 
