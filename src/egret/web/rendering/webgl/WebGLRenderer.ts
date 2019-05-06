@@ -29,11 +29,11 @@
 
 namespace egret.web {
 
-    let blendModes = ["source-over", "lighter", "destination-out"];
-    let defaultCompositeOp = "source-over";
-    let BLACK_COLOR = "#000000";
-    let CAPS_STYLES = { none: 'butt', square: 'square', round: 'round' };
-    let renderBufferPool: WebGLRenderBuffer[] = [];//渲染缓冲区对象池
+    export const blendModes = ["source-over", "lighter", "destination-out"];
+    export const defaultCompositeOp = "source-over";
+    export const BLACK_COLOR = "#000000";
+    export const CAPS_STYLES = { none: 'butt', square: 'square', round: 'round' };
+    export const renderBufferPool: WebGLRenderBuffer[] = [];//渲染缓冲区对象池
     /**
      * @private
      * WebGL渲染器
@@ -1269,26 +1269,28 @@ namespace egret.web {
             }
             return drawCalls;
         }
-
+        private readonly legacyDrawAdvanced: boolean = false;
         private __drawAdvanced__(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX2: number, offsetY2: number): number {
             let drawCalls = 0;
             const child = displayObject;
-            switch (child.$renderMode) {
-                case RenderMode.FILTER:
-                    drawCalls += this.drawWithFilter(child, buffer, offsetX2, offsetY2);
-                    break;
-                case RenderMode.CLIP:
-                    drawCalls += this.drawWithClip(child, buffer, offsetX2, offsetY2);
-                    break;
-                case RenderMode.SCROLLRECT:
-                    drawCalls += this.drawWithScrollRect(child, buffer, offsetX2, offsetY2);
-                    break;
-                default: {
-                    console.error('__drawAdvanced__: child.$renderMode = ' + child.$renderMode);
-                    break;
+            if (this.legacyDrawAdvanced) {
+                switch (child.$renderMode) {
+                    case RenderMode.FILTER:
+                        drawCalls += this.drawWithFilter(child, buffer, offsetX2, offsetY2);
+                        break;
+                    case RenderMode.CLIP:
+                        drawCalls += this.drawWithClip(child, buffer, offsetX2, offsetY2);
+                        break;
+                    case RenderMode.SCROLLRECT:
+                        drawCalls += this.drawWithScrollRect(child, buffer, offsetX2, offsetY2);
+                        break;
+                    default: {
+                        console.error('__drawAdvanced__: child.$renderMode = ' + child.$renderMode);
+                        break;
+                    }
                 }
+                return drawCalls;
             }
-
             ////
             //renderer.batch.flush();
             buffer.context.$drawWebGL();
@@ -1317,7 +1319,7 @@ namespace egret.web {
                 // {
                 //     renderer.filter.push(this, this._enabledFilters);
                 // }
-                //FilterManager.push();
+                buffer.context.filterSystem.push(child, child.filters, buffer);
             }
 
             if (mask) {
@@ -1333,7 +1335,7 @@ namespace egret.web {
             // {
             //     this.children[i$1].render(renderer);
             // }
-            //this.drawDisplayObject(displayObject, buffer, offsetX2, offsetY2);
+            drawCalls += this.drawDisplayObject(displayObject, buffer, offsetX2, offsetY2);
 
             //renderer.batch.flush();
             buffer.context.$drawWebGL();
@@ -1345,7 +1347,7 @@ namespace egret.web {
 
             if (filters /*&& this._enabledFilters && this._enabledFilters.length*/) {
                 //renderer.filter.pop();
-                //FilterManager.pop();
+                buffer.context.filterSystem.pop();
             }
             return drawCalls;
         }

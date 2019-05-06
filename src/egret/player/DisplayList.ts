@@ -150,7 +150,9 @@ namespace egret.sys {
                 renderNode.imageHeight = height;
                 renderNode.drawImage(0, 0, width, height, -this.offsetX, -this.offsetY, width / this.$canvasScaleX, height / this.$canvasScaleY);
             }
-
+            else {
+                
+            }
             return drawCalls;
         }
 

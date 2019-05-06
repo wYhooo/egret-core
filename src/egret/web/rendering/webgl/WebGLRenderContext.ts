@@ -58,6 +58,8 @@ namespace egret.web {
      */
     export class WebGLRenderContext {
 
+        public readonly filterSystem: FilterSystem = new FilterSystem;
+
         public static antialias: boolean;
 
         //
