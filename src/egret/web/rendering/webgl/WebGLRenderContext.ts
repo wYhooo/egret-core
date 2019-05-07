@@ -58,7 +58,10 @@ namespace egret.web {
      */
     export class WebGLRenderContext {
 
-        public readonly filterSystem: FilterSystem = new FilterSystem;
+        public readonly filterSystem: FilterSystem = new FilterSystem(this);
+        public currentFilterSystemRenderTarget: WebGLRenderBuffer = null;
+        public currentFilterSystemRenderTargetOffsetX: number = 0;
+        public currentFilterSystemRenderTargetOffsetY: number = 0;
 
         public static antialias: boolean;
 

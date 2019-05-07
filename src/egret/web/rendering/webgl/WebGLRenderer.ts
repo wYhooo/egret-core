@@ -1293,7 +1293,8 @@ namespace egret.web {
             }
             ////
             //renderer.batch.flush();
-            buffer.context.$drawWebGL();
+            const webglRenderContext = buffer.context;
+            webglRenderContext.$drawWebGL();
 
             const filters = displayObject.$filters;
             const mask = displayObject.$mask || displayObject.$maskRect || displayObject.$scrollRect;
@@ -1319,7 +1320,7 @@ namespace egret.web {
                 // {
                 //     renderer.filter.push(this, this._enabledFilters);
                 // }
-                buffer.context.filterSystem.push(child, child.filters, buffer);
+                webglRenderContext.filterSystem.push(child, child.filters, buffer);
             }
 
             if (mask) {
@@ -1335,10 +1336,12 @@ namespace egret.web {
             // {
             //     this.children[i$1].render(renderer);
             // }
-            drawCalls += this.drawDisplayObject(displayObject, buffer, offsetX2, offsetY2);
+            drawCalls += this.drawDisplayObject(displayObject, webglRenderContext.currentFilterSystemRenderTarget,
+                webglRenderContext.currentFilterSystemRenderTargetOffsetX,//offsetX2,
+                webglRenderContext.currentFilterSystemRenderTargetOffsetY)// offsetY2);
 
             //renderer.batch.flush();
-            buffer.context.$drawWebGL();
+            webglRenderContext.$drawWebGL();
 
             if (mask) {
                 //renderer.mask.pop(this, this._mask);
@@ -1347,7 +1350,7 @@ namespace egret.web {
 
             if (filters /*&& this._enabledFilters && this._enabledFilters.length*/) {
                 //renderer.filter.pop();
-                buffer.context.filterSystem.pop();
+                webglRenderContext.filterSystem.pop();
             }
             return drawCalls;
         }
