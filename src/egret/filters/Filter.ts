@@ -74,6 +74,8 @@ namespace egret {
          */
         public $obj: any;
 
+        public post: boolean = true; //后处理类型，否则就是直接绘制
+
         constructor() {
             super();
             this.$uniforms = {};
@@ -101,5 +103,14 @@ namespace egret {
                 egret_native.NativeDisplayObject.setDataToFilter(self);
             }
         }
+
+        // public apply(filterManager: , input, output, clear, currentState)
+        // {
+        //     // do as you please!
+
+        //     filterManager.applyFilter(this, input, output, clear, currentState);
+
+        //     // or just do a regular render..
+        // }
     }
 }

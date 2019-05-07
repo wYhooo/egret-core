@@ -293,6 +293,7 @@ declare namespace egret {
          * @native Render
          */
         $obj: any;
+        post: boolean;
         constructor();
         /**
          * @private

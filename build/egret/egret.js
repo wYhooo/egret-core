@@ -461,6 +461,7 @@ var egret;
              * @private
              */
             _this.paddingRight = 0;
+            _this.post = true; //后处理类型，否则就是直接绘制
             _this.$uniforms = {};
             if (egret.nativeRender) {
                 egret_native.NativeDisplayObject.createFilter(_this);
@@ -9698,6 +9699,7 @@ var egret;
             _this.$uniforms.colorAdd = { x: 0, y: 0, z: 0, w: 0 };
             _this.setMatrix(matrix);
             _this.onPropertyChange();
+            _this.post = false;
             return _this;
         }
         Object.defineProperty(ColorMatrixFilter.prototype, "matrix", {
@@ -9878,6 +9880,7 @@ var egret;
             _this.$shaderKey = SOURCE_KEY_MAP[tempKey];
             _this.$uniforms = uniforms;
             _this.type = "custom";
+            _this.post = false;
             return _this;
         }
         Object.defineProperty(CustomFilter.prototype, "padding", {
