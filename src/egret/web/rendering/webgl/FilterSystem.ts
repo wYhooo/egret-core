@@ -149,7 +149,10 @@ namespace egret.web {
                 }
             }
             else {
-
+                console.log('push: filters.length = ' + filters.length);
+                const targetTexture = state.renderTexture;
+                const _webglRenderContext = this._webglRenderContext;
+                _webglRenderContext.pushBuffer(targetTexture);
             }
         }
 
@@ -165,16 +168,18 @@ namespace egret.web {
                 const filters_0 = filters[0];
                 const _webglRenderContext = this._webglRenderContext;
                 //
-                if (filters_0.post) {   
+                if (filters_0.post) {
                     //unbind
                     _webglRenderContext.popBuffer();
                 }
                 else {
+                    //nothing
                 }
                 //
                 this.applyFilter(filters_0, state.renderTexture, lastState.renderTexture, false, state);
                 //
                 if (filters_0.post) {
+                    //nothing
                 }
                 else {
                     _webglRenderContext.setGlobalCompositeOperation(defaultCompositeOp);
@@ -182,6 +187,7 @@ namespace egret.web {
                     //unbind
                     _webglRenderContext.popBuffer();
                 }
+                //这三个临时变量不要了
                 _webglRenderContext.curFilterRenderTarget = null;
                 _webglRenderContext.curFilterOffsetX = 0;
                 _webglRenderContext.curFilterOffsetY = 0;
@@ -190,8 +196,43 @@ namespace egret.web {
                 state.renderTexture = null;
             }
             else {
+                console.log('pop: filters.length = ' + filters.length);
+                const _webglRenderContext = this._webglRenderContext;
+                _webglRenderContext.popBuffer();
+                //
+                _webglRenderContext.setGlobalCompositeOperation(state.currentCompositeOp);
+                let input = state.renderTexture;
+                const filtersLen = filters.length;
+                if (filtersLen > 1) {
+                    for (let i = 0; i < filtersLen - 1; i++) {
+                        let filter = filters[i];
+                        let width = state.displayBoundsWidth;
+                        let height = state.displayBoundsHeight;
+                        let output = this.getOptimalFilterTexture(width, height);
+                        output.setTransform(1, 0, 0, 1, 0, 0);
+                        output.globalAlpha = 1;
+                        //this.drawToRenderTarget(filter, input, output);
+                        output.debugCurrentRenderNode = null;//do not render using renderNode
+                        _webglRenderContext.___drawToRenderTarget___(filter, input, output);
+                        this.returnFilterTexture(input);
+                        input = output;
+                    }
+                }
+
+                // 应用最后一个滤镜并绘制到当前场景中
+                let filter = filters[filtersLen - 1];
+                lastState.renderTexture.debugCurrentRenderNode = null;//do not render using renderNode
+                _webglRenderContext.___drawToRenderTarget___(filter, input, lastState.renderTexture);
+                this.returnFilterTexture(input);
+
+                _webglRenderContext.setGlobalCompositeOperation(defaultCompositeOp);
+                _webglRenderContext.$filter = null;
+                //这三个临时变量不要了
+                _webglRenderContext.curFilterRenderTarget = null;
+                _webglRenderContext.curFilterOffsetX = 0;
+                _webglRenderContext.curFilterOffsetY = 0;
             }
-            //
+            //清除，回池
             state.clear();
             this.statePool.push(state);
         }
@@ -203,7 +244,8 @@ namespace egret.web {
         public applyFilter(filter: Filter, input: WebGLRenderBuffer, output: WebGLRenderBuffer, clear: boolean, state: FilterState): void {
             console.log('applyFilter = ' + filter.type + ', post = ' + filter.post);
             if (filter.post) {
-                this._webglRenderContext.setGlobalCompositeOperation(state.currentCompositeOp);
+                const _webglRenderContext = this._webglRenderContext;
+                _webglRenderContext.setGlobalCompositeOperation(state.currentCompositeOp);
                 // 绘制结果的时候，应用滤镜
                 output.$offsetX = state.offsetX + state.displayBoundsX;
                 output.$offsetY = state.offsetY + state.displayBoundsY;
@@ -219,7 +261,7 @@ namespace egret.web {
                 const savedOffsetY = output.$offsetY;
                 output.useOffset();
                 output.debugCurrentRenderNode = null;//do not render using renderNode
-                this._webglRenderContext.___drawToRenderTarget___(filter, input, output);
+                _webglRenderContext.___drawToRenderTarget___(filter, input, output);
                 curMatrix.a = savedMatrix.a;
                 curMatrix.b = savedMatrix.b;
                 curMatrix.c = savedMatrix.c;
@@ -229,7 +271,7 @@ namespace egret.web {
                 output.$offsetX = savedOffsetX;
                 output.$offsetY = savedOffsetY;
                 Matrix.release(savedMatrix);
-                this._webglRenderContext.setGlobalCompositeOperation(defaultCompositeOp);
+                _webglRenderContext.setGlobalCompositeOperation(defaultCompositeOp);
             }
             else {
             }
