@@ -1297,7 +1297,7 @@ namespace egret.web {
             webglRenderContext.curFilterRenderTarget = buffer;
             webglRenderContext.curFilterOffsetX = offsetX2;
             webglRenderContext.curFilterOffsetY = offsetY2;
-            
+
             webglRenderContext.$drawWebGL();
 
             const filters = displayObject.$filters;
@@ -1324,7 +1324,7 @@ namespace egret.web {
                 // {
                 //     renderer.filter.push(this, this._enabledFilters);
                 // }
-                webglRenderContext.filterSystem.push(child, child.filters, buffer);
+                webglRenderContext.filterSystem.push(child, child.filters, buffer, offsetX2, offsetY2);
             }
 
             if (mask) {

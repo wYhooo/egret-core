@@ -1214,6 +1214,30 @@ namespace egret.web {
             this.popBuffer();
         }
 
+
+        /**
+         * 向一个renderTarget中绘制
+         * */
+        public ___drawToRenderTarget___(filter: Filter, input: WebGLRenderBuffer, output: WebGLRenderBuffer): void {
+            if (this.contextLost) {
+                return;
+            }
+            if (this.vao.reachMaxSize()) {
+                this.$drawWebGL();
+            }
+            this.pushBuffer(output);
+            const width = input.rootRenderTarget.width;
+            const height = input.rootRenderTarget.height;
+            // 绘制input结果到舞台
+            output.saveTransform();
+            output.transform(1, 0, 0, -1, 0, height);
+            this.vao.cacheArrays(output, 0, 0, width, height, 0, 0, width, height, width, height);
+            output.restoreTransform();
+            //
+            this.drawCmdManager.pushDrawTexture(input.rootRenderTarget.texture, 2, filter, width, height);
+            this.popBuffer();
+        }
+
         public static blendModesForGL: any = null;
 
         public static initBlendMode(): void {
