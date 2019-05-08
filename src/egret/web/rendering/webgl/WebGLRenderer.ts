@@ -1294,6 +1294,10 @@ namespace egret.web {
             ////
             //renderer.batch.flush();
             const webglRenderContext = buffer.context;
+            webglRenderContext.curFilterRenderTarget = buffer;
+            webglRenderContext.curFilterOffsetX = offsetX2;
+            webglRenderContext.curFilterOffsetY = offsetY2;
+            
             webglRenderContext.$drawWebGL();
 
             const filters = displayObject.$filters;
@@ -1336,9 +1340,9 @@ namespace egret.web {
             // {
             //     this.children[i$1].render(renderer);
             // }
-            drawCalls += this.drawDisplayObject(displayObject, webglRenderContext.currentFilterSystemRenderTarget,
-                webglRenderContext.currentFilterSystemRenderTargetOffsetX,//offsetX2,
-                webglRenderContext.currentFilterSystemRenderTargetOffsetY)// offsetY2);
+            drawCalls += this.drawDisplayObject(displayObject, webglRenderContext.curFilterRenderTarget,
+                webglRenderContext.curFilterOffsetX,//offsetX2,
+                webglRenderContext.curFilterOffsetY)// offsetY2);
 
             //renderer.batch.flush();
             webglRenderContext.$drawWebGL();
