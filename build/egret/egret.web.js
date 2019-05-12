@@ -8321,66 +8321,43 @@ var egret;
                     }
                     return drawCalls;
                 }
-                ////
-                //renderer.batch.flush();
+                //
                 var webglRenderContext = buffer.context;
                 webglRenderContext.curFilterRenderTarget = buffer;
                 webglRenderContext.curFilterOffsetX = offsetX2;
                 webglRenderContext.curFilterOffsetY = offsetY2;
                 //
                 webglRenderContext.$drawWebGL();
-                var filters = displayObject.$_filters; //$filters;
+                //
+                var filters = displayObject.$_filters;
                 var mask = displayObject.$mask || displayObject.$maskRect || displayObject.$scrollRect;
-                // push filter first as we need to ensure the stencil buffer is correct for any masking
+                //
                 if (filters && filters.length > 0) {
-                    // if (!this._enabledFilters)
-                    // {
-                    //     this._enabledFilters = [];
-                    // }
-                    // this._enabledFilters.length = 0;
-                    // for (var i = 0; i < filters.length; i++)
-                    // {
-                    //     if (filters[i].enabled)
-                    //     {
-                    //         this._enabledFilters.push(filters[i]);
-                    //     }
-                    // }
-                    // if (this._enabledFilters.length)
-                    // {
-                    //     renderer.filter.push(this, this._enabledFilters);
-                    // }
+                    /*
+                    这里面有可能会改掉curFilterRenderTarget,curFilterOffsetX,curFilterOffsetY;
+                    */
                     webglRenderContext.filterSystem.push(child, child.$_filters, buffer, offsetX2, offsetY2);
                 }
                 if (mask) {
                     //renderer.mask.push(this, this._mask);
                     //MaskManager.push
                 }
-                // add this object to the batch, only rendered if it has a texture.
-                // this._render(renderer);
-                // // now loop through the children and make sure they get rendered
-                // for (var i$1 = 0, j = this.children.length; i$1 < j; i$1++)
-                // {
-                //     this.children[i$1].render(renderer);
-                // }
-                //
-                //自定义shader
+                //自定义shader ===  webglRenderContext.$filter
                 webglRenderContext.$filter = displayObject.$_shader;
                 var blend = web.blendModes[displayObject.$blendMode] || web.defaultCompositeOp;
                 webglRenderContext.setGlobalCompositeOperation(blend);
                 //
-                drawCalls += this.drawDisplayObject(displayObject, webglRenderContext.curFilterRenderTarget, webglRenderContext.curFilterOffsetX, //offsetX2,
-                webglRenderContext.curFilterOffsetY); // offsetY2);
+                drawCalls += this.drawDisplayObject(displayObject, webglRenderContext.curFilterRenderTarget, webglRenderContext.curFilterOffsetX, webglRenderContext.curFilterOffsetY);
                 //
                 webglRenderContext.setGlobalCompositeOperation(web.defaultCompositeOp);
                 webglRenderContext.$filter = null;
-                //renderer.batch.flush();
+                //
                 webglRenderContext.$drawWebGL();
                 if (mask) {
                     //renderer.mask.pop(this, this._mask);
                     //MaskManager.pop
                 }
-                if (filters && filters.length > 0 /*&& this._enabledFilters && this._enabledFilters.length*/) {
-                    //renderer.filter.pop();
+                if (filters && filters.length > 0) {
                     webglRenderContext.filterSystem.pop();
                 }
                 return drawCalls;
