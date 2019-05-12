@@ -79,6 +79,9 @@ namespace egret.web {
         }
 
         public push(target: DisplayObject, filters: Array<Filter | CustomFilter>, renderTargetRoot: WebGLRenderBuffer, offsetX: number, offsetY: number): void {
+            if (filters.length <= 0) {
+                console.error('FilterSystem:push:filters.length = ' + filters.length);
+            }
             //
             const filterStack = this.defaultFilterStack;
             const state = this.statePool.pop() || new FilterState();
@@ -104,60 +107,78 @@ namespace egret.web {
             state.filters = filters;
             //save blendFunc;
             state.currentCompositeOp = blendModes[target.$blendMode] || defaultCompositeOp;
+
+            ////重新变换
+            const _webglRenderContext = this._webglRenderContext;
+            const targetTexture = state.renderTexture;
+            //绑定目标
+            _webglRenderContext.pushBuffer(targetTexture); 
+            ///设置位置，不再相对全局，而是局部
+            _webglRenderContext.curFilterRenderTarget = targetTexture;
+            _webglRenderContext.curFilterOffsetX = -state.displayBoundsX;
+            _webglRenderContext.curFilterOffsetY = -state.displayBoundsY;
+            //need transform
+            if (egret.transformRefactor) {
+                state.target.transformAsRenderRoot(-state.displayBoundsX, -state.displayBoundsY, targetTexture.globalMatrix);
+                state.target.transform(-state.displayBoundsX, -state.displayBoundsY);
+            }
+            ////
+
+
             //active!!!
-            if (filters.length === 1) {
-                //设置filter
-                const filters_0 = filters[0];
-                if (!filters_0.post) {
-                    /*
-                    if (DEBUG) {
-                        //
-                        if (state.target.mask) {
-                            console.warn('false: state.target.mask');
-                        }
-                        const condition2 = (!state.target.$children || this.___getRenderCount___(state.target) === 1);
-                        if (!condition2) {
-                            console.warn('false: (!state.target.$children || childrenDrawCount === 1)');
-                        }
-                        const isColorTransform = filters_0.type === "colorTransform";
-                        const isCustomFilter = (filters_0.type === "custom" && (<CustomFilter>filters_0).padding === 0);
-                        if (!isColorTransform && !isCustomFilter) {
-                            console.warn('false: !isColorTransform && !isCustomFilter');
-                        }
-                    }
-                    const _webglRenderContext = this._webglRenderContext;
-                    _webglRenderContext.$filter = state.target.$_shader;//<ColorMatrixFilter | CustomFilter>filters_0;
-                    //bind render target 直接往目标上画，不走framebuffer来回导手
-                    _webglRenderContext.pushBuffer(state.rootRenderTexture);
-                    _webglRenderContext.curFilterRenderTarget = state.rootRenderTexture;
-                    //设置blend
-                    _webglRenderContext.setGlobalCompositeOperation(state.currentCompositeOp);
-                    */
-                }
-                else {
-                    /*
-                    //剩下的都是处理结果型的，不像ColorMatrixFilter和CustomFilter在精灵绘制的过程中进行改变
-                    //bind render target 单独画一张图。
-                    const targetTexture = state.renderTexture;
-                    const _webglRenderContext = this._webglRenderContext;
-                    _webglRenderContext.pushBuffer(targetTexture);
-                    _webglRenderContext.curFilterRenderTarget = targetTexture;
-                    _webglRenderContext.curFilterOffsetX = -state.displayBoundsX;
-                    _webglRenderContext.curFilterOffsetY = -state.displayBoundsY;
-                    //need transform
-                    if (egret.transformRefactor) {
-                        state.target.transformAsRenderRoot(-state.displayBoundsX, -state.displayBoundsY, targetTexture.globalMatrix);
-                        state.target.transform(-state.displayBoundsX, -state.displayBoundsY);
-                    }
-                    */
-                }
-            }
-            else {
-                console.log('push: filters.length = ' + filters.length);
-                const targetTexture = state.renderTexture;
-                const _webglRenderContext = this._webglRenderContext;
-                _webglRenderContext.pushBuffer(targetTexture);
-            }
+            // if (filters.length === 1) {
+            //     //设置filter
+            //     const filters_0 = filters[0];
+            //     if (!filters_0.post) {
+            //         /*
+            //         if (DEBUG) {
+            //             //
+            //             if (state.target.mask) {
+            //                 console.warn('false: state.target.mask');
+            //             }
+            //             const condition2 = (!state.target.$children || this.___getRenderCount___(state.target) === 1);
+            //             if (!condition2) {
+            //                 console.warn('false: (!state.target.$children || childrenDrawCount === 1)');
+            //             }
+            //             const isColorTransform = filters_0.type === "colorTransform";
+            //             const isCustomFilter = (filters_0.type === "custom" && (<CustomFilter>filters_0).padding === 0);
+            //             if (!isColorTransform && !isCustomFilter) {
+            //                 console.warn('false: !isColorTransform && !isCustomFilter');
+            //             }
+            //         }
+            //         const _webglRenderContext = this._webglRenderContext;
+            //         _webglRenderContext.$filter = state.target.$_shader;//<ColorMatrixFilter | CustomFilter>filters_0;
+            //         //bind render target 直接往目标上画，不走framebuffer来回导手
+            //         _webglRenderContext.pushBuffer(state.rootRenderTexture);
+            //         _webglRenderContext.curFilterRenderTarget = state.rootRenderTexture;
+            //         //设置blend
+            //         _webglRenderContext.setGlobalCompositeOperation(state.currentCompositeOp);
+            //         */
+            //     }
+            //     else {
+            //         /*
+            //         //剩下的都是处理结果型的，不像ColorMatrixFilter和CustomFilter在精灵绘制的过程中进行改变
+            //         //bind render target 单独画一张图。
+            //         const targetTexture = state.renderTexture;
+            //         const _webglRenderContext = this._webglRenderContext;
+            //         _webglRenderContext.pushBuffer(targetTexture);
+            //         _webglRenderContext.curFilterRenderTarget = targetTexture;
+            //         _webglRenderContext.curFilterOffsetX = -state.displayBoundsX;
+            //         _webglRenderContext.curFilterOffsetY = -state.displayBoundsY;
+            //         //need transform
+            //         if (egret.transformRefactor) {
+            //             state.target.transformAsRenderRoot(-state.displayBoundsX, -state.displayBoundsY, targetTexture.globalMatrix);
+            //             state.target.transform(-state.displayBoundsX, -state.displayBoundsY);
+            //         }
+            //         */
+            //     }
+            // }
+            // else {
+            //     // console.log('push: filters.length = ' + filters.length);
+            //     // const targetTexture = state.renderTexture;
+            //     // const _webglRenderContext = this._webglRenderContext;
+            //     // _webglRenderContext.pushBuffer(targetTexture);
+            // }
         }
 
         public pop(): void {
@@ -167,11 +188,20 @@ namespace egret.web {
             const lastState = filterStack[filterStack.length - 1];
             const filters = state.filters;
             this.activeState = state;
+            const _webglRenderContext = this._webglRenderContext;
             //
             if (filters.length === 1) {
+                //
+                const filters_0 = filters[0];
+                //
+                _webglRenderContext.popBuffer();
+                this.applyFilter(filters_0, state.renderTexture, lastState.renderTexture, false, state);
+                 //return 不管用没用，都还回去
+                 this.returnFilterTexture(state.renderTexture);
+                 state.renderTexture = null;
                 /*
                 const filters_0 = filters[0];
-                const _webglRenderContext = this._webglRenderContext;
+                //const _webglRenderContext = this._webglRenderContext;
                 //
                 if (filters_0.post) {
                     //unbind
@@ -202,6 +232,7 @@ namespace egret.web {
                 */
             }
             else {
+                /*
                 console.log('pop: filters.length = ' + filters.length);
                 const _webglRenderContext = this._webglRenderContext;
                 _webglRenderContext.popBuffer();
@@ -237,7 +268,13 @@ namespace egret.web {
                 _webglRenderContext.curFilterRenderTarget = null;
                 _webglRenderContext.curFilterOffsetX = 0;
                 _webglRenderContext.curFilterOffsetY = 0;
+                */
             }
+
+            //清除临时数据
+            _webglRenderContext.curFilterRenderTarget = null;
+            _webglRenderContext.curFilterOffsetX = 0;
+            _webglRenderContext.curFilterOffsetY = 0;
             //清除，回池
             state.clear();
             this.statePool.push(state);

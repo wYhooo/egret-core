@@ -1294,13 +1294,17 @@ namespace egret.web {
             ////
             //renderer.batch.flush();
             const webglRenderContext = buffer.context;
+            webglRenderContext.curFilterRenderTarget = buffer;
+            webglRenderContext.curFilterOffsetX = offsetX2;
+            webglRenderContext.curFilterOffsetY = offsetY2;
+            //
             webglRenderContext.$drawWebGL();
 
-            const filters = displayObject.$filters;
+            const filters = displayObject.$_filters;//$filters;
             const mask = displayObject.$mask || displayObject.$maskRect || displayObject.$scrollRect;
 
             // push filter first as we need to ensure the stencil buffer is correct for any masking
-            if (filters) {
+            if (filters && filters.length > 0) {
                 // if (!this._enabledFilters)
                 // {
                 //     this._enabledFilters = [];
@@ -1320,7 +1324,7 @@ namespace egret.web {
                 // {
                 //     renderer.filter.push(this, this._enabledFilters);
                 // }
-                webglRenderContext.filterSystem.push(child, child.filters, buffer, offsetX2, offsetY2);
+                webglRenderContext.filterSystem.push(child, child.$_filters, buffer, offsetX2, offsetY2);
             }
 
             if (mask) {
@@ -1336,9 +1340,7 @@ namespace egret.web {
             // {
             //     this.children[i$1].render(renderer);
             // }
-            // webglRenderContext.curFilterRenderTarget = buffer;
-            // webglRenderContext.curFilterOffsetX = offsetX2;
-            // webglRenderContext.curFilterOffsetY = offsetY2;
+           
             //
             //自定义shader
             webglRenderContext.$filter = displayObject.$_shader;
@@ -1346,9 +1348,9 @@ namespace egret.web {
             webglRenderContext.setGlobalCompositeOperation(blend);
             //
             drawCalls += this.drawDisplayObject(displayObject,
-                buffer,//webglRenderContext.curFilterRenderTarget,
-                offsetX2,//webglRenderContext.curFilterOffsetX,//offsetX2,
-                offsetY2);//webglRenderContext.curFilterOffsetY)// offsetY2);
+                webglRenderContext.curFilterRenderTarget,
+                webglRenderContext.curFilterOffsetX,//offsetX2,
+                webglRenderContext.curFilterOffsetY);// offsetY2);
             //
             webglRenderContext.setGlobalCompositeOperation(defaultCompositeOp);
             webglRenderContext.$filter = null;
@@ -1361,7 +1363,7 @@ namespace egret.web {
                 //MaskManager.pop
             }
 
-            if (filters /*&& this._enabledFilters && this._enabledFilters.length*/) {
+            if (filters && filters.length > 0 /*&& this._enabledFilters && this._enabledFilters.length*/) {
                 //renderer.filter.pop();
                 webglRenderContext.filterSystem.pop();
             }

@@ -8324,11 +8324,15 @@ var egret;
                 ////
                 //renderer.batch.flush();
                 var webglRenderContext = buffer.context;
+                webglRenderContext.curFilterRenderTarget = buffer;
+                webglRenderContext.curFilterOffsetX = offsetX2;
+                webglRenderContext.curFilterOffsetY = offsetY2;
+                //
                 webglRenderContext.$drawWebGL();
-                var filters = displayObject.$filters;
+                var filters = displayObject.$_filters; //$filters;
                 var mask = displayObject.$mask || displayObject.$maskRect || displayObject.$scrollRect;
                 // push filter first as we need to ensure the stencil buffer is correct for any masking
-                if (filters) {
+                if (filters && filters.length > 0) {
                     // if (!this._enabledFilters)
                     // {
                     //     this._enabledFilters = [];
@@ -8345,7 +8349,7 @@ var egret;
                     // {
                     //     renderer.filter.push(this, this._enabledFilters);
                     // }
-                    webglRenderContext.filterSystem.push(child, child.filters, buffer, offsetX2, offsetY2);
+                    webglRenderContext.filterSystem.push(child, child.$_filters, buffer, offsetX2, offsetY2);
                 }
                 if (mask) {
                     //renderer.mask.push(this, this._mask);
@@ -8358,17 +8362,14 @@ var egret;
                 // {
                 //     this.children[i$1].render(renderer);
                 // }
-                webglRenderContext.curFilterRenderTarget = buffer;
-                webglRenderContext.curFilterOffsetX = offsetX2;
-                webglRenderContext.curFilterOffsetY = offsetY2;
                 //
+                //自定义shader
                 webglRenderContext.$filter = displayObject.$_shader;
                 var blend = web.blendModes[displayObject.$blendMode] || web.defaultCompositeOp;
                 webglRenderContext.setGlobalCompositeOperation(blend);
                 //
-                drawCalls += this.drawDisplayObject(displayObject, buffer, //webglRenderContext.curFilterRenderTarget,
-                offsetX2, //webglRenderContext.curFilterOffsetX,//offsetX2,
-                offsetY2); //webglRenderContext.curFilterOffsetY)// offsetY2);
+                drawCalls += this.drawDisplayObject(displayObject, webglRenderContext.curFilterRenderTarget, webglRenderContext.curFilterOffsetX, //offsetX2,
+                webglRenderContext.curFilterOffsetY); // offsetY2);
                 //
                 webglRenderContext.setGlobalCompositeOperation(web.defaultCompositeOp);
                 webglRenderContext.$filter = null;
@@ -8378,7 +8379,7 @@ var egret;
                     //renderer.mask.pop(this, this._mask);
                     //MaskManager.pop
                 }
-                if (filters /*&& this._enabledFilters && this._enabledFilters.length*/) {
+                if (filters && filters.length > 0 /*&& this._enabledFilters && this._enabledFilters.length*/) {
                     //renderer.filter.pop();
                     webglRenderContext.filterSystem.pop();
                 }
@@ -8489,6 +8490,21 @@ var egret;
                 state.filters = filters;
                 //save blendFunc;
                 state.currentCompositeOp = web.blendModes[target.$blendMode] || web.defaultCompositeOp;
+                ////重新变换
+                var _webglRenderContext = this._webglRenderContext;
+                var targetTexture = state.renderTexture;
+                //绑定目标
+                _webglRenderContext.pushBuffer(targetTexture);
+                ///设置位置，不再相对全局，而是局部
+                _webglRenderContext.curFilterRenderTarget = targetTexture;
+                _webglRenderContext.curFilterOffsetX = -state.displayBoundsX;
+                _webglRenderContext.curFilterOffsetY = -state.displayBoundsY;
+                //need transform
+                if (egret.transformRefactor) {
+                    state.target.transformAsRenderRoot(-state.displayBoundsX, -state.displayBoundsY, targetTexture.globalMatrix);
+                    state.target.transform(-state.displayBoundsX, -state.displayBoundsY);
+                }
+                ////
                 //active!!!
                 if (filters.length === 1) {
                     //设置filter
@@ -8538,10 +8554,10 @@ var egret;
                     }
                 }
                 else {
-                    console.log('push: filters.length = ' + filters.length);
-                    var targetTexture = state.renderTexture;
-                    var _webglRenderContext = this._webglRenderContext;
-                    _webglRenderContext.pushBuffer(targetTexture);
+                    // console.log('push: filters.length = ' + filters.length);
+                    // const targetTexture = state.renderTexture;
+                    // const _webglRenderContext = this._webglRenderContext;
+                    // _webglRenderContext.pushBuffer(targetTexture);
                 }
             };
             FilterSystem.prototype.pop = function () {
@@ -8551,11 +8567,20 @@ var egret;
                 var lastState = filterStack[filterStack.length - 1];
                 var filters = state.filters;
                 this.activeState = state;
+                var _webglRenderContext = this._webglRenderContext;
                 //
                 if (filters.length === 1) {
+                    //
+                    var filters_0 = filters[0];
+                    //
+                    _webglRenderContext.popBuffer();
+                    this.applyFilter(filters_0, state.renderTexture, lastState.renderTexture, false, state);
+                    //return 不管用没用，都还回去
+                    this.returnFilterTexture(state.renderTexture);
+                    state.renderTexture = null;
                     /*
                     const filters_0 = filters[0];
-                    const _webglRenderContext = this._webglRenderContext;
+                    //const _webglRenderContext = this._webglRenderContext;
                     //
                     if (filters_0.post) {
                         //unbind
@@ -8586,40 +8611,48 @@ var egret;
                     */
                 }
                 else {
+                    /*
                     console.log('pop: filters.length = ' + filters.length);
-                    var _webglRenderContext = this._webglRenderContext;
+                    const _webglRenderContext = this._webglRenderContext;
                     _webglRenderContext.popBuffer();
                     //
                     _webglRenderContext.setGlobalCompositeOperation(state.currentCompositeOp);
-                    var input = state.renderTexture;
-                    var filtersLen = filters.length;
+                    let input = state.renderTexture;
+                    const filtersLen = filters.length;
                     if (filtersLen > 1) {
-                        for (var i = 0; i < filtersLen - 1; i++) {
-                            var filter_2 = filters[i];
-                            var width = state.displayBoundsWidth;
-                            var height = state.displayBoundsHeight;
-                            var output = this.getOptimalFilterTexture(width, height);
+                        for (let i = 0; i < filtersLen - 1; i++) {
+                            let filter = filters[i];
+                            let width = state.displayBoundsWidth;
+                            let height = state.displayBoundsHeight;
+                            let output = this.getOptimalFilterTexture(width, height);
                             output.setTransform(1, 0, 0, 1, 0, 0);
                             output.globalAlpha = 1;
                             //this.drawToRenderTarget(filter, input, output);
-                            output.debugCurrentRenderNode = null; //do not render using renderNode
-                            _webglRenderContext.___drawToRenderTarget___(filter_2, input, output);
+                            output.debugCurrentRenderNode = null;//do not render using renderNode
+                            _webglRenderContext.___drawToRenderTarget___(filter, input, output);
                             this.returnFilterTexture(input);
                             input = output;
                         }
                     }
+    
                     // 应用最后一个滤镜并绘制到当前场景中
-                    var filter = filters[filtersLen - 1];
-                    lastState.renderTexture.debugCurrentRenderNode = null; //do not render using renderNode
+                    let filter = filters[filtersLen - 1];
+                    lastState.renderTexture.debugCurrentRenderNode = null;//do not render using renderNode
                     _webglRenderContext.___drawToRenderTarget___(filter, input, lastState.renderTexture);
                     this.returnFilterTexture(input);
-                    _webglRenderContext.setGlobalCompositeOperation(web.defaultCompositeOp);
+    
+                    _webglRenderContext.setGlobalCompositeOperation(defaultCompositeOp);
                     _webglRenderContext.$filter = null;
                     //这三个临时变量不要了
                     _webglRenderContext.curFilterRenderTarget = null;
                     _webglRenderContext.curFilterOffsetX = 0;
                     _webglRenderContext.curFilterOffsetY = 0;
+                    */
                 }
+                //清除临时数据
+                _webglRenderContext.curFilterRenderTarget = null;
+                _webglRenderContext.curFilterOffsetX = 0;
+                _webglRenderContext.curFilterOffsetY = 0;
                 //清除，回池
                 state.clear();
                 this.statePool.push(state);
