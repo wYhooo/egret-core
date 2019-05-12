@@ -1294,10 +1294,6 @@ namespace egret.web {
             ////
             //renderer.batch.flush();
             const webglRenderContext = buffer.context;
-            webglRenderContext.curFilterRenderTarget = buffer;
-            webglRenderContext.curFilterOffsetX = offsetX2;
-            webglRenderContext.curFilterOffsetY = offsetY2;
-
             webglRenderContext.$drawWebGL();
 
             const filters = displayObject.$filters;
@@ -1340,9 +1336,22 @@ namespace egret.web {
             // {
             //     this.children[i$1].render(renderer);
             // }
-            drawCalls += this.drawDisplayObject(displayObject, webglRenderContext.curFilterRenderTarget,
-                webglRenderContext.curFilterOffsetX,//offsetX2,
-                webglRenderContext.curFilterOffsetY)// offsetY2);
+            // webglRenderContext.curFilterRenderTarget = buffer;
+            // webglRenderContext.curFilterOffsetX = offsetX2;
+            // webglRenderContext.curFilterOffsetY = offsetY2;
+            //
+            //自定义shader
+            webglRenderContext.$filter = displayObject.$_shader;
+            const blend = blendModes[displayObject.$blendMode] || defaultCompositeOp;
+            webglRenderContext.setGlobalCompositeOperation(blend);
+            //
+            drawCalls += this.drawDisplayObject(displayObject,
+                buffer,//webglRenderContext.curFilterRenderTarget,
+                offsetX2,//webglRenderContext.curFilterOffsetX,//offsetX2,
+                offsetY2);//webglRenderContext.curFilterOffsetY)// offsetY2);
+            //
+            webglRenderContext.setGlobalCompositeOperation(defaultCompositeOp);
+            webglRenderContext.$filter = null;
 
             //renderer.batch.flush();
             webglRenderContext.$drawWebGL();

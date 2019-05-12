@@ -109,6 +109,7 @@ namespace egret.web {
                 //设置filter
                 const filters_0 = filters[0];
                 if (!filters_0.post) {
+                    /*
                     if (DEBUG) {
                         //
                         if (state.target.mask) {
@@ -125,14 +126,16 @@ namespace egret.web {
                         }
                     }
                     const _webglRenderContext = this._webglRenderContext;
-                    _webglRenderContext.$filter = <ColorMatrixFilter | CustomFilter>filters_0;
+                    _webglRenderContext.$filter = state.target.$_shader;//<ColorMatrixFilter | CustomFilter>filters_0;
                     //bind render target 直接往目标上画，不走framebuffer来回导手
                     _webglRenderContext.pushBuffer(state.rootRenderTexture);
                     _webglRenderContext.curFilterRenderTarget = state.rootRenderTexture;
                     //设置blend
                     _webglRenderContext.setGlobalCompositeOperation(state.currentCompositeOp);
+                    */
                 }
                 else {
+                    /*
                     //剩下的都是处理结果型的，不像ColorMatrixFilter和CustomFilter在精灵绘制的过程中进行改变
                     //bind render target 单独画一张图。
                     const targetTexture = state.renderTexture;
@@ -146,6 +149,7 @@ namespace egret.web {
                         state.target.transformAsRenderRoot(-state.displayBoundsX, -state.displayBoundsY, targetTexture.globalMatrix);
                         state.target.transform(-state.displayBoundsX, -state.displayBoundsY);
                     }
+                    */
                 }
             }
             else {
@@ -165,6 +169,7 @@ namespace egret.web {
             this.activeState = state;
             //
             if (filters.length === 1) {
+                /*
                 const filters_0 = filters[0];
                 const _webglRenderContext = this._webglRenderContext;
                 //
@@ -194,6 +199,7 @@ namespace egret.web {
                 //return 不管用没用，都还回去
                 this.returnFilterTexture(state.renderTexture);
                 state.renderTexture = null;
+                */
             }
             else {
                 console.log('pop: filters.length = ' + filters.length);
@@ -242,7 +248,7 @@ namespace egret.web {
         }
 
         public applyFilter(filter: Filter, input: WebGLRenderBuffer, output: WebGLRenderBuffer, clear: boolean, state: FilterState): void {
-            console.log('applyFilter = ' + filter.type + ', post = ' + filter.post);
+            //console.log('applyFilter = ' + filter.type + ', post = ' + filter.post);
             if (filter.post) {
                 const _webglRenderContext = this._webglRenderContext;
                 _webglRenderContext.setGlobalCompositeOperation(state.currentCompositeOp);
