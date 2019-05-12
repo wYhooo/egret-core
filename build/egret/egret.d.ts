@@ -1062,6 +1062,8 @@ declare namespace egret {
         mask: DisplayObject | Rectangle;
         private $setMaskRect(value);
         $filters: Array<Filter | CustomFilter>;
+        $_shader: Filter | CustomFilter;
+        readonly $_filters: Array<Filter>;
         /**
          * An indexed array that contains each filter object currently associated with the display object.
          * @version Egret 3.1.0
@@ -1198,6 +1200,7 @@ declare namespace egret {
          * 获取渲染节点
          */
         $getRenderNode(): sys.RenderNode;
+        private __analysisAndRebuildFilters__();
         $updateRenderMode(): void;
         $renderMode: RenderMode;
         /**
