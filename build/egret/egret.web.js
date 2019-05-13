@@ -8639,6 +8639,8 @@ var egret;
                 this.width = 0;
                 this.height = 0;
                 this.enable = false;
+                this.currentCompositeOp = '';
+                this.isSpriteMask = false;
             }
             MaskState.prototype.clear = function () {
                 this.target = null;
@@ -8651,6 +8653,8 @@ var egret;
                 this.width = 0;
                 this.height = 0;
                 this.enable = false;
+                this.currentCompositeOp = '';
+                this.isSpriteMask = false;
             };
             return MaskState;
         }());
@@ -8669,19 +8673,23 @@ var egret;
                 var state = this.statePool.pop() || new MaskState();
                 defaultMaskStack.push(state);
                 //
-                // const displayObject = target;
-                // const buffer = renderTargetRoot;
                 if (target.$mask) {
-                    console.warn('MaskSystem: push: displayObject.$mask');
                     state.enable = false;
+                    state.isSpriteMask = true;
+                    console.warn('MaskSystem: push: displayObject.$mask');
                 }
                 else {
-                    this.pushScissorOrStencilMask(state, target, renderTargetRoot, offsetX, offsetY, drawAdvancedData);
                     state.enable = true;
+                    state.isSpriteMask = false;
+                    this.pushScissorOrStencilMask(state, target, renderTargetRoot, offsetX, offsetY, drawAdvancedData);
                 }
             };
             MaskSystem.prototype.pushScissorOrStencilMask = function (state, displayObject, buffer, offsetX, offsetY, drawAdvancedData) {
-                //let drawCalls = 0;
+                if (true) {
+                    if (state.isSpriteMask) {
+                        console.error('pushScissorOrStencilMask: state.isSpriteMask = ' + state.isSpriteMask);
+                    }
+                }
                 var scrollRect = displayObject.$scrollRect ? displayObject.$scrollRect : displayObject.$maskRect;
                 if (true) {
                     if (scrollRect.isEmpty()) {
@@ -8698,6 +8706,8 @@ var egret;
                 state.offsetX = offsetX;
                 state.offsetY = offsetY;
                 state.scissor = false;
+                //save blendFunc;
+                state.currentCompositeOp = web.blendModes[displayObject.$blendMode] || web.defaultCompositeOp;
                 //????
                 drawAdvancedData.renderTarget = buffer;
                 drawAdvancedData.offsetX = offsetX;
@@ -8780,23 +8790,38 @@ var egret;
                     //scissor = true;
                     state.scissor = true;
                 }
+                this._webglRenderContext.setGlobalCompositeOperation(state.currentCompositeOp);
                 //need transform
                 if (egret.transformRefactor) {
                     state.target.transformAsRenderRoot(state.offsetX, state.offsetY, state.renderTexture.globalMatrix);
                     state.target.transform(state.offsetX, state.offsetY);
                 }
             };
+            MaskSystem.prototype.popScissorOrStencilMask = function (state) {
+                if (true) {
+                    if (state.isSpriteMask) {
+                        console.error('popScissorOrStencilMask: state.isSpriteMask = ' + state.isSpriteMask);
+                    }
+                }
+                this._webglRenderContext.setGlobalCompositeOperation(web.defaultCompositeOp);
+                if (state.scissor) {
+                    //context.disableScissor();
+                    this._webglRenderContext.disableScissor();
+                }
+                else {
+                    //context.popMask();
+                    this._webglRenderContext.popMask();
+                }
+            };
             MaskSystem.prototype.pop = function () {
                 var defaultMaskStack = this.defaultMaskStack;
                 var state = defaultMaskStack.pop();
                 if (state.enable) {
-                    if (state.scissor) {
-                        //context.disableScissor();
-                        this._webglRenderContext.disableScissor();
+                    if (state.isSpriteMask) {
+                        console.warn('MaskSystem: pop: state.isSpriteMask');
                     }
                     else {
-                        //context.popMask();
-                        this._webglRenderContext.popMask();
+                        this.popScissorOrStencilMask(state);
                     }
                 }
                 //清除，回池

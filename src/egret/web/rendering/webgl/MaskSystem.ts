@@ -43,6 +43,8 @@ namespace egret.web {
         public width: number = 0;
         public height: number = 0;
         public enable: boolean = false;
+        public currentCompositeOp: string = '';
+        public isSpriteMask: boolean = false;
 
         constructor() {
         }
@@ -58,6 +60,8 @@ namespace egret.web {
             this.width = 0;
             this.height = 0;
             this.enable = false;
+            this.currentCompositeOp = '';
+            this.isSpriteMask = false;
         }
     }
 
@@ -82,15 +86,15 @@ namespace egret.web {
             const state = this.statePool.pop() || new MaskState();
             defaultMaskStack.push(state);
             //
-            // const displayObject = target;
-            // const buffer = renderTargetRoot;
             if (target.$mask) {
-                console.warn('MaskSystem: push: displayObject.$mask');
                 state.enable = false;
+                state.isSpriteMask = true;
+                console.warn('MaskSystem: push: displayObject.$mask');
             }
             else {
-                this.pushScissorOrStencilMask(state, target, renderTargetRoot, offsetX, offsetY, drawAdvancedData);
                 state.enable = true;
+                state.isSpriteMask = false;
+                this.pushScissorOrStencilMask(state, target, renderTargetRoot, offsetX, offsetY, drawAdvancedData);
             }
         }
 
@@ -100,7 +104,11 @@ namespace egret.web {
             offsetX: number, offsetY: number,
             drawAdvancedData: IDrawAdvancedData): void {
 
-            //let drawCalls = 0;
+            if (DEBUG) {
+                if (state.isSpriteMask) {
+                    console.error('pushScissorOrStencilMask: state.isSpriteMask = ' + state.isSpriteMask);
+                }
+            }
             let scrollRect = displayObject.$scrollRect ? displayObject.$scrollRect : displayObject.$maskRect;
             if (DEBUG) {
                 if (scrollRect.isEmpty()) {
@@ -117,6 +125,8 @@ namespace egret.web {
             state.offsetX = offsetX;
             state.offsetY = offsetY;
             state.scissor = false;
+             //save blendFunc;
+             state.currentCompositeOp = blendModes[displayObject.$blendMode] || defaultCompositeOp;
             //????
             drawAdvancedData.renderTarget = buffer;
             drawAdvancedData.offsetX = offsetX;
@@ -203,6 +213,7 @@ namespace egret.web {
                 //scissor = true;
                 state.scissor = true;
             }
+            this._webglRenderContext.setGlobalCompositeOperation(state.currentCompositeOp);
             //need transform
             if (egret.transformRefactor) {
                 state.target.transformAsRenderRoot(state.offsetX, state.offsetY, state.renderTexture.globalMatrix);
@@ -210,16 +221,31 @@ namespace egret.web {
             }
         }
 
+        private popScissorOrStencilMask(state: MaskState): void {
+            if (DEBUG) {
+                if (state.isSpriteMask) {
+                    console.error('popScissorOrStencilMask: state.isSpriteMask = ' + state.isSpriteMask);
+                }
+            }
+            this._webglRenderContext.setGlobalCompositeOperation(defaultCompositeOp);
+            if (state.scissor) {
+                //context.disableScissor();
+                this._webglRenderContext.disableScissor();
+            } else {
+                //context.popMask();
+                this._webglRenderContext.popMask();
+            }
+        }
+
         public pop(): void {
             const defaultMaskStack = this.defaultMaskStack;
             const state = defaultMaskStack.pop();
             if (state.enable) {
-                if (state.scissor) {
-                    //context.disableScissor();
-                    this._webglRenderContext.disableScissor();
-                } else {
-                    //context.popMask();
-                    this._webglRenderContext.popMask();
+                if (state.isSpriteMask) {
+                    console.warn('MaskSystem: pop: state.isSpriteMask');
+                }
+                else {
+                    this.popScissorOrStencilMask(state);
                 }
             }
             //清除，回池
