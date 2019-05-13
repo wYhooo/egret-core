@@ -42,6 +42,7 @@ namespace egret.web {
         public y: number = 0;
         public width: number = 0;
         public height: number = 0;
+        public enable: boolean = false;
 
         constructor() {
         }
@@ -56,6 +57,7 @@ namespace egret.web {
             this.y = 0;
             this.width = 0;
             this.height = 0;
+            this.enable = false;
         }
     }
 
@@ -84,9 +86,11 @@ namespace egret.web {
             // const buffer = renderTargetRoot;
             if (target.$mask) {
                 console.warn('MaskSystem: push: displayObject.$mask');
+                state.enable = false;
             }
             else {
                 this.pushScissorOrStencilMask(state, target, renderTargetRoot, offsetX, offsetY, drawAdvancedData);
+                state.enable = true;
             }
         }
 
@@ -209,14 +213,15 @@ namespace egret.web {
         public pop(): void {
             const defaultMaskStack = this.defaultMaskStack;
             const state = defaultMaskStack.pop();
-            if (state.scissor) {
-                //context.disableScissor();
-                this._webglRenderContext.disableScissor();
-            } else {
-                //context.popMask();
-                this._webglRenderContext.popMask();
+            if (state.enable) {
+                if (state.scissor) {
+                    //context.disableScissor();
+                    this._webglRenderContext.disableScissor();
+                } else {
+                    //context.popMask();
+                    this._webglRenderContext.popMask();
+                }
             }
-
             //清除，回池
             state.clear();
             this.statePool.push(state);

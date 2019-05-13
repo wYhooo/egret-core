@@ -8638,6 +8638,7 @@ var egret;
                 this.y = 0;
                 this.width = 0;
                 this.height = 0;
+                this.enable = false;
             }
             MaskState.prototype.clear = function () {
                 this.target = null;
@@ -8649,6 +8650,7 @@ var egret;
                 this.y = 0;
                 this.width = 0;
                 this.height = 0;
+                this.enable = false;
             };
             return MaskState;
         }());
@@ -8671,9 +8673,11 @@ var egret;
                 // const buffer = renderTargetRoot;
                 if (target.$mask) {
                     console.warn('MaskSystem: push: displayObject.$mask');
+                    state.enable = false;
                 }
                 else {
                     this.pushScissorOrStencilMask(state, target, renderTargetRoot, offsetX, offsetY, drawAdvancedData);
+                    state.enable = true;
                 }
             };
             MaskSystem.prototype.pushScissorOrStencilMask = function (state, displayObject, buffer, offsetX, offsetY, drawAdvancedData) {
@@ -8785,13 +8789,15 @@ var egret;
             MaskSystem.prototype.pop = function () {
                 var defaultMaskStack = this.defaultMaskStack;
                 var state = defaultMaskStack.pop();
-                if (state.scissor) {
-                    //context.disableScissor();
-                    this._webglRenderContext.disableScissor();
-                }
-                else {
-                    //context.popMask();
-                    this._webglRenderContext.popMask();
+                if (state.enable) {
+                    if (state.scissor) {
+                        //context.disableScissor();
+                        this._webglRenderContext.disableScissor();
+                    }
+                    else {
+                        //context.popMask();
+                        this._webglRenderContext.popMask();
+                    }
                 }
                 //清除，回池
                 state.clear();
