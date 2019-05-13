@@ -99,7 +99,7 @@ namespace egret.web {
          * @private
          * 绘制一个显示对象
          */
-        private drawDisplayObject(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, isStage?: boolean): number {
+        public drawDisplayObject(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, isStage?: boolean): number {
             let drawCalls = 0;
             let node: sys.RenderNode;
             let displayList = displayObject.$displayList;
@@ -1317,6 +1317,7 @@ namespace egret.web {
             if (mask) {
                 //renderer.mask.push(this, this._mask);
                 //MaskManager.push
+                webglRenderContext.maskSystem._webglRender = this;
                 webglRenderContext.maskSystem.push(child, buffer, offsetX2, offsetY2, drawAdvancedData);
             }
 
