@@ -189,7 +189,7 @@ namespace egret {
                 nativeBitmapData.$init();
                 this.$nativeBitmapData = nativeBitmapData;
             }
-            this.source = source;
+            // this.source = source;
             // this.width = source.width;
             // this.height = source.height;
             this.source = source;

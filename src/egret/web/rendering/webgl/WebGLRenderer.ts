@@ -1223,7 +1223,26 @@ namespace egret.web {
                     const node = <sys.NormalBitmapNode>_node;
                     node.__$offsetX__ = displayObject.__$offsetX__;
                     node.__$offsetY__ = displayObject.__$offsetY__;
-                    node.renderMatrix._setTo_(displayObject.globalMatrix);
+                    const renderMatrix = node.renderMatrix;
+                    renderMatrix._setTo_(displayObject.globalMatrix);
+                    //
+                    const image = node.image;
+                    if (image) {
+                        if (image["texture"] || (image.source && image.source["texture"])) {
+                            // 如果是render target
+                            //const texture = image["texture"] || image.source["texture"];
+                            const destHeight = node.drawH;
+                            const destY = node.drawY;
+                            //buffer.useOffset();
+                            if (node.__$offsetX__ !== 0 || node.__$offsetY__ !== 0) {
+                                renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                                node.__$offsetX__ = 0;
+                                node.__$offsetY__ = 0;
+                            }
+                            //buffer.transform(1, 0, 0, -1, 0, destHeight + destY * 2);// 翻转
+                            NumberUtils.__transform__(renderMatrix, 1, 0, 0, -1, 0, destHeight + destY * 2);
+                        } 
+                    }
                     break;
                 }
 
@@ -1269,7 +1288,7 @@ namespace egret.web {
             }
             return drawCalls;
         }
-        private readonly legacyDrawAdvanced: boolean = false;
+        private readonly legacyDrawAdvanced: boolean = true;
         private __drawAdvanced__(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX2: number, offsetY2: number): number {
             let drawCalls = 0;
             const child = displayObject;

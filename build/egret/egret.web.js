@@ -7147,7 +7147,7 @@ var egret;
         var WebGLRenderer = (function () {
             function WebGLRenderer() {
                 this.nestLevel = 0; //渲染的嵌套层次，0表示在调用堆栈的最外层。
-                this.legacyDrawAdvanced = false;
+                this.legacyDrawAdvanced = true;
             }
             /**
              * 渲染一个显示对象
@@ -8258,13 +8258,48 @@ var egret;
                             //buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
                             egret.NumberUtils.__transform__(renderMatrix, m.a, m.b, m.c, m.d, m.tx, m.ty);
                         }
+                        //
+                        // const image = node.image;
+                        // if (image["texture"] || (image.source && image.source["texture"])) {
+                        //     // 如果是render target
+                        //     //const texture = image["texture"] || image.source["texture"];
+                        //     const destHeight = node.drawH;
+                        //     const destY = node.drawY;
+                        //     //buffer.useOffset();
+                        //     if (node.__$offsetX__ !== 0 || node.__$offsetY__ !== 0) {
+                        //         renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                        //         node.__$offsetX__ = 0;
+                        //         node.__$offsetY__ = 0;
+                        //     }
+                        //     //buffer.transform(1, 0, 0, -1, 0, destHeight + destY * 2);// 翻转
+                        //     NumberUtils.__transform__(renderMatrix, 1, 0, 0, -1, 0, destHeight + destY * 2);
+                        // } 
                         break;
                     }
                     case 6 /* NormalBitmapNode */: {
                         var node = _node;
                         node.__$offsetX__ = displayObject.__$offsetX__;
                         node.__$offsetY__ = displayObject.__$offsetY__;
-                        node.renderMatrix._setTo_(displayObject.globalMatrix);
+                        var renderMatrix = node.renderMatrix;
+                        renderMatrix._setTo_(displayObject.globalMatrix);
+                        //
+                        var image = node.image;
+                        if (image) {
+                            if (image["texture"] || (image.source && image.source["texture"])) {
+                                // 如果是render target
+                                //const texture = image["texture"] || image.source["texture"];
+                                var destHeight = node.drawH;
+                                var destY = node.drawY;
+                                //buffer.useOffset();
+                                if (node.__$offsetX__ !== 0 || node.__$offsetY__ !== 0) {
+                                    renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                                    node.__$offsetX__ = 0;
+                                    node.__$offsetY__ = 0;
+                                }
+                                //buffer.transform(1, 0, 0, -1, 0, destHeight + destY * 2);// 翻转
+                                egret.NumberUtils.__transform__(renderMatrix, 1, 0, 0, -1, 0, destHeight + destY * 2);
+                            }
+                        }
                         break;
                     }
                     default: {

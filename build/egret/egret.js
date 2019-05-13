@@ -8811,7 +8811,7 @@ var egret;
                 nativeBitmapData.$init();
                 _this.$nativeBitmapData = nativeBitmapData;
             }
-            _this.source = source;
+            // this.source = source;
             // this.width = source.width;
             // this.height = source.height;
             _this.source = source;
