@@ -8626,101 +8626,176 @@ var egret;
     var web;
     (function (web) {
         /** !!!!!!!! inspired by pixi !!!!!!!!!!!!!
+         */
+        var MaskState = (function () {
+            function MaskState() {
+                this.target = null;
+                this.renderTexture = null;
+                this.offsetX = 0;
+                this.offsetY = 0;
+                this.scissor = false;
+                this.x = 0;
+                this.y = 0;
+                this.width = 0;
+                this.height = 0;
+            }
+            MaskState.prototype.clear = function () {
+                this.target = null;
+                this.renderTexture = null;
+                this.offsetX = 0;
+                this.offsetY = 0;
+                this.scissor = false;
+                this.x = 0;
+                this.y = 0;
+                this.width = 0;
+                this.height = 0;
+            };
+            return MaskState;
+        }());
+        __reflect(MaskState.prototype, "MaskState");
+        /** !!!!!!!! inspired by pixi !!!!!!!!!!!!!
         */
         var MaskSystem = (function () {
             function MaskSystem(webglRenderContext) {
+                this.statePool = [];
+                this.defaultMaskStack = [];
                 this._webglRenderContext = webglRenderContext;
-                // super(renderer);
-                // // TODO - we don't need both!
-                // /**
-                //  * `true` if current pushed masked is scissor
-                //  * @member {boolean}
-                //  * @readonly
-                //  */
-                // this.scissor = false;
-                // /**
-                //  * Mask data
-                //  * @member {PIXI.Graphics}
-                //  * @readonly
-                //  */
-                // this.scissorData = null;
-                // /**
-                //  * Target to mask
-                //  * @member {PIXI.DisplayObject}
-                //  * @readonly
-                //  */
-                // this.scissorRenderTarget = null;
-                // /**
-                //  * Enable scissor
-                //  * @member {boolean}
-                //  * @readonly
-                //  */
-                // this.enableScissor = false;
-                // /**
-                //  * Pool of used sprite mask filters
-                //  * @member {PIXI.SpriteMaskFilter[]}
-                //  * @readonly
-                //  */
-                // this.alphaMaskPool = [];
-                // /**
-                //  * Current index of alpha mask pool
-                //  * @member {number}
-                //  * @default 0
-                //  * @readonly
-                //  */
-                // this.alphaMaskIndex = 0;
             }
-            /**
-             * Applies the Mask and adds it to the current filter stack.
-             *
-             * @param {PIXI.DisplayObject} target - Display Object to push the mask to
-             * @param {PIXI.Sprite|PIXI.Graphics} maskData - The masking data.
-             */
             MaskSystem.prototype.push = function (target, renderTargetRoot, offsetX, offsetY, _drawAdvancedTargetData) {
-                console.log('mask system push');
-                // TODO the root check means scissor rect will not
-                // be used on render textures more info here:
-                // https://github.com/pixijs/pixi.js/pull/3545
-                // if (maskData.isSprite) {
-                //     this.pushSpriteMask(target, maskData);
-                // }
-                // else if (this.enableScissor
-                //     && !this.scissor
-                //     && this.renderer._activeRenderTarget.root
-                //     && !this.renderer.stencil.stencilMaskStack.length
-                //     && maskData.isFastRect()) {
-                //     const matrix = maskData.worldTransform;
-                //     let rot = Math.atan2(matrix.b, matrix.a);
-                //     // use the nearest degree!
-                //     rot = Math.round(rot * (180 / Math.PI));
-                //     if (rot % 90) {
-                //         this.pushStencilMask(maskData);
-                //     }
-                //     else {
-                //         this.pushScissorMask(target, maskData);
-                //     }
-                // }
-                // else {
-                //     this.pushStencilMask(maskData);
-                // }
+                //
+                var defaultMaskStack = this.defaultMaskStack;
+                var state = this.statePool.pop() || new MaskState();
+                defaultMaskStack.push(state);
+                //
+                // const displayObject = target;
+                // const buffer = renderTargetRoot;
+                if (target.$mask) {
+                    console.warn('MaskSystem: push: displayObject.$mask');
+                }
+                else {
+                    this.pushScissorOrStencilMask(state, target, renderTargetRoot, offsetX, offsetY, _drawAdvancedTargetData);
+                }
             };
-            /**
-             * Removes the last mask from the mask stack and doesn't return it.
-             *
-             * @param {PIXI.DisplayObject} target - Display Object to pop the mask from
-             * @param {PIXI.Sprite|PIXI.Graphics} maskData - The masking data.
-             */
+            MaskSystem.prototype.pushScissorOrStencilMask = function (state, displayObject, buffer, offsetX, offsetY, _drawAdvancedTargetData) {
+                //let drawCalls = 0;
+                var scrollRect = displayObject.$scrollRect ? displayObject.$scrollRect : displayObject.$maskRect;
+                if (true) {
+                    if (scrollRect.isEmpty()) {
+                        console.error('MaskSystem: push: scrollRect.isEmpty()');
+                    }
+                }
+                if (displayObject.$scrollRect) {
+                    offsetX -= scrollRect.x;
+                    offsetY -= scrollRect.y;
+                }
+                //
+                state.target = displayObject;
+                state.renderTexture = buffer;
+                state.offsetX = offsetX;
+                state.offsetY = offsetY;
+                state.scissor = false;
+                //????
+                _drawAdvancedTargetData.renderTarget = buffer;
+                _drawAdvancedTargetData.offsetX = offsetX;
+                _drawAdvancedTargetData.offsetY = offsetY;
+                //
+                var m = buffer.globalMatrix;
+                var context = buffer.context;
+                //let scissor = false;
+                if (buffer.$hasScissor || m.b !== 0 || m.c !== 0) {
+                    buffer.context.pushMask(scrollRect.x + offsetX, scrollRect.y + offsetY, scrollRect.width, scrollRect.height);
+                    //save state
+                    state.x = scrollRect.x + offsetX;
+                    state.y = scrollRect.y + offsetY;
+                    state.width = scrollRect.width;
+                    state.height = scrollRect.height;
+                }
+                else {
+                    var a = m.a;
+                    var d = m.d;
+                    var tx = m.tx;
+                    var ty = m.ty;
+                    var x = scrollRect.x + offsetX;
+                    var y = scrollRect.y + offsetY;
+                    var xMax = x + scrollRect.width;
+                    var yMax = y + scrollRect.height;
+                    var minX = void 0, minY = void 0, maxX = void 0, maxY = void 0;
+                    //优化，通常情况下不缩放的对象占多数，直接加上偏移量即可。
+                    if (a === 1.0 && d === 1.0) {
+                        minX = x + tx;
+                        minY = y + ty;
+                        maxX = xMax + tx;
+                        maxY = yMax + ty;
+                    }
+                    else {
+                        /*
+                        x0---x1
+                        |     |
+                        x3---x2
+                        */
+                        var x0 = a * x + tx;
+                        var y0 = d * y + ty;
+                        var x1 = a * xMax + tx;
+                        var y1 = d * y + ty;
+                        var x2 = a * xMax + tx;
+                        var y2 = d * yMax + ty;
+                        var x3 = a * x + tx;
+                        var y3 = d * yMax + ty;
+                        var tmp = 0;
+                        if (x0 > x1) {
+                            tmp = x0;
+                            x0 = x1;
+                            x1 = tmp;
+                        }
+                        if (x2 > x3) {
+                            tmp = x2;
+                            x2 = x3;
+                            x3 = tmp;
+                        }
+                        minX = (x0 < x2 ? x0 : x2);
+                        maxX = (x1 > x3 ? x1 : x3);
+                        if (y0 > y1) {
+                            tmp = y0;
+                            y0 = y1;
+                            y1 = tmp;
+                        }
+                        if (y2 > y3) {
+                            tmp = y2;
+                            y2 = y3;
+                            y3 = tmp;
+                        }
+                        minY = (y0 < y2 ? y0 : y2);
+                        maxY = (y1 > y3 ? y1 : y3);
+                    }
+                    context.enableScissor(minX, -maxY + buffer.height, maxX - minX, maxY - minY);
+                    //save state
+                    state.x = minX;
+                    state.y = -maxY + buffer.height;
+                    state.width = maxX - minX;
+                    state.height = maxY - minY;
+                    //scissor = true;
+                    state.scissor = true;
+                }
+                //need transform
+                if (egret.transformRefactor) {
+                    state.target.transformAsRenderRoot(state.offsetX, state.offsetY, state.renderTexture.globalMatrix);
+                    state.target.transform(state.offsetX, state.offsetY);
+                }
+            };
             MaskSystem.prototype.pop = function () {
-                console.log('mask system pop');
-                // if (maskData.isSprite) {
-                //     this.popSpriteMask(target, maskData);
-                // }
-                // else if (this.enableScissor && !this.renderer.stencil.stencilMaskStack.length) {
-                //     this.popScissorMask(target, maskData);
-                // }
-                // else {
-                //     this.popStencilMask(target, maskData);
-                // }
+                var defaultMaskStack = this.defaultMaskStack;
+                var state = defaultMaskStack.pop();
+                if (state.scissor) {
+                    //context.disableScissor();
+                    this._webglRenderContext.disableScissor();
+                }
+                else {
+                    //context.popMask();
+                    this._webglRenderContext.popMask();
+                }
+                //清除，回池
+                state.clear();
+                this.statePool.push(state);
             };
             return MaskSystem;
         }());
