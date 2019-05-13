@@ -1317,6 +1317,7 @@ namespace egret.web {
             if (mask) {
                 //renderer.mask.push(this, this._mask);
                 //MaskManager.push
+                webglRenderContext.maskSystem.push(child, buffer, offsetX2, offsetY2, _drawAdvancedTargetData);
             }
 
             //自定义shader ===  webglRenderContext.$filter
@@ -1338,6 +1339,7 @@ namespace egret.web {
             if (mask) {
                 //renderer.mask.pop(this, this._mask);
                 //MaskManager.pop
+                webglRenderContext.maskSystem.pop();
             }
 
             if (filters && filters.length > 0) {

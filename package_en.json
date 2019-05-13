@@ -265,6 +265,10 @@
             "platform": "web"
           },
           {
+            "path": "web/rendering/webgl/MaskSystem.ts",
+            "platform": "web"
+          },
+          {
             "path": "web/rendering/webgl/EgretWebGLAttribute.ts",
             "platform": "web"
           },

@@ -65,6 +65,7 @@ namespace egret.web {
     export class WebGLRenderContext {
 
         public readonly filterSystem: FilterSystem = new FilterSystem(this);
+        public readonly maskSystem: MaskSystem = new MaskSystem(this);
         public readonly drawAdvancedTargetDataPool: IDrawAdvancedTargetData[] = [];
 
         public static antialias: boolean;
