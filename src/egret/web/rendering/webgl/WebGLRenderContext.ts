@@ -120,9 +120,11 @@ namespace egret.web {
          * 推入一个RenderBuffer并绑定
          */
         public pushBuffer(buffer: WebGLRenderBuffer): void {
-
             this.$bufferStack.push(buffer);
-
+            //let lastBuffer = this.$bufferStack[this.$bufferStack.length - 1];
+            // if (lastBuffer === buffer) {
+            //     console.error('pushBuffer');
+            // }
             if (buffer != this.currentBuffer) {
 
                 if (this.currentBuffer) {
@@ -131,32 +133,30 @@ namespace egret.web {
 
                 this.drawCmdManager.pushActivateBuffer(buffer);
             }
-
             this.currentBuffer = buffer;
-
         }
 
         /**
          * 推出一个RenderBuffer并绑定上一个RenderBuffer
          */
-        public popBuffer(): void {
+        public popBuffer(_buffer_?:WebGLRenderBuffer): void {
             // 如果只剩下一个buffer，则不执行pop操作
             // 保证舞台buffer永远在最开始
             if (this.$bufferStack.length <= 1) {
                 return;
             }
-
             let buffer = this.$bufferStack.pop();
-
+            if (DEBUG && _buffer_) {
+                if (_buffer_ !== buffer) {
+                    console.error('popBuffer check _buffer_ error');
+                }
+            }
             let lastBuffer = this.$bufferStack[this.$bufferStack.length - 1];
-
             // 重新绑定
             if (buffer != lastBuffer) {
                 // this.$drawWebGL();
-
                 this.drawCmdManager.pushActivateBuffer(lastBuffer);
             }
-
             this.currentBuffer = lastBuffer;
         }
 

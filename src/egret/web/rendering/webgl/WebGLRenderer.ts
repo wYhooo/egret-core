@@ -1294,6 +1294,8 @@ namespace egret.web {
 
             //
             const webglRenderContext = buffer.context;
+            webglRenderContext.filterSystem._webglRender = this;
+            webglRenderContext.maskSystem._webglRender = this;
             const drawAdvancedData = webglRenderContext.drawAdvancedTargetDataPool.pop() || <IDrawAdvancedData>{};
             
             //
@@ -1306,6 +1308,7 @@ namespace egret.web {
             //
             const filters = displayObject.$_filters;
             const mask = displayObject.$mask || displayObject.$maskRect || displayObject.$scrollRect;
+            
             //
             if (filters && filters.length > 0) {
                 /*
@@ -1315,9 +1318,6 @@ namespace egret.web {
             }
 
             if (mask) {
-                //renderer.mask.push(this, this._mask);
-                //MaskManager.push
-                webglRenderContext.maskSystem._webglRender = this;
                 webglRenderContext.maskSystem.push(child, buffer, offsetX2, offsetY2, drawAdvancedData);
             }
 
@@ -1338,8 +1338,6 @@ namespace egret.web {
             webglRenderContext.$drawWebGL();
 
             if (mask) {
-                //renderer.mask.pop(this, this._mask);
-                //MaskManager.pop
                 webglRenderContext.maskSystem.pop();
             }
 

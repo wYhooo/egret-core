@@ -33,7 +33,7 @@ namespace egret.web {
      */
     class FilterState {
 
-        public target: DisplayObject = null;
+        public displayObject: DisplayObject = null;
         public renderTexture: egret.web.WebGLRenderBuffer = null;
         public rootRenderTexture: egret.web.WebGLRenderBuffer = null;
         public filters: Array<Filter | CustomFilter> = [];
@@ -49,7 +49,7 @@ namespace egret.web {
         }
 
         public clear(): void {
-            this.target = null;
+            this.displayObject = null;
             this.renderTexture = null;
             this.rootRenderTexture = null;
             this.filters = null;
@@ -70,6 +70,7 @@ namespace egret.web {
         private readonly statePool: FilterState[] = [];
         private readonly defaultFilterStack: FilterState[] = [];
         private readonly _webglRenderContext: WebGLRenderContext;
+        public _webglRender: WebGLRenderer = null;
 
         constructor(webglRenderContext: WebGLRenderContext) {
             this.statePool = [];
@@ -94,7 +95,7 @@ namespace egret.web {
             }
             filterStack.push(state);
             //install
-            state.target = target;
+            state.displayObject = target;
             //width, height
             const displayBounds = target.$getOriginalBounds();
             state.displayBoundsX = displayBounds.x;
@@ -120,8 +121,8 @@ namespace egret.web {
             drawAdvancedData.offsetY = -state.displayBoundsY;
             //need transform
             if (egret.transformRefactor) {
-                state.target.transformAsRenderRoot(-state.displayBoundsX, -state.displayBoundsY, targetTexture.globalMatrix);
-                state.target.transform(-state.displayBoundsX, -state.displayBoundsY);
+                state.displayObject.transformAsRenderRoot(-state.displayBoundsX, -state.displayBoundsY, targetTexture.globalMatrix);
+                state.displayObject.transform(-state.displayBoundsX, -state.displayBoundsY);
             }
         }
 
@@ -134,16 +135,24 @@ namespace egret.web {
             //this.activeState = state;
             const _webglRenderContext = this._webglRenderContext;
             //unbind target
-            _webglRenderContext.popBuffer();
+            _webglRenderContext.popBuffer(state.renderTexture);
             //
             _webglRenderContext.setGlobalCompositeOperation(state.currentCompositeOp);
             //
             if (filters.length === 1) {
-                //后处理
-                this.applyFilter(filters[0], state.renderTexture, lastState.renderTexture, false, state);
-                //return 不管用没用，都还回去
-                this.returnFilterTexture(state.renderTexture);
-                state.renderTexture = null;
+
+                const filters0 = filters[0];
+                if (filters0.type === 'SpriteMaskFilter') {
+                    //SpriteMaskFilter单独处理
+                    this.applySpriteMaskFilter(filters0, state.renderTexture, lastState.renderTexture, false, state);
+                }
+                else {
+                    //后处理
+                    this.applyFilter(filters[0], state.renderTexture, lastState.renderTexture, false, state);
+                    //return 不管用没用，都还回去
+                    this.returnFilterTexture(state.renderTexture);
+                    state.renderTexture = null;
+                }
             }
             else {
                 //
@@ -180,6 +189,106 @@ namespace egret.web {
 
         private getOptimalFilterTexture(minWidth: number, minHeight: number, resolution: number = 1): WebGLRenderBuffer {
             return this.__createRenderBuffer__(minWidth, minHeight);
+        }
+
+        private applySpriteMaskFilter(filter: Filter, input: WebGLRenderBuffer, output: WebGLRenderBuffer, clear: boolean, state: FilterState): void {
+
+            //绘制遮罩
+            const mask = state.displayObject.$mask;
+            const displayObject = state.displayObject;
+            const displayBoundsX = state.displayBoundsX;
+            const displayBoundsY = state.displayBoundsY;
+            const displayBoundsWidth = state.displayBoundsWidth;
+            const displayBoundsHeight = state.displayBoundsHeight;
+            const displayBuffer = state.renderTexture;
+            const offsetX = state.offsetX;
+            const offsetY = state.offsetY;
+            let drawCalls = 0;
+
+            if (mask) {
+                let maskBuffer = WebGLRenderBuffer.create(displayBoundsWidth, displayBoundsHeight);//this.createRenderBuffer(displayBoundsWidth, displayBoundsHeight);
+                maskBuffer.context.pushBuffer(maskBuffer);
+                let maskMatrix = Matrix.create();
+                const maskConcatenatedMatrix = mask.$getConcatenatedMatrix();
+                maskMatrix.copyFrom(maskConcatenatedMatrix);
+                mask.$getConcatenatedMatrixAt(displayObject, maskMatrix);
+                maskMatrix.translate(-displayBoundsX, -displayBoundsY);
+                maskBuffer.setTransform(maskMatrix.a, maskMatrix.b, maskMatrix.c, maskMatrix.d, maskMatrix.tx, maskMatrix.ty);
+                Matrix.release(maskMatrix);
+                //
+                if (egret.transformRefactor) {
+                    mask.transformAsRenderRoot(0, 0, maskBuffer.globalMatrix);
+                    mask.transform(0, 0);
+                }
+                drawCalls += this._webglRender.drawDisplayObject(mask, maskBuffer, 0, 0);
+                maskBuffer.context.popBuffer(maskBuffer);
+                displayBuffer.context.setGlobalCompositeOperation("destination-in");
+                displayBuffer.setTransform(1, 0, 0, -1, 0, maskBuffer.height);
+                let maskBufferWidth = maskBuffer.rootRenderTarget.width;
+                let maskBufferHeight = maskBuffer.rootRenderTarget.height;
+
+                this._webglRenderContext.pushBuffer(displayBuffer);///??
+
+                displayBuffer.debugCurrentRenderNode = null;
+                displayBuffer.context.drawTexture(maskBuffer.rootRenderTarget.texture, 0, 0, maskBufferWidth, maskBufferHeight,
+                    0, 0, maskBufferWidth, maskBufferHeight, maskBufferWidth, maskBufferHeight);
+                displayBuffer.setTransform(1, 0, 0, 1, 0, 0);
+                displayBuffer.context.setGlobalCompositeOperation("source-over");
+                maskBuffer.setTransform(1, 0, 0, 1, 0, 0);
+                //renderBufferPool.push(maskBuffer);
+                WebGLRenderBuffer.release(maskBuffer);
+
+                this._webglRenderContext.popBuffer(displayBuffer); ///???
+            }
+
+            displayBuffer.context.setGlobalCompositeOperation(defaultCompositeOp);
+            //displayBuffer.context.popBuffer();
+
+            //绘制结果到屏幕
+            if (drawCalls > 0) {
+                drawCalls++;
+                const buffer = output;//state.renderTarget;
+                let hasBlendMode = (displayObject.$blendMode !== 0);
+                let compositeOp: string;
+                if (hasBlendMode) {
+                    compositeOp = blendModes[displayObject.$blendMode];
+                    if (!compositeOp) {
+                        compositeOp = defaultCompositeOp;
+                    }
+                }
+                if (hasBlendMode) {
+                    buffer.context.setGlobalCompositeOperation(compositeOp);
+                }
+               
+                let savedMatrix = Matrix.create();
+                let curMatrix = buffer.globalMatrix;
+                savedMatrix.a = curMatrix.a;
+                savedMatrix.b = curMatrix.b;
+                savedMatrix.c = curMatrix.c;
+                savedMatrix.d = curMatrix.d;
+                savedMatrix.tx = curMatrix.tx;
+                savedMatrix.ty = curMatrix.ty;
+                curMatrix.append(1, 0, 0, -1, offsetX + displayBoundsX, offsetY + displayBoundsY + displayBuffer.height);
+                let displayBufferWidth = displayBuffer.rootRenderTarget.width;
+                let displayBufferHeight = displayBuffer.rootRenderTarget.height;
+                buffer.debugCurrentRenderNode = null;
+                buffer.context.drawTexture(displayBuffer.rootRenderTarget.texture, 0, 0, displayBufferWidth, displayBufferHeight,
+                    0, 0, displayBufferWidth, displayBufferHeight, displayBufferWidth, displayBufferHeight);
+             
+                if (hasBlendMode) {
+                    buffer.context.setGlobalCompositeOperation(defaultCompositeOp);
+                }
+                let matrix = buffer.globalMatrix;
+                matrix.a = savedMatrix.a;
+                matrix.b = savedMatrix.b;
+                matrix.c = savedMatrix.c;
+                matrix.d = savedMatrix.d;
+                matrix.tx = savedMatrix.tx;
+                matrix.ty = savedMatrix.ty;
+                Matrix.release(savedMatrix);
+            }
+            //renderBufferPool.push(displayBuffer);
+            WebGLRenderBuffer.release(displayBuffer);
         }
 
         public applyFilter(filter: Filter, input: WebGLRenderBuffer, output: WebGLRenderBuffer, clear: boolean, state: FilterState): void {

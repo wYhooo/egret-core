@@ -30,6 +30,16 @@
 namespace egret.web {
 
     /** !!!!!!!! inspired by pixi !!!!!!!!!!!!!
+    */
+    export class SpriteMaskFilter extends Filter {
+        constructor() {
+            super();
+            this.type = 'SpriteMaskFilter';
+            this.post = true;
+        }
+    }
+
+    /** !!!!!!!! inspired by pixi !!!!!!!!!!!!!
      */
     class MaskState {
 
@@ -42,15 +52,8 @@ namespace egret.web {
         public y: number = 0;
         public width: number = 0;
         public height: number = 0;
-        public enable: boolean = false;
         public currentCompositeOp: string = '';
         public isSpriteMask: boolean = false;
-        public displayBoundsX: number = 0;
-        public displayBoundsY: number = 0;
-        public displayBoundsWidth: number = 0;
-        public displayBoundsHeight: number = 0;
-        public displayBuffer: egret.web.WebGLRenderBuffer = null;
-        public maskBuffer: egret.web.WebGLRenderBuffer = null;
 
         constructor() {
         }
@@ -65,15 +68,9 @@ namespace egret.web {
             this.y = 0;
             this.width = 0;
             this.height = 0;
-            this.enable = false;
+            //this.enable = false;
             this.currentCompositeOp = '';
             this.isSpriteMask = false;
-            this.displayBoundsX = 0;
-            this.displayBoundsY = 0;
-            this.displayBoundsWidth = 0;
-            this.displayBoundsHeight = 0;
-            this.displayBuffer = null;
-            this.maskBuffer = null;
         }
     }
 
@@ -85,6 +82,7 @@ namespace egret.web {
         private readonly statePool: MaskState[] = [];
         private readonly defaultMaskStack: MaskState[] = [];
         public _webglRender: WebGLRenderer = null;
+        private readonly _spriteMaskFilter: SpriteMaskFilter = new SpriteMaskFilter;
 
         constructor(webglRenderContext: WebGLRenderContext) {
             this._webglRenderContext = webglRenderContext;
@@ -93,73 +91,18 @@ namespace egret.web {
         public push(target: DisplayObject, renderTargetRoot: WebGLRenderBuffer,
             offsetX: number, offsetY: number,
             drawAdvancedData: IDrawAdvancedData): void {
-
             //
             const defaultMaskStack = this.defaultMaskStack;
             const state = this.statePool.pop() || new MaskState();
             defaultMaskStack.push(state);
             //
+            state.isSpriteMask = !!target.$mask;
             if (target.$mask) {
-                state.enable = true;
-                state.isSpriteMask = true;
-                //console.warn('MaskSystem: push: displayObject.$mask');
-                this.pushSpriteMask(state, target, renderTargetRoot, offsetX, offsetY, drawAdvancedData);
+                this._webglRenderContext.filterSystem.push(target, [this._spriteMaskFilter], renderTargetRoot, offsetX, offsetY, drawAdvancedData);
             }
             else {
-                state.enable = true;
-                state.isSpriteMask = false;
                 this.pushScissorOrStencilMask(state, target, renderTargetRoot, offsetX, offsetY, drawAdvancedData);
             }
-        }
-
-        private pushSpriteMask(state: MaskState,
-            displayObject: DisplayObject,
-            buffer: WebGLRenderBuffer,
-            offsetX: number, offsetY: number,
-            drawAdvancedData: IDrawAdvancedData): void {
-
-            let displayBounds = displayObject.$getOriginalBounds();
-            const displayBoundsX = displayBounds.x;
-            const displayBoundsY = displayBounds.y;
-            const displayBoundsWidth = displayBounds.width;
-            const displayBoundsHeight = displayBounds.height;
-
-
-            state.displayObject = displayObject;
-            state.renderTarget = buffer;
-            state.offsetX = offsetX;
-            state.offsetY = offsetY;
-
-            //const displayBounds = displayObject.$getOriginalBounds();
-            // const displayBoundsX = displayBounds.x;
-            // const displayBoundsY = displayBounds.y;
-            // const displayBoundsWidth = displayBounds.width;
-            // const displayBoundsHeight = displayBounds.height;
-
-            state.displayBoundsX = displayBounds.x;
-            state.displayBoundsY = displayBounds.y;
-            state.displayBoundsWidth = displayBounds.width;
-            state.displayBoundsHeight = displayBounds.height;
-            //let drawCalls = 0;
-
-
-            // if (displayBoundsWidth <= 0 || displayBoundsHeight <= 0) {
-            //     return drawCalls;
-            // }
-            //绘制显示对象自身，若有scrollRect，应用clip
-            let displayBuffer = WebGLRenderBuffer.create(displayBoundsWidth, displayBoundsHeight);//;//this.createRenderBuffer(displayBoundsWidth, displayBoundsHeight);
-            displayBuffer.context.pushBuffer(displayBuffer);
-            state.displayBuffer = displayBuffer;
-            //
-            if (egret.transformRefactor) {
-                displayObject.transformAsRenderRoot(-displayBoundsX, -displayBoundsY, displayBuffer.globalMatrix);
-                displayObject.transform(-displayBoundsX, -displayBoundsY);
-            }
-            //drawCalls += this._webglRender.drawDisplayObject(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
-            //????
-            drawAdvancedData.renderTarget = state.displayBuffer;
-            drawAdvancedData.offsetX = -state.displayBoundsX;
-            drawAdvancedData.offsetY = -state.displayBoundsY;
         }
 
         private pushScissorOrStencilMask(state: MaskState,
@@ -167,7 +110,7 @@ namespace egret.web {
             buffer: WebGLRenderBuffer,
             offsetX: number, offsetY: number,
             drawAdvancedData: IDrawAdvancedData): void {
-
+            //
             if (DEBUG) {
                 if (state.isSpriteMask) {
                     console.error('pushScissorOrStencilMask: state.isSpriteMask = ' + state.isSpriteMask);
@@ -293,117 +236,20 @@ namespace egret.web {
             }
             this._webglRenderContext.setGlobalCompositeOperation(defaultCompositeOp);
             if (state.scissor) {
-                //context.disableScissor();
                 this._webglRenderContext.disableScissor();
             } else {
-                //context.popMask();
                 this._webglRenderContext.popMask();
             }
-        }
-
-        private popSpriteMask(state: MaskState): void {
-            //绘制遮罩
-            const mask = state.displayObject.$mask;
-            const displayObject = state.displayObject;
-            const displayBoundsX = state.displayBoundsX;
-            const displayBoundsY = state.displayBoundsY;
-            const displayBoundsWidth = state.displayBoundsWidth;
-            const displayBoundsHeight = state.displayBoundsHeight;
-            const displayBuffer = state.displayBuffer;
-            const offsetX = state.offsetX;
-            const offsetY = state.offsetY;
-            let drawCalls = 0;
-
-            if (mask) {
-                let maskBuffer = WebGLRenderBuffer.create(displayBoundsWidth, displayBoundsHeight);//this.createRenderBuffer(displayBoundsWidth, displayBoundsHeight);
-                maskBuffer.context.pushBuffer(maskBuffer);
-                let maskMatrix = Matrix.create();
-                const maskConcatenatedMatrix = mask.$getConcatenatedMatrix();
-                maskMatrix.copyFrom(maskConcatenatedMatrix);
-                mask.$getConcatenatedMatrixAt(displayObject, maskMatrix);
-                maskMatrix.translate(-displayBoundsX, -displayBoundsY);
-                maskBuffer.setTransform(maskMatrix.a, maskMatrix.b, maskMatrix.c, maskMatrix.d, maskMatrix.tx, maskMatrix.ty);
-                Matrix.release(maskMatrix);
-                //
-                if (egret.transformRefactor) {
-                    mask.transformAsRenderRoot(0, 0, maskBuffer.globalMatrix);
-                    mask.transform(0, 0);
-                }
-                drawCalls += this._webglRender.drawDisplayObject(mask, maskBuffer, 0, 0);
-                maskBuffer.context.popBuffer();
-                displayBuffer.context.setGlobalCompositeOperation("destination-in");
-                displayBuffer.setTransform(1, 0, 0, -1, 0, maskBuffer.height);
-                let maskBufferWidth = maskBuffer.rootRenderTarget.width;
-                let maskBufferHeight = maskBuffer.rootRenderTarget.height;
-                displayBuffer.debugCurrentRenderNode = null;
-                displayBuffer.context.drawTexture(maskBuffer.rootRenderTarget.texture, 0, 0, maskBufferWidth, maskBufferHeight,
-                    0, 0, maskBufferWidth, maskBufferHeight, maskBufferWidth, maskBufferHeight);
-                displayBuffer.setTransform(1, 0, 0, 1, 0, 0);
-                displayBuffer.context.setGlobalCompositeOperation("source-over");
-                maskBuffer.setTransform(1, 0, 0, 1, 0, 0);
-                renderBufferPool.push(maskBuffer);
-            }
-
-            displayBuffer.context.setGlobalCompositeOperation(defaultCompositeOp);
-            displayBuffer.context.popBuffer();
-
-            //绘制结果到屏幕
-            if (drawCalls > 0) {
-                drawCalls++;
-                const buffer = state.renderTarget;
-                let hasBlendMode = (displayObject.$blendMode !== 0);
-                let compositeOp: string;
-                if (hasBlendMode) {
-                    compositeOp = blendModes[displayObject.$blendMode];
-                    if (!compositeOp) {
-                        compositeOp = defaultCompositeOp;
-                    }
-                }
-                if (hasBlendMode) {
-                    buffer.context.setGlobalCompositeOperation(compositeOp);
-                }
-               
-                let savedMatrix = Matrix.create();
-                let curMatrix = buffer.globalMatrix;
-                savedMatrix.a = curMatrix.a;
-                savedMatrix.b = curMatrix.b;
-                savedMatrix.c = curMatrix.c;
-                savedMatrix.d = curMatrix.d;
-                savedMatrix.tx = curMatrix.tx;
-                savedMatrix.ty = curMatrix.ty;
-                curMatrix.append(1, 0, 0, -1, offsetX + displayBoundsX, offsetY + displayBoundsY + displayBuffer.height);
-                let displayBufferWidth = displayBuffer.rootRenderTarget.width;
-                let displayBufferHeight = displayBuffer.rootRenderTarget.height;
-                buffer.debugCurrentRenderNode = null;
-                buffer.context.drawTexture(displayBuffer.rootRenderTarget.texture, 0, 0, displayBufferWidth, displayBufferHeight,
-                    0, 0, displayBufferWidth, displayBufferHeight, displayBufferWidth, displayBufferHeight);
-             
-                if (hasBlendMode) {
-                    buffer.context.setGlobalCompositeOperation(defaultCompositeOp);
-                }
-                let matrix = buffer.globalMatrix;
-                matrix.a = savedMatrix.a;
-                matrix.b = savedMatrix.b;
-                matrix.c = savedMatrix.c;
-                matrix.d = savedMatrix.d;
-                matrix.tx = savedMatrix.tx;
-                matrix.ty = savedMatrix.ty;
-                Matrix.release(savedMatrix);
-            }
-            renderBufferPool.push(displayBuffer);
         }
 
         public pop(): void {
             const defaultMaskStack = this.defaultMaskStack;
             const state = defaultMaskStack.pop();
-            if (state.enable) {
-                if (state.isSpriteMask) {
-                    //console.warn('MaskSystem: pop: state.isSpriteMask');
-                    this.popSpriteMask(state);
-                }
-                else {
-                    this.popScissorOrStencilMask(state);
-                }
+            if (state.isSpriteMask) {
+                this._webglRenderContext.filterSystem.pop();
+            }
+            else {
+                this.popScissorOrStencilMask(state);
             }
             //清除，回池
             state.clear();
