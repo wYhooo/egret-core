@@ -48,6 +48,12 @@ namespace egret.web {
         extension: any
     }
 
+    export interface IDrawAdvancedTargetData {
+        renderTarget: WebGLRenderBuffer,
+        offsetX: number,
+        offsetY: number,
+    }
+
     //TO DO
     let debugLogOnceCompressedTextureNotSupported = false;
 
@@ -59,9 +65,7 @@ namespace egret.web {
     export class WebGLRenderContext {
 
         public readonly filterSystem: FilterSystem = new FilterSystem(this);
-        public curFilterRenderTarget: WebGLRenderBuffer = null;
-        public curFilterOffsetX: number = 0;
-        public curFilterOffsetY: number = 0;
+        public readonly drawAdvancedTargetDataPool: IDrawAdvancedTargetData[] = [];
 
         public static antialias: boolean;
 

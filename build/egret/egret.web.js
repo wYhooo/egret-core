@@ -5715,9 +5715,7 @@ var egret;
         var WebGLRenderContext = (function () {
             function WebGLRenderContext(width, height) {
                 this.filterSystem = new web.FilterSystem(this);
-                this.curFilterRenderTarget = null;
-                this.curFilterOffsetX = 0;
-                this.curFilterOffsetY = 0;
+                this.drawAdvancedTargetDataPool = [];
                 //
                 this._defaultEmptyTexture = null;
                 this.glID = null;
@@ -8323,9 +8321,11 @@ var egret;
                 }
                 //
                 var webglRenderContext = buffer.context;
-                webglRenderContext.curFilterRenderTarget = buffer;
-                webglRenderContext.curFilterOffsetX = offsetX2;
-                webglRenderContext.curFilterOffsetY = offsetY2;
+                var _drawAdvancedTargetData = webglRenderContext.drawAdvancedTargetDataPool.pop() || {};
+                //
+                _drawAdvancedTargetData.renderTarget = buffer;
+                _drawAdvancedTargetData.offsetX = offsetX2;
+                _drawAdvancedTargetData.offsetY = offsetY2;
                 //
                 webglRenderContext.$drawWebGL();
                 //
@@ -8334,9 +8334,9 @@ var egret;
                 //
                 if (filters && filters.length > 0) {
                     /*
-                    这里面有可能会改掉curFilterRenderTarget,curFilterOffsetX,curFilterOffsetY;
+                    这里面有可能会改掉_drawAdvancedTargetData;
                     */
-                    webglRenderContext.filterSystem.push(child, child.$_filters, buffer, offsetX2, offsetY2);
+                    webglRenderContext.filterSystem.push(child, child.$_filters, buffer, offsetX2, offsetY2, _drawAdvancedTargetData);
                 }
                 if (mask) {
                     //renderer.mask.push(this, this._mask);
@@ -8347,7 +8347,7 @@ var egret;
                 var blend = web.blendModes[displayObject.$blendMode] || web.defaultCompositeOp;
                 webglRenderContext.setGlobalCompositeOperation(blend);
                 //
-                drawCalls += this.drawDisplayObject(displayObject, webglRenderContext.curFilterRenderTarget, webglRenderContext.curFilterOffsetX, webglRenderContext.curFilterOffsetY);
+                drawCalls += this.drawDisplayObject(displayObject, _drawAdvancedTargetData.renderTarget, _drawAdvancedTargetData.offsetX, _drawAdvancedTargetData.offsetY);
                 //
                 webglRenderContext.setGlobalCompositeOperation(web.defaultCompositeOp);
                 webglRenderContext.$filter = null;
@@ -8360,6 +8360,7 @@ var egret;
                 if (filters && filters.length > 0) {
                     webglRenderContext.filterSystem.pop();
                 }
+                webglRenderContext.drawAdvancedTargetDataPool.push(_drawAdvancedTargetData);
                 return drawCalls;
             };
             return WebGLRenderer;
@@ -8442,7 +8443,7 @@ var egret;
                 this.defaultFilterStack.push(new FilterState);
                 this._webglRenderContext = webglRenderContext;
             }
-            FilterSystem.prototype.push = function (target, filters, renderTargetRoot, offsetX, offsetY) {
+            FilterSystem.prototype.push = function (target, filters, renderTargetRoot, offsetX, offsetY, _drawAdvancedTargetData) {
                 if (filters.length <= 0) {
                     console.error('FilterSystem:push:filters.length = ' + filters.length);
                 }
@@ -8476,9 +8477,9 @@ var egret;
                 //绑定目标
                 _webglRenderContext.pushBuffer(targetTexture);
                 ///设置位置，不再相对全局，而是局部
-                _webglRenderContext.curFilterRenderTarget = targetTexture;
-                _webglRenderContext.curFilterOffsetX = -state.displayBoundsX;
-                _webglRenderContext.curFilterOffsetY = -state.displayBoundsY;
+                _drawAdvancedTargetData.renderTarget = targetTexture;
+                _drawAdvancedTargetData.offsetX = -state.displayBoundsX;
+                _drawAdvancedTargetData.offsetY = -state.displayBoundsY;
                 //need transform
                 if (egret.transformRefactor) {
                     state.target.transformAsRenderRoot(-state.displayBoundsX, -state.displayBoundsY, targetTexture.globalMatrix);
@@ -8533,10 +8534,6 @@ var egret;
                 }
                 //
                 _webglRenderContext.setGlobalCompositeOperation(web.defaultCompositeOp);
-                //清除临时数据
-                _webglRenderContext.curFilterRenderTarget = null;
-                _webglRenderContext.curFilterOffsetX = 0;
-                _webglRenderContext.curFilterOffsetY = 0;
                 //清除，回池
                 state.clear();
                 this.statePool.push(state);

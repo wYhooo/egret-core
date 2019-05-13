@@ -77,7 +77,11 @@ namespace egret.web {
             this._webglRenderContext = webglRenderContext;
         }
 
-        public push(target: DisplayObject, filters: Array<Filter | CustomFilter>, renderTargetRoot: WebGLRenderBuffer, offsetX: number, offsetY: number): void {
+        public push(target: DisplayObject, filters: Array<Filter | CustomFilter>,
+            renderTargetRoot: WebGLRenderBuffer,
+            offsetX: number, offsetY: number,
+            _drawAdvancedTargetData: IDrawAdvancedTargetData): void {
+
             if (filters.length <= 0) {
                 console.error('FilterSystem:push:filters.length = ' + filters.length);
             }
@@ -111,9 +115,9 @@ namespace egret.web {
             //绑定目标
             _webglRenderContext.pushBuffer(targetTexture);
             ///设置位置，不再相对全局，而是局部
-            _webglRenderContext.curFilterRenderTarget = targetTexture;
-            _webglRenderContext.curFilterOffsetX = -state.displayBoundsX;
-            _webglRenderContext.curFilterOffsetY = -state.displayBoundsY;
+            _drawAdvancedTargetData.renderTarget = targetTexture;
+            _drawAdvancedTargetData.offsetX = -state.displayBoundsX;
+            _drawAdvancedTargetData.offsetY = -state.displayBoundsY;
             //need transform
             if (egret.transformRefactor) {
                 state.target.transformAsRenderRoot(-state.displayBoundsX, -state.displayBoundsY, targetTexture.globalMatrix);
@@ -169,10 +173,6 @@ namespace egret.web {
             }
             //
             _webglRenderContext.setGlobalCompositeOperation(defaultCompositeOp);
-            //清除临时数据
-            _webglRenderContext.curFilterRenderTarget = null;
-            _webglRenderContext.curFilterOffsetX = 0;
-            _webglRenderContext.curFilterOffsetY = 0;
             //清除，回池
             state.clear();
             this.statePool.push(state);

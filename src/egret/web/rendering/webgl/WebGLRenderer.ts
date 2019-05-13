@@ -1294,9 +1294,13 @@ namespace egret.web {
 
             //
             const webglRenderContext = buffer.context;
-            webglRenderContext.curFilterRenderTarget = buffer;
-            webglRenderContext.curFilterOffsetX = offsetX2;
-            webglRenderContext.curFilterOffsetY = offsetY2;
+            const _drawAdvancedTargetData = webglRenderContext.drawAdvancedTargetDataPool.pop() || <IDrawAdvancedTargetData>{};
+            
+            //
+            _drawAdvancedTargetData.renderTarget = buffer;
+            _drawAdvancedTargetData.offsetX = offsetX2;
+            _drawAdvancedTargetData.offsetY = offsetY2;
+
             //
             webglRenderContext.$drawWebGL();
             //
@@ -1305,9 +1309,9 @@ namespace egret.web {
             //
             if (filters && filters.length > 0) {
                 /*
-                这里面有可能会改掉curFilterRenderTarget,curFilterOffsetX,curFilterOffsetY;
+                这里面有可能会改掉_drawAdvancedTargetData;
                 */
-                webglRenderContext.filterSystem.push(child, child.$_filters, buffer, offsetX2, offsetY2);
+                webglRenderContext.filterSystem.push(child, child.$_filters, buffer, offsetX2, offsetY2, _drawAdvancedTargetData);
             }
 
             if (mask) {
@@ -1321,9 +1325,9 @@ namespace egret.web {
             webglRenderContext.setGlobalCompositeOperation(blend);
             //
             drawCalls += this.drawDisplayObject(displayObject,
-                webglRenderContext.curFilterRenderTarget,
-                webglRenderContext.curFilterOffsetX,
-                webglRenderContext.curFilterOffsetY);
+                _drawAdvancedTargetData.renderTarget,
+                _drawAdvancedTargetData.offsetX,
+                _drawAdvancedTargetData.offsetY);
             //
             webglRenderContext.setGlobalCompositeOperation(defaultCompositeOp);
             webglRenderContext.$filter = null;
@@ -1339,6 +1343,8 @@ namespace egret.web {
             if (filters && filters.length > 0) {
                 webglRenderContext.filterSystem.pop();
             }
+
+            webglRenderContext.drawAdvancedTargetDataPool.push(_drawAdvancedTargetData);
             return drawCalls;
         }
     }
