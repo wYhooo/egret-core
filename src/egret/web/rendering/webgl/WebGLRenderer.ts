@@ -1294,12 +1294,12 @@ namespace egret.web {
 
             //
             const webglRenderContext = buffer.context;
-            const _drawAdvancedTargetData = webglRenderContext.drawAdvancedTargetDataPool.pop() || <IDrawAdvancedTargetData>{};
+            const drawAdvancedData = webglRenderContext.drawAdvancedTargetDataPool.pop() || <IDrawAdvancedData>{};
             
             //
-            _drawAdvancedTargetData.renderTarget = buffer;
-            _drawAdvancedTargetData.offsetX = offsetX2;
-            _drawAdvancedTargetData.offsetY = offsetY2;
+            drawAdvancedData.renderTarget = buffer;
+            drawAdvancedData.offsetX = offsetX2;
+            drawAdvancedData.offsetY = offsetY2;
 
             //
             webglRenderContext.$drawWebGL();
@@ -1311,13 +1311,13 @@ namespace egret.web {
                 /*
                 这里面有可能会改掉_drawAdvancedTargetData;
                 */
-                webglRenderContext.filterSystem.push(child, child.$_filters, buffer, offsetX2, offsetY2, _drawAdvancedTargetData);
+                webglRenderContext.filterSystem.push(child, child.$_filters, buffer, offsetX2, offsetY2, drawAdvancedData);
             }
 
             if (mask) {
                 //renderer.mask.push(this, this._mask);
                 //MaskManager.push
-                webglRenderContext.maskSystem.push(child, buffer, offsetX2, offsetY2, _drawAdvancedTargetData);
+                webglRenderContext.maskSystem.push(child, buffer, offsetX2, offsetY2, drawAdvancedData);
             }
 
             //自定义shader ===  webglRenderContext.$filter
@@ -1326,9 +1326,9 @@ namespace egret.web {
             webglRenderContext.setGlobalCompositeOperation(blend);
             //
             drawCalls += this.drawDisplayObject(displayObject,
-                _drawAdvancedTargetData.renderTarget,
-                _drawAdvancedTargetData.offsetX,
-                _drawAdvancedTargetData.offsetY);
+                drawAdvancedData.renderTarget,
+                drawAdvancedData.offsetX,
+                drawAdvancedData.offsetY);
             //
             webglRenderContext.setGlobalCompositeOperation(defaultCompositeOp);
             webglRenderContext.$filter = null;
@@ -1346,7 +1346,7 @@ namespace egret.web {
                 webglRenderContext.filterSystem.pop();
             }
 
-            webglRenderContext.drawAdvancedTargetDataPool.push(_drawAdvancedTargetData);
+            webglRenderContext.drawAdvancedTargetDataPool.push(drawAdvancedData);
             return drawCalls;
         }
     }

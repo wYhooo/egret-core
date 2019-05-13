@@ -8322,11 +8322,11 @@ var egret;
                 }
                 //
                 var webglRenderContext = buffer.context;
-                var _drawAdvancedTargetData = webglRenderContext.drawAdvancedTargetDataPool.pop() || {};
+                var drawAdvancedData = webglRenderContext.drawAdvancedTargetDataPool.pop() || {};
                 //
-                _drawAdvancedTargetData.renderTarget = buffer;
-                _drawAdvancedTargetData.offsetX = offsetX2;
-                _drawAdvancedTargetData.offsetY = offsetY2;
+                drawAdvancedData.renderTarget = buffer;
+                drawAdvancedData.offsetX = offsetX2;
+                drawAdvancedData.offsetY = offsetY2;
                 //
                 webglRenderContext.$drawWebGL();
                 //
@@ -8337,19 +8337,19 @@ var egret;
                     /*
                     这里面有可能会改掉_drawAdvancedTargetData;
                     */
-                    webglRenderContext.filterSystem.push(child, child.$_filters, buffer, offsetX2, offsetY2, _drawAdvancedTargetData);
+                    webglRenderContext.filterSystem.push(child, child.$_filters, buffer, offsetX2, offsetY2, drawAdvancedData);
                 }
                 if (mask) {
                     //renderer.mask.push(this, this._mask);
                     //MaskManager.push
-                    webglRenderContext.maskSystem.push(child, buffer, offsetX2, offsetY2, _drawAdvancedTargetData);
+                    webglRenderContext.maskSystem.push(child, buffer, offsetX2, offsetY2, drawAdvancedData);
                 }
                 //自定义shader ===  webglRenderContext.$filter
                 webglRenderContext.$filter = displayObject.$_shader;
                 var blend = web.blendModes[displayObject.$blendMode] || web.defaultCompositeOp;
                 webglRenderContext.setGlobalCompositeOperation(blend);
                 //
-                drawCalls += this.drawDisplayObject(displayObject, _drawAdvancedTargetData.renderTarget, _drawAdvancedTargetData.offsetX, _drawAdvancedTargetData.offsetY);
+                drawCalls += this.drawDisplayObject(displayObject, drawAdvancedData.renderTarget, drawAdvancedData.offsetX, drawAdvancedData.offsetY);
                 //
                 webglRenderContext.setGlobalCompositeOperation(web.defaultCompositeOp);
                 webglRenderContext.$filter = null;
@@ -8363,7 +8363,7 @@ var egret;
                 if (filters && filters.length > 0) {
                     webglRenderContext.filterSystem.pop();
                 }
-                webglRenderContext.drawAdvancedTargetDataPool.push(_drawAdvancedTargetData);
+                webglRenderContext.drawAdvancedTargetDataPool.push(drawAdvancedData);
                 return drawCalls;
             };
             return WebGLRenderer;
@@ -8446,7 +8446,7 @@ var egret;
                 this.defaultFilterStack.push(new FilterState);
                 this._webglRenderContext = webglRenderContext;
             }
-            FilterSystem.prototype.push = function (target, filters, renderTargetRoot, offsetX, offsetY, _drawAdvancedTargetData) {
+            FilterSystem.prototype.push = function (target, filters, renderTargetRoot, offsetX, offsetY, drawAdvancedData) {
                 if (filters.length <= 0) {
                     console.error('FilterSystem:push:filters.length = ' + filters.length);
                 }
@@ -8480,9 +8480,9 @@ var egret;
                 //绑定目标
                 _webglRenderContext.pushBuffer(targetTexture);
                 ///设置位置，不再相对全局，而是局部
-                _drawAdvancedTargetData.renderTarget = targetTexture;
-                _drawAdvancedTargetData.offsetX = -state.displayBoundsX;
-                _drawAdvancedTargetData.offsetY = -state.displayBoundsY;
+                drawAdvancedData.renderTarget = targetTexture;
+                drawAdvancedData.offsetX = -state.displayBoundsX;
+                drawAdvancedData.offsetY = -state.displayBoundsY;
                 //need transform
                 if (egret.transformRefactor) {
                     state.target.transformAsRenderRoot(-state.displayBoundsX, -state.displayBoundsY, targetTexture.globalMatrix);
@@ -8661,7 +8661,7 @@ var egret;
                 this.defaultMaskStack = [];
                 this._webglRenderContext = webglRenderContext;
             }
-            MaskSystem.prototype.push = function (target, renderTargetRoot, offsetX, offsetY, _drawAdvancedTargetData) {
+            MaskSystem.prototype.push = function (target, renderTargetRoot, offsetX, offsetY, drawAdvancedData) {
                 //
                 var defaultMaskStack = this.defaultMaskStack;
                 var state = this.statePool.pop() || new MaskState();
@@ -8673,10 +8673,10 @@ var egret;
                     console.warn('MaskSystem: push: displayObject.$mask');
                 }
                 else {
-                    this.pushScissorOrStencilMask(state, target, renderTargetRoot, offsetX, offsetY, _drawAdvancedTargetData);
+                    this.pushScissorOrStencilMask(state, target, renderTargetRoot, offsetX, offsetY, drawAdvancedData);
                 }
             };
-            MaskSystem.prototype.pushScissorOrStencilMask = function (state, displayObject, buffer, offsetX, offsetY, _drawAdvancedTargetData) {
+            MaskSystem.prototype.pushScissorOrStencilMask = function (state, displayObject, buffer, offsetX, offsetY, drawAdvancedData) {
                 //let drawCalls = 0;
                 var scrollRect = displayObject.$scrollRect ? displayObject.$scrollRect : displayObject.$maskRect;
                 if (true) {
@@ -8695,9 +8695,9 @@ var egret;
                 state.offsetY = offsetY;
                 state.scissor = false;
                 //????
-                _drawAdvancedTargetData.renderTarget = buffer;
-                _drawAdvancedTargetData.offsetX = offsetX;
-                _drawAdvancedTargetData.offsetY = offsetY;
+                drawAdvancedData.renderTarget = buffer;
+                drawAdvancedData.offsetX = offsetX;
+                drawAdvancedData.offsetY = offsetY;
                 //
                 var m = buffer.globalMatrix;
                 var context = buffer.context;

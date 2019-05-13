@@ -73,7 +73,7 @@ namespace egret.web {
 
         public push(target: DisplayObject, renderTargetRoot: WebGLRenderBuffer,
             offsetX: number, offsetY: number,
-            _drawAdvancedTargetData: IDrawAdvancedTargetData): void {
+            drawAdvancedData: IDrawAdvancedData): void {
 
             //
             const defaultMaskStack = this.defaultMaskStack;
@@ -86,7 +86,7 @@ namespace egret.web {
                 console.warn('MaskSystem: push: displayObject.$mask');
             }
             else {
-                this.pushScissorOrStencilMask(state, target, renderTargetRoot, offsetX, offsetY, _drawAdvancedTargetData);
+                this.pushScissorOrStencilMask(state, target, renderTargetRoot, offsetX, offsetY, drawAdvancedData);
             }
         }
 
@@ -94,7 +94,7 @@ namespace egret.web {
             displayObject: DisplayObject,
             buffer: WebGLRenderBuffer,
             offsetX: number, offsetY: number,
-            _drawAdvancedTargetData: IDrawAdvancedTargetData): void {
+            drawAdvancedData: IDrawAdvancedData): void {
 
             //let drawCalls = 0;
             let scrollRect = displayObject.$scrollRect ? displayObject.$scrollRect : displayObject.$maskRect;
@@ -114,9 +114,9 @@ namespace egret.web {
             state.offsetY = offsetY;
             state.scissor = false;
             //????
-            _drawAdvancedTargetData.renderTarget = buffer;
-            _drawAdvancedTargetData.offsetX = offsetX;
-            _drawAdvancedTargetData.offsetY = offsetY;
+            drawAdvancedData.renderTarget = buffer;
+            drawAdvancedData.offsetX = offsetX;
+            drawAdvancedData.offsetY = offsetY;
             //
             let m = buffer.globalMatrix;
             let context = buffer.context;

@@ -48,7 +48,7 @@ namespace egret.web {
         extension: any
     }
 
-    export interface IDrawAdvancedTargetData {
+    export interface IDrawAdvancedData {
         renderTarget: WebGLRenderBuffer,
         offsetX: number,
         offsetY: number,
@@ -66,7 +66,7 @@ namespace egret.web {
 
         public readonly filterSystem: FilterSystem = new FilterSystem(this);
         public readonly maskSystem: MaskSystem = new MaskSystem(this);
-        public readonly drawAdvancedTargetDataPool: IDrawAdvancedTargetData[] = [];
+        public readonly drawAdvancedTargetDataPool: IDrawAdvancedData[] = [];
 
         public static antialias: boolean;
 

@@ -80,7 +80,7 @@ namespace egret.web {
         public push(target: DisplayObject, filters: Array<Filter | CustomFilter>,
             renderTargetRoot: WebGLRenderBuffer,
             offsetX: number, offsetY: number,
-            _drawAdvancedTargetData: IDrawAdvancedTargetData): void {
+            drawAdvancedData: IDrawAdvancedData): void {
 
             if (filters.length <= 0) {
                 console.error('FilterSystem:push:filters.length = ' + filters.length);
@@ -115,9 +115,9 @@ namespace egret.web {
             //绑定目标
             _webglRenderContext.pushBuffer(targetTexture);
             ///设置位置，不再相对全局，而是局部
-            _drawAdvancedTargetData.renderTarget = targetTexture;
-            _drawAdvancedTargetData.offsetX = -state.displayBoundsX;
-            _drawAdvancedTargetData.offsetY = -state.displayBoundsY;
+            drawAdvancedData.renderTarget = targetTexture;
+            drawAdvancedData.offsetX = -state.displayBoundsX;
+            drawAdvancedData.offsetY = -state.displayBoundsY;
             //need transform
             if (egret.transformRefactor) {
                 state.target.transformAsRenderRoot(-state.displayBoundsX, -state.displayBoundsY, targetTexture.globalMatrix);
