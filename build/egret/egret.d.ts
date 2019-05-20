@@ -9603,6 +9603,33 @@ declare namespace egret.sys {
          */
         drawNodeToBuffer(node: sys.RenderNode, buffer: RenderBuffer, matrix: Matrix, forHitTest?: boolean): void;
     }
+    /**
+     *
+     */
+    interface RenderContext {
+    }
+    /**
+     * 创建一个canvas。
+     */
+    function mainCanvas(width?: number, height?: number): HTMLCanvasElement;
+    function createCanvas(width?: number, height?: number): HTMLCanvasElement;
+    /**
+    * 重新设置主canvas的大小
+    */
+    function resizeContext(renderContext: RenderContext, width: number, height: number, useMaxSize?: boolean): void;
+    /**
+    * 获得系统的渲染运行时
+    */
+    function getContextWebGL(surface: HTMLCanvasElement): WebGLRenderingContext;
+    function getContext2d(surface: HTMLCanvasElement): CanvasRenderingContext2D;
+    /**
+    * 重新设置主canvas的大小
+    */
+    function createTexture(renderContext: RenderContext, bitmapData: BitmapData | HTMLCanvasElement): WebGLTexture;
+    /**
+     * 画texture
+     **/
+    function drawTextureElements(renderContext: RenderContext, data: any, offset: number): number;
 }
 declare namespace egret.sys {
     /**

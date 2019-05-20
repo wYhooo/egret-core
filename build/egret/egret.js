@@ -8815,9 +8815,9 @@ var egret;
             // this.width = source.width;
             // this.height = source.height;
             _this.source = source;
-            if (_this.source && _this.source instanceof HTMLImageElement) {
-                _this.width = source.width;
-                _this.height = source.height;
+            if (_this.source) {
+                _this.width = +source.width;
+                _this.height = +source.height;
             }
             else {
                 ///compressed texture?
@@ -14523,6 +14523,55 @@ var egret;
 (function (egret) {
     var sys;
     (function (sys) {
+        /**
+         * 创建一个canvas。
+         */
+        function mainCanvas(width, height) {
+            console.error("empty sys.mainCanvas = " + width + ", " + height);
+            return null;
+        }
+        sys.mainCanvas = mainCanvas;
+        function createCanvas(width, height) {
+            console.error("empty sys.createCanvas = " + width + ", " + height);
+            return null;
+        }
+        sys.createCanvas = createCanvas;
+        /**
+        * 重新设置主canvas的大小
+        */
+        function resizeContext(renderContext, width, height, useMaxSize) {
+            console.error("empty sys.resizeContext = " + renderContext + ", " + width + ", " + height + ", " + useMaxSize);
+        }
+        sys.resizeContext = resizeContext;
+        /**
+        * 获得系统的渲染运行时
+        */
+        function getContextWebGL(surface) {
+            console.error("empty sys.getContextWebGL = " + surface);
+            return null;
+        }
+        sys.getContextWebGL = getContextWebGL;
+        function getContext2d(surface) {
+            console.error("empty sys.getContext2d = " + surface);
+            return null;
+        }
+        sys.getContext2d = getContext2d;
+        /**
+        * 重新设置主canvas的大小
+        */
+        function createTexture(renderContext, bitmapData) {
+            console.error("empty sys.createTexture = " + bitmapData);
+            return null;
+        }
+        sys.createTexture = createTexture;
+        /**
+         * 画texture
+         **/
+        function drawTextureElements(renderContext, data, offset) {
+            console.error("empty sys.drawTextureElements = " + renderContext + ", " + data + ", " + offset);
+            return 0;
+        }
+        sys.drawTextureElements = drawTextureElements;
     })(sys = egret.sys || (egret.sys = {}));
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////

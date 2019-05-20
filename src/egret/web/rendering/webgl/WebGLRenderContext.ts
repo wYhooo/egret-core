@@ -29,23 +29,10 @@
 
 namespace egret.web {
 
-    /**
-     * 创建一个canvas。
-     */
-    function createCanvas(width?: number, height?: number): HTMLCanvasElement {
-        let canvas: HTMLCanvasElement = document.createElement("canvas");
-        if (!isNaN(width) && !isNaN(height)) {
-            canvas.width = width;
-            canvas.height = height;
-        }
-        return canvas;
-    }
-
     ///
-    export interface SupportedCompressedTextureType {
-        type: string,
-        formats: Uint32Array,
-        extension: any
+    interface SupportedCompressedTextureInfo {
+        extensionName: string,
+        supportedFormats: Array<[string, number]>,
     }
 
     export interface IDrawAdvancedData {
@@ -55,14 +42,14 @@ namespace egret.web {
     }
 
     //TO DO
-    let debugLogOnceCompressedTextureNotSupported = false;
+    const debugLogCompressedTextureNotSupported = {};
 
     /**
      * @private
      * WebGL上下文对象，提供简单的绘图接口
      * 抽象出此类，以实现共用一个context
      */
-    export class WebGLRenderContext {
+    export class WebGLRenderContext implements egret.sys.RenderContext {
 
         public readonly filterSystem: FilterSystem = new FilterSystem(this);
         public readonly maskSystem: MaskSystem = new MaskSystem(this);
@@ -203,7 +190,7 @@ namespace egret.web {
 
         public constructor(width?: number, height?: number) {
 
-            this.surface = createCanvas(width, height);
+            this.surface = egret.sys.mainCanvas(width, height);
 
             if (egret.nativeRender) {
                 return;
@@ -233,7 +220,7 @@ namespace egret.web {
             this.surface.width = this.surface.height = 0;
         }
 
-        private onResize(width?: number, height?: number): void {
+        public onResize(width?: number, height?: number): void {
             width = width || this.surface.width;
             height = height || this.surface.height;
             this.projectionX = width / 2;
@@ -250,6 +237,8 @@ namespace egret.web {
          * @param useMaxSize 若传入true，则将改变后的尺寸与已有尺寸对比，保留较大的尺寸。
          */
         public resize(width: number, height: number, useMaxSize?: boolean): void {
+            egret.sys.resizeContext(this, width, height, useMaxSize);
+            /*
             let surface = this.surface;
             if (useMaxSize) {
                 if (surface.width < width) {
@@ -269,6 +258,7 @@ namespace egret.web {
             }
 
             this.onResize();
+            */
         }
 
         public static glContextId: number = 0;
@@ -280,39 +270,42 @@ namespace egret.web {
         public contextLost: boolean = false;
 
         //refactor
-        public currentSupportedCompressedTextureTypes: SupportedCompressedTextureType[] = [];
-        private getSupportedCompressedTextureTypes(gl: WebGLRenderingContext, compressedTextureType: string[]): SupportedCompressedTextureType[] {
-            const result: SupportedCompressedTextureType[] = [];
-            for (let i = 0, length = compressedTextureType.length; i < length; ++i) {
-                const targetCompressedTextureType = compressedTextureType[i];
-                const rs = this.getSupportedCompressedTextureType(gl, targetCompressedTextureType);
-                if (rs) {
-                    result.push(rs);
-                }
+        private _supportedCompressedTextureInfo: SupportedCompressedTextureInfo[] = [];
+        private _buildSupportedCompressedTextureInfo(gl: WebGLRenderingContext, compressedTextureExNames: string[]): SupportedCompressedTextureInfo[] {
+            if (compressedTextureExNames.length === 0) {
+                return [];
             }
-            return result;
-        }
+            const returnValue: SupportedCompressedTextureInfo[] = [];
+            for (const exName of compressedTextureExNames) {
+                const extension = gl.getExtension(exName);
+                if (!extension) {
+                    continue;
+                }
 
-        private getSupportedCompressedTextureType(gl: WebGLRenderingContext, targetCompressedTextureType: string): SupportedCompressedTextureType {
-            const availableExtensions = gl.getSupportedExtensions();
-            for (let i = 0; i < availableExtensions.length; ++i) {
-                if (availableExtensions[i].indexOf(targetCompressedTextureType) !== -1) {
-                    const extension = gl.getExtension(availableExtensions[i]);
-                    const formats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
-                    if (DEBUG) {
-                        egret.log(formats);
+                const info = {
+                    extensionName: exName,
+                    supportedFormats: []
+                } as SupportedCompressedTextureInfo;
+
+                //
+                for (const key in extension) {
+                    info.supportedFormats.push([key, extension[key]]);
+                }
+                //
+                if (DEBUG) {
+                    if (info.supportedFormats.length === 0) {
+                        console.error('buildSupportedCompressedTextureInfo failed = ' + exName);
+                    }
+                    else {
+                        egret.log('support: ' + exName);
                         for (const key in extension) {
                             egret.log(key, extension[key], '0x' + extension[key].toString(16));
                         }
                     }
-                    return {
-                        type: targetCompressedTextureType,
-                        extension: extension,
-                        formats: formats
-                    }
                 }
+                returnValue.push(info);
             }
-            return null;
+            return returnValue;
         }
 
         private initWebGL(): void {
@@ -327,7 +320,20 @@ namespace egret.web {
             this.$maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
 
             //refactor
-            this.currentSupportedCompressedTextureTypes = this.getSupportedCompressedTextureTypes(this.context, ['s3tc', 'etc1', 'pvrtc']);
+            // this._caps.astc = this._gl.getExtension('WEBGL_compressed_texture_astc') || this._gl.getExtension('WEBKIT_WEBGL_compressed_texture_astc');
+            // this._caps.s3tc = this._gl.getExtension('WEBGL_compressed_texture_s3tc') || this._gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc');
+            // this._caps.pvrtc = this._gl.getExtension('WEBGL_compressed_texture_pvrtc') || this._gl.getExtension('WEBKIT_WEBGL_compressed_texture_pvrtc');
+            // this._caps.etc1 = this._gl.getExtension('WEBGL_compressed_texture_etc1') || this._gl.getExtension('WEBKIT_WEBGL_compressed_texture_etc1');
+            // this._caps.etc2 = this._gl.getExtension('WEBGL_compressed_texture_etc') || this._gl.getExtension('WEBKIT_WEBGL_compressed_texture_etc') ||
+            //     this._gl.getExtension('WEBGL_compressed_texture_es3_0'); // also a requirement of OpenGL ES 3
+            const compressedTextureExNames = [
+                'WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc',
+                'WEBGL_compressed_texture_etc1', 'WEBKIT_WEBGL_compressed_texture_etc1',
+                'WEBGL_compressed_texture_etc', 'WEBKIT_WEBGL_compressed_texture_etc',
+                'WEBGL_compressed_texture_astc', 'WEBKIT_WEBGL_compressed_texture_astc',
+                'WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc',
+                'WEBGL_compressed_texture_es3_0'];
+            this._supportedCompressedTextureInfo = this._buildSupportedCompressedTextureInfo(this.context, compressedTextureExNames);
         }
 
         private handleContextLost() {
@@ -340,6 +346,7 @@ namespace egret.web {
         }
 
         private getWebGLContext() {
+            /*
             let options = {
                 antialias: WebGLRenderContext.antialias,
                 stencil: true//设置可以使用模板（用于不规则遮罩）
@@ -360,6 +367,8 @@ namespace egret.web {
             if (!gl) {
                 $error(1021);
             }
+            */
+            const gl = egret.sys.getContextWebGL(this.surface);
             this.setContext(gl);
         }
 
@@ -422,8 +431,12 @@ namespace egret.web {
          * 创建一个WebGLTexture
          */
         public createTexture(bitmapData: BitmapData | HTMLCanvasElement): WebGLTexture {
-            const gl = this.context;
-            const texture = gl.createTexture() as WebGLTexture;
+            return egret.sys.createTexture(this, bitmapData);
+            /*
+            let gl: any = this.context;
+
+            let texture = gl.createTexture();
+
             if (!texture) {
                 //先创建texture失败,然后lost事件才发出来..
                 this.contextLost = true;
@@ -438,50 +451,60 @@ namespace egret.web {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
             return texture;
+            */
         }
 
         /*
         * TO DO
         */
-        private $debugCheckCompressedTextureInternalFormat(currentSupportedCompressedTextureTypes: SupportedCompressedTextureType[], internalFormat: number): boolean {
+        private checkCompressedTextureInternalFormat(supportedCompressedTextureInfo: SupportedCompressedTextureInfo[], internalFormat: number): boolean {
             //width: number, height: number max ?
-            let checkCurrentSupportedCompressedTextureTypes = false;
-            for (let i = 0, length = currentSupportedCompressedTextureTypes.length; i < length; ++i) {
-                const ss = currentSupportedCompressedTextureTypes[i];
-                const formats = ss.formats;
-                for (let j = 0, length = formats.length; j < length; ++j) {
-                    if (formats[j] === internalFormat) {
-                        checkCurrentSupportedCompressedTextureTypes = true;
-                        break;
+            for (let i = 0, length = supportedCompressedTextureInfo.length; i < length; ++i) {
+                const ss = supportedCompressedTextureInfo[i];
+                // const formats = ss._COMPRESSED_TEXTURE_FORMATS_;
+                // for (let j = 0, length = formats.length; j < length; ++j) {
+                //     if (formats[j] === internalFormat) {
+                //         return true;
+                //     }
+                // }
+                const supportedFormats = ss.supportedFormats;
+                for (let j = 0, length = supportedFormats.length; j < length; ++j) {
+                    if (supportedFormats[j][1] === internalFormat) {
+                        return true;
                     }
                 }
             }
-            return checkCurrentSupportedCompressedTextureTypes;
+            return false;
         }
 
         /*
         * TO DO
         */
-        private $debugLogOnceCompressedTextureNotSupported(currentSupportedCompressedTextureTypes: SupportedCompressedTextureType[], internalFormat: number): void {
-            if (!debugLogOnceCompressedTextureNotSupported) {
-                debugLogOnceCompressedTextureNotSupported = true;
+        private $debugLogCompressedTextureNotSupported(supportedCompressedTextureInfo: SupportedCompressedTextureInfo[], internalFormat: number): void {
+            if (!debugLogCompressedTextureNotSupported[internalFormat]) {
+                debugLogCompressedTextureNotSupported[internalFormat] = true;
                 egret.log('internalFormat = ' + internalFormat + ':' + ('0x' + internalFormat.toString(16)) + ', the current hardware does not support the corresponding compression format.');
-                for (let i = 0, length = currentSupportedCompressedTextureTypes.length; i < length; ++i) {
-                    const ss = currentSupportedCompressedTextureTypes[i];
-                    egret.log('type = ' + ss.type + ', formats = ' + ss.formats);
+                for (let i = 0, length = supportedCompressedTextureInfo.length; i < length; ++i) {
+                    const ss = supportedCompressedTextureInfo[i];
+                    if (ss.supportedFormats.length > 0) {
+                        egret.log('support = ' + ss.extensionName);
+                        for (let j = 0, length = ss.supportedFormats.length; j < length; ++j) {
+                            const tp = ss.supportedFormats[j];
+                            egret.log(tp[0] + ' : ' + tp[1] + ' : ' + ('0x' + tp[1].toString(16)));
+                        }
+                    }
                 }
             }
         }
 
         //
         private createCompressedTexture(data: Uint8Array, width: number, height: number, levels: number, internalFormat: number): WebGLTexture {
-            if (DEBUG) {
-                const checkRes = this.$debugCheckCompressedTextureInternalFormat(this.currentSupportedCompressedTextureTypes, internalFormat);
-                if (!checkRes) {
-                    this.$debugLogOnceCompressedTextureNotSupported(this.currentSupportedCompressedTextureTypes, internalFormat);
-                    return this.defaultEmptyTexture;
-                }
+            const checkSupported = this.checkCompressedTextureInternalFormat(this._supportedCompressedTextureInfo, internalFormat);
+            if (!checkSupported) {
+                this.$debugLogCompressedTextureNotSupported(this._supportedCompressedTextureInfo, internalFormat);
+                return this.defaultEmptyTexture;
             }
+            ///
             const gl: any = this.context;
             const texture = gl.createTexture() as WebGLTexture;
             if (!texture) {
@@ -513,8 +536,8 @@ namespace egret.web {
         public get defaultEmptyTexture(): WebGLTexture {
             if (!this._defaultEmptyTexture) {
                 const size = 16;
-                const canvas = createCanvas(size, size);
-                const context = canvas.getContext('2d');
+                const canvas = egret.sys.createCanvas(size, size);
+                const context = egret.sys.getContext2d(canvas);//canvas.getContext('2d');
                 context.fillStyle = 'white';
                 context.fillRect(0, 0, size, size);
                 this._defaultEmptyTexture = this.createTexture(canvas);
@@ -1021,12 +1044,15 @@ namespace egret.web {
          * 画texture
          **/
         private drawTextureElements(data: any, offset: number): number {
+            return egret.sys.drawTextureElements(this, data, offset);
+            /*
             let gl: any = this.context;
             gl.activeTexture(gl.TEXTURE0); ///refactor
             gl.bindTexture(gl.TEXTURE_2D, data.texture);
             let size = data.count * 3;
             gl.drawElements(gl.TRIANGLES, size, gl.UNSIGNED_SHORT, offset * 2);
             return size;
+            */
         }
 
         /**
