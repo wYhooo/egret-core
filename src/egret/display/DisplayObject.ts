@@ -2346,8 +2346,7 @@ namespace egret {
             this.__$offsetX__ = offsetX;
             this.__$offsetY__ = offsetY;
             this.globalMatrix._setTo_(globalMatrix);
-            // const local = this.$getMatrix();
-            // NumberUtils.__transform__(this.globalMatrix, local.a, local.b, local.c, local.d, local.tx, local.ty);
+            this.transform(offsetX, offsetY);
         }
     }
 

@@ -224,7 +224,7 @@ namespace egret.web {
             //need transform
             if (egret.transformRefactor) {
                 state.displayObject.transformAsRenderRoot(state.offsetX, state.offsetY, state.renderTarget.globalMatrix);
-                state.displayObject.transform(state.offsetX, state.offsetY);
+                //state.displayObject.transform(state.offsetX, state.offsetY);
             }
         }
 

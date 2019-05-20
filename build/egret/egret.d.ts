@@ -2956,7 +2956,6 @@ declare namespace egret {
          */
         $hitTest(stageX: number, stageY: number): DisplayObject;
         transform(offsetX: number, offsetY: number): void;
-        transformAsRenderRoot(offsetX: number, offsetY: number, globalMatrix: Matrix): void;
     }
 }
 declare namespace egret {

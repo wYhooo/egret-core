@@ -122,7 +122,7 @@ namespace egret.web {
             //need transform
             if (egret.transformRefactor) {
                 state.displayObject.transformAsRenderRoot(-state.displayBoundsX, -state.displayBoundsY, targetTexture.globalMatrix);
-                state.displayObject.transform(-state.displayBoundsX, -state.displayBoundsY);
+                //state.displayObject.transform(-state.displayBoundsX, -state.displayBoundsY);
             }
         }
 
@@ -218,7 +218,7 @@ namespace egret.web {
                 //
                 if (egret.transformRefactor) {
                     mask.transformAsRenderRoot(0, 0, maskBuffer.globalMatrix);
-                    mask.transform(0, 0);
+                    //mask.transform(0, 0);
                 }
                 drawCalls += this._webglRender.drawDisplayObject(mask, maskBuffer, 0, 0);
                 maskBuffer.context.popBuffer(maskBuffer);

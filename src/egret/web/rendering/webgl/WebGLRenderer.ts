@@ -67,7 +67,7 @@ namespace egret.web {
             //
             if (egret.transformRefactor) {
                 displayObject.transformAsRenderRoot(matrix.tx, matrix.ty, webglBuffer.globalMatrix);
-                displayObject.transform(matrix.tx, matrix.ty);
+                //displayObject.transform(matrix.tx, matrix.ty);
             }
             //
             this.drawDisplayObject(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
@@ -241,6 +241,7 @@ namespace egret.web {
          */
         private drawWithFilter(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number): number {
             let drawCalls = 0;
+            /*
             if (displayObject.$children && displayObject.$children.length == 0 && (!displayObject.$renderNode || displayObject.$renderNode.$getRenderCount() == 0)) {
                 return drawCalls;
             }
@@ -345,6 +346,8 @@ namespace egret.web {
             }
             renderBufferPool.push(displayBuffer);
             return drawCalls;
+            */
+           return drawCalls;
         }
 
         private getRenderCount(displayObject: DisplayObject): number {
@@ -379,6 +382,7 @@ namespace egret.web {
          */
         private drawWithClip(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number): number {
             let drawCalls = 0;
+            /*
             let hasBlendMode = (displayObject.$blendMode !== 0);
             let compositeOp: string;
             if (hasBlendMode) {
@@ -509,6 +513,8 @@ namespace egret.web {
                 renderBufferPool.push(displayBuffer);
                 return drawCalls;
             }
+            */
+           return drawCalls;
         }
 
         /**

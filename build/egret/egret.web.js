@@ -7349,7 +7349,7 @@ var egret;
                 //
                 if (egret.transformRefactor) {
                     displayObject.transformAsRenderRoot(matrix.tx, matrix.ty, webglBuffer.globalMatrix);
-                    displayObject.transform(matrix.tx, matrix.ty);
+                    //displayObject.transform(matrix.tx, matrix.ty);
                 }
                 //
                 this.drawDisplayObject(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
@@ -7387,7 +7387,7 @@ var egret;
                         displayList.$canvasScaleX !== egret.sys.DisplayList.$canvasScaleX ||
                         displayList.$canvasScaleY !== egret.sys.DisplayList.$canvasScaleY) {
                         displayObject.saveOffsetBeforeDrawToSurface(); ///
-                        drawCalls += displayList.drawToSurface();
+                        drawCalls += displayList.drawToSurface(); ///这里面会有一次render.里面有一个从根的transform, 需要保存下
                         displayObject.restoreOffsetAfterDrawToSurface(); ///
                     }
                     node = displayList.$renderNode;
@@ -7519,33 +7519,37 @@ var egret;
              */
             WebGLRenderer.prototype.drawWithFilter = function (displayObject, buffer, offsetX, offsetY) {
                 var drawCalls = 0;
+                /*
                 if (displayObject.$children && displayObject.$children.length == 0 && (!displayObject.$renderNode || displayObject.$renderNode.$getRenderCount() == 0)) {
                     return drawCalls;
                 }
-                var filters = displayObject.$filters;
-                var hasBlendMode = (displayObject.$blendMode !== 0);
-                var compositeOp;
+                let filters = displayObject.$filters;
+                let hasBlendMode = (displayObject.$blendMode !== 0);
+                let compositeOp: string;
                 if (hasBlendMode) {
-                    compositeOp = web.blendModes[displayObject.$blendMode];
+                    compositeOp = blendModes[displayObject.$blendMode];
                     if (!compositeOp) {
-                        compositeOp = web.defaultCompositeOp;
+                        compositeOp = defaultCompositeOp;
                     }
                 }
-                var displayBounds = displayObject.$getOriginalBounds();
-                var displayBoundsX = displayBounds.x;
-                var displayBoundsY = displayBounds.y;
-                var displayBoundsWidth = displayBounds.width;
-                var displayBoundsHeight = displayBounds.height;
+    
+                const displayBounds = displayObject.$getOriginalBounds();
+                const displayBoundsX = displayBounds.x;
+                const displayBoundsY = displayBounds.y;
+                const displayBoundsWidth = displayBounds.width;
+                const displayBoundsHeight = displayBounds.height;
                 if (displayBoundsWidth <= 0 || displayBoundsHeight <= 0) {
                     return drawCalls;
                 }
-                if (!displayObject.mask && filters.length == 1 && (filters[0].type == "colorTransform" || (filters[0].type === "custom" && filters[0].padding === 0))) {
-                    var childrenDrawCount = this.getRenderCount(displayObject);
+    
+                if (!displayObject.mask && filters.length == 1 && (filters[0].type == "colorTransform" || (filters[0].type === "custom" && (<CustomFilter>filters[0]).padding === 0))) {
+                    let childrenDrawCount = this.getRenderCount(displayObject);
                     if (!displayObject.$children || childrenDrawCount == 1) {
                         if (hasBlendMode) {
                             buffer.context.setGlobalCompositeOperation(compositeOp);
                         }
-                        buffer.context.$filter = filters[0];
+    
+                        buffer.context.$filter = <ColorMatrixFilter>filters[0];
                         if (displayObject.$mask) {
                             drawCalls += this.drawWithClip(displayObject, buffer, offsetX, offsetY);
                         }
@@ -7555,16 +7559,21 @@ var egret;
                         else {
                             drawCalls += this.drawDisplayObject(displayObject, buffer, offsetX, offsetY);
                         }
+    
                         buffer.context.$filter = null;
+    
                         if (hasBlendMode) {
-                            buffer.context.setGlobalCompositeOperation(web.defaultCompositeOp);
+                            buffer.context.setGlobalCompositeOperation(defaultCompositeOp);
                         }
+    
                         return drawCalls;
                     }
                 }
+    
                 // 为显示对象创建一个新的buffer
-                var displayBuffer = this.createRenderBuffer(displayBoundsWidth, displayBoundsHeight);
+                let displayBuffer = this.createRenderBuffer(displayBoundsWidth, displayBoundsHeight);
                 displayBuffer.context.pushBuffer(displayBuffer);
+    
                 //todo 可以优化减少draw次数
                 if (displayObject.$mask) {
                     drawCalls += this.drawWithClip(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
@@ -7579,7 +7588,9 @@ var egret;
                     }
                     drawCalls += this.drawDisplayObject(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
                 }
+    
                 displayBuffer.context.popBuffer();
+    
                 //绘制结果到屏幕
                 if (drawCalls > 0) {
                     if (hasBlendMode) {
@@ -7589,8 +7600,8 @@ var egret;
                     // 绘制结果的时候，应用滤镜
                     buffer.$offsetX = offsetX + displayBoundsX;
                     buffer.$offsetY = offsetY + displayBoundsY;
-                    var savedMatrix = egret.Matrix.create();
-                    var curMatrix = buffer.globalMatrix;
+                    let savedMatrix = Matrix.create();
+                    let curMatrix = buffer.globalMatrix;
                     savedMatrix.a = curMatrix.a;
                     savedMatrix.b = curMatrix.b;
                     savedMatrix.c = curMatrix.c;
@@ -7598,7 +7609,7 @@ var egret;
                     savedMatrix.tx = curMatrix.tx;
                     savedMatrix.ty = curMatrix.ty;
                     buffer.useOffset();
-                    buffer.debugCurrentRenderNode = null; //do not render using renderNode
+                    buffer.debugCurrentRenderNode = null;//do not render using renderNode
                     buffer.context.drawTargetWidthFilters(filters, displayBuffer);
                     curMatrix.a = savedMatrix.a;
                     curMatrix.b = savedMatrix.b;
@@ -7606,12 +7617,14 @@ var egret;
                     curMatrix.d = savedMatrix.d;
                     curMatrix.tx = savedMatrix.tx;
                     curMatrix.ty = savedMatrix.ty;
-                    egret.Matrix.release(savedMatrix);
+                    Matrix.release(savedMatrix);
                     if (hasBlendMode) {
-                        buffer.context.setGlobalCompositeOperation(web.defaultCompositeOp);
+                        buffer.context.setGlobalCompositeOperation(defaultCompositeOp);
                     }
                 }
-                web.renderBufferPool.push(displayBuffer);
+                renderBufferPool.push(displayBuffer);
+                return drawCalls;
+                */
                 return drawCalls;
             };
             WebGLRenderer.prototype.getRenderCount = function (displayObject) {
@@ -7646,23 +7659,26 @@ var egret;
              */
             WebGLRenderer.prototype.drawWithClip = function (displayObject, buffer, offsetX, offsetY) {
                 var drawCalls = 0;
-                var hasBlendMode = (displayObject.$blendMode !== 0);
-                var compositeOp;
+                /*
+                let hasBlendMode = (displayObject.$blendMode !== 0);
+                let compositeOp: string;
                 if (hasBlendMode) {
-                    compositeOp = web.blendModes[displayObject.$blendMode];
+                    compositeOp = blendModes[displayObject.$blendMode];
                     if (!compositeOp) {
-                        compositeOp = web.defaultCompositeOp;
+                        compositeOp = defaultCompositeOp;
                     }
                 }
-                var scrollRect = displayObject.$scrollRect ? displayObject.$scrollRect : displayObject.$maskRect;
-                var mask = displayObject.$mask;
+    
+                let scrollRect = displayObject.$scrollRect ? displayObject.$scrollRect : displayObject.$maskRect;
+                let mask = displayObject.$mask;
                 if (mask) {
-                    var maskRenderMatrix = mask.$getMatrix();
+                    let maskRenderMatrix = mask.$getMatrix();
                     //遮罩scaleX或scaleY为0，放弃绘制
                     if ((maskRenderMatrix.a == 0 && maskRenderMatrix.b == 0) || (maskRenderMatrix.c == 0 && maskRenderMatrix.d == 0)) {
                         return drawCalls;
                     }
                 }
+    
                 //没有遮罩,同时显示对象没有子项
                 if (!mask && (!displayObject.$children || displayObject.$children.length == 0)) {
                     if (scrollRect) {
@@ -7674,7 +7690,7 @@ var egret;
                     }
                     drawCalls += this.drawDisplayObject(displayObject, buffer, offsetX, offsetY);
                     if (hasBlendMode) {
-                        buffer.context.setGlobalCompositeOperation(web.defaultCompositeOp);
+                        buffer.context.setGlobalCompositeOperation(defaultCompositeOp);
                     }
                     if (scrollRect) {
                         buffer.context.popMask();
@@ -7682,16 +7698,16 @@ var egret;
                     return drawCalls;
                 }
                 else {
-                    var displayBounds = displayObject.$getOriginalBounds();
-                    var displayBoundsX = displayBounds.x;
-                    var displayBoundsY = displayBounds.y;
-                    var displayBoundsWidth = displayBounds.width;
-                    var displayBoundsHeight = displayBounds.height;
+                    let displayBounds = displayObject.$getOriginalBounds();
+                    const displayBoundsX = displayBounds.x;
+                    const displayBoundsY = displayBounds.y;
+                    const displayBoundsWidth = displayBounds.width;
+                    const displayBoundsHeight = displayBounds.height;
                     if (displayBoundsWidth <= 0 || displayBoundsHeight <= 0) {
                         return drawCalls;
                     }
                     //绘制显示对象自身，若有scrollRect，应用clip
-                    var displayBuffer = this.createRenderBuffer(displayBoundsWidth, displayBoundsHeight);
+                    let displayBuffer = this.createRenderBuffer(displayBoundsWidth, displayBoundsHeight);
                     displayBuffer.context.pushBuffer(displayBuffer);
                     //
                     if (egret.transformRefactor) {
@@ -7701,15 +7717,15 @@ var egret;
                     drawCalls += this.drawDisplayObject(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
                     //绘制遮罩
                     if (mask) {
-                        var maskBuffer = this.createRenderBuffer(displayBoundsWidth, displayBoundsHeight);
+                        let maskBuffer = this.createRenderBuffer(displayBoundsWidth, displayBoundsHeight);
                         maskBuffer.context.pushBuffer(maskBuffer);
-                        var maskMatrix = egret.Matrix.create();
-                        var maskConcatenatedMatrix = mask.$getConcatenatedMatrix();
+                        let maskMatrix = Matrix.create();
+                        const maskConcatenatedMatrix = mask.$getConcatenatedMatrix();
                         maskMatrix.copyFrom(maskConcatenatedMatrix);
                         mask.$getConcatenatedMatrixAt(displayObject, maskMatrix);
                         maskMatrix.translate(-displayBoundsX, -displayBoundsY);
                         maskBuffer.setTransform(maskMatrix.a, maskMatrix.b, maskMatrix.c, maskMatrix.d, maskMatrix.tx, maskMatrix.ty);
-                        egret.Matrix.release(maskMatrix);
+                        Matrix.release(maskMatrix);
                         //
                         if (egret.transformRefactor) {
                             mask.transformAsRenderRoot(0, 0, maskBuffer.globalMatrix);
@@ -7719,17 +7735,20 @@ var egret;
                         maskBuffer.context.popBuffer();
                         displayBuffer.context.setGlobalCompositeOperation("destination-in");
                         displayBuffer.setTransform(1, 0, 0, -1, 0, maskBuffer.height);
-                        var maskBufferWidth = maskBuffer.rootRenderTarget.width;
-                        var maskBufferHeight = maskBuffer.rootRenderTarget.height;
+                        let maskBufferWidth = maskBuffer.rootRenderTarget.width;
+                        let maskBufferHeight = maskBuffer.rootRenderTarget.height;
                         displayBuffer.debugCurrentRenderNode = null;
-                        displayBuffer.context.drawTexture(maskBuffer.rootRenderTarget.texture, 0, 0, maskBufferWidth, maskBufferHeight, 0, 0, maskBufferWidth, maskBufferHeight, maskBufferWidth, maskBufferHeight);
+                        displayBuffer.context.drawTexture(maskBuffer.rootRenderTarget.texture, 0, 0, maskBufferWidth, maskBufferHeight,
+                            0, 0, maskBufferWidth, maskBufferHeight, maskBufferWidth, maskBufferHeight);
                         displayBuffer.setTransform(1, 0, 0, 1, 0, 0);
                         displayBuffer.context.setGlobalCompositeOperation("source-over");
                         maskBuffer.setTransform(1, 0, 0, 1, 0, 0);
-                        web.renderBufferPool.push(maskBuffer);
+                        renderBufferPool.push(maskBuffer);
                     }
-                    displayBuffer.context.setGlobalCompositeOperation(web.defaultCompositeOp);
+    
+                    displayBuffer.context.setGlobalCompositeOperation(defaultCompositeOp);
                     displayBuffer.context.popBuffer();
+    
                     //绘制结果到屏幕
                     if (drawCalls > 0) {
                         drawCalls++;
@@ -7739,8 +7758,8 @@ var egret;
                         if (scrollRect) {
                             buffer.context.pushMask(scrollRect.x + offsetX, scrollRect.y + offsetY, scrollRect.width, scrollRect.height);
                         }
-                        var savedMatrix = egret.Matrix.create();
-                        var curMatrix = buffer.globalMatrix;
+                        let savedMatrix = Matrix.create();
+                        let curMatrix = buffer.globalMatrix;
                         savedMatrix.a = curMatrix.a;
                         savedMatrix.b = curMatrix.b;
                         savedMatrix.c = curMatrix.c;
@@ -7748,28 +7767,31 @@ var egret;
                         savedMatrix.tx = curMatrix.tx;
                         savedMatrix.ty = curMatrix.ty;
                         curMatrix.append(1, 0, 0, -1, offsetX + displayBoundsX, offsetY + displayBoundsY + displayBuffer.height);
-                        var displayBufferWidth = displayBuffer.rootRenderTarget.width;
-                        var displayBufferHeight = displayBuffer.rootRenderTarget.height;
+                        let displayBufferWidth = displayBuffer.rootRenderTarget.width;
+                        let displayBufferHeight = displayBuffer.rootRenderTarget.height;
                         buffer.debugCurrentRenderNode = null;
-                        buffer.context.drawTexture(displayBuffer.rootRenderTarget.texture, 0, 0, displayBufferWidth, displayBufferHeight, 0, 0, displayBufferWidth, displayBufferHeight, displayBufferWidth, displayBufferHeight);
+                        buffer.context.drawTexture(displayBuffer.rootRenderTarget.texture, 0, 0, displayBufferWidth, displayBufferHeight,
+                            0, 0, displayBufferWidth, displayBufferHeight, displayBufferWidth, displayBufferHeight);
                         if (scrollRect) {
                             displayBuffer.context.popMask();
                         }
                         if (hasBlendMode) {
-                            buffer.context.setGlobalCompositeOperation(web.defaultCompositeOp);
+                            buffer.context.setGlobalCompositeOperation(defaultCompositeOp);
                         }
-                        var matrix = buffer.globalMatrix;
+                        let matrix = buffer.globalMatrix;
                         matrix.a = savedMatrix.a;
                         matrix.b = savedMatrix.b;
                         matrix.c = savedMatrix.c;
                         matrix.d = savedMatrix.d;
                         matrix.tx = savedMatrix.tx;
                         matrix.ty = savedMatrix.ty;
-                        egret.Matrix.release(savedMatrix);
+                        Matrix.release(savedMatrix);
                     }
-                    web.renderBufferPool.push(displayBuffer);
+                    renderBufferPool.push(displayBuffer);
                     return drawCalls;
                 }
+                */
+                return drawCalls;
             };
             /**
              * @private
@@ -8722,7 +8744,7 @@ var egret;
                 //need transform
                 if (egret.transformRefactor) {
                     state.displayObject.transformAsRenderRoot(-state.displayBoundsX, -state.displayBoundsY, targetTexture.globalMatrix);
-                    state.displayObject.transform(-state.displayBoundsX, -state.displayBoundsY);
+                    //state.displayObject.transform(-state.displayBoundsX, -state.displayBoundsY);
                 }
             };
             FilterSystem.prototype.pop = function () {
@@ -8813,7 +8835,7 @@ var egret;
                     //
                     if (egret.transformRefactor) {
                         mask.transformAsRenderRoot(0, 0, maskBuffer.globalMatrix);
-                        mask.transform(0, 0);
+                        //mask.transform(0, 0);
                     }
                     drawCalls += this._webglRender.drawDisplayObject(mask, maskBuffer, 0, 0);
                     maskBuffer.context.popBuffer(maskBuffer);
@@ -9138,7 +9160,7 @@ var egret;
                 //need transform
                 if (egret.transformRefactor) {
                     state.displayObject.transformAsRenderRoot(state.offsetX, state.offsetY, state.renderTarget.globalMatrix);
-                    state.displayObject.transform(state.offsetX, state.offsetY);
+                    //state.displayObject.transform(state.offsetX, state.offsetY);
                 }
             };
             MaskSystem.prototype.popScissorOrStencilMask = function (state) {
