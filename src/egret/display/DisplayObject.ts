@@ -1160,11 +1160,11 @@ namespace egret {
                 return;
             }
             if (value) {
-                let displayList = sys.DisplayList.create(self);
-                if (displayList) {
-                    self.$displayList = displayList;
-                    self.$cacheDirty = true;
-                }
+                // let displayList = sys.DisplayList.create(self);
+                // if (displayList) {
+                //     self.$displayList = displayList;
+                //     self.$cacheDirty = true;
+                // }
             }
             else {
                 self.$displayList = null;
@@ -2324,17 +2324,17 @@ namespace egret {
         public readonly globalMatrix: Matrix = new Matrix;
 
         //
-        public __$saveOffsetX__: number = 0;
-        public __$saveOffsetY__: number = 0;
-        public saveOffsetBeforeDrawToSurface(): void {
-            this.__$saveOffsetX__ = this.__$offsetX__;
-            this.__$saveOffsetY__ = this.__$offsetY__
+        // public __$saveOffsetX__: number = 0;
+        // public __$saveOffsetY__: number = 0;
+        // public saveOffsetBeforeDrawToSurface(): void {
+        //     this.__$saveOffsetX__ = this.__$offsetX__;
+        //     this.__$saveOffsetY__ = this.__$offsetY__
 
-        }
-        public restoreOffsetAfterDrawToSurface(): void {
-            this.__$offsetX__ = this.__$saveOffsetX__;
-            this.__$offsetY__ = this.__$saveOffsetY__;
-        }
+        // }
+        // public restoreOffsetAfterDrawToSurface(): void {
+        //     this.__$offsetX__ = this.__$saveOffsetX__;
+        //     this.__$offsetY__ = this.__$saveOffsetY__;
+        // }
 
         //
         public transform(offsetX: number, offsetY: number): void {

@@ -693,9 +693,6 @@ var egret;
             _this.__$offsetX__ = 0;
             _this.__$offsetY__ = 0;
             _this.globalMatrix = new egret.Matrix;
-            //
-            _this.__$saveOffsetX__ = 0;
-            _this.__$saveOffsetY__ = 0;
             if (egret.nativeRender) {
                 _this.createNativeDisplayObject();
             }
@@ -1657,11 +1654,11 @@ var egret;
                 return;
             }
             if (value) {
-                var displayList = egret.sys.DisplayList.create(self);
-                if (displayList) {
-                    self.$displayList = displayList;
-                    self.$cacheDirty = true;
-                }
+                // let displayList = sys.DisplayList.create(self);
+                // if (displayList) {
+                //     self.$displayList = displayList;
+                //     self.$cacheDirty = true;
+                // }
             }
             else {
                 self.$displayList = null;
@@ -2716,14 +2713,17 @@ var egret;
             }
             return false;
         };
-        DisplayObject.prototype.saveOffsetBeforeDrawToSurface = function () {
-            this.__$saveOffsetX__ = this.__$offsetX__;
-            this.__$saveOffsetY__ = this.__$offsetY__;
-        };
-        DisplayObject.prototype.restoreOffsetAfterDrawToSurface = function () {
-            this.__$offsetX__ = this.__$saveOffsetX__;
-            this.__$offsetY__ = this.__$saveOffsetY__;
-        };
+        //
+        // public __$saveOffsetX__: number = 0;
+        // public __$saveOffsetY__: number = 0;
+        // public saveOffsetBeforeDrawToSurface(): void {
+        //     this.__$saveOffsetX__ = this.__$offsetX__;
+        //     this.__$saveOffsetY__ = this.__$offsetY__
+        // }
+        // public restoreOffsetAfterDrawToSurface(): void {
+        //     this.__$offsetX__ = this.__$saveOffsetX__;
+        //     this.__$offsetY__ = this.__$saveOffsetY__;
+        // }
         //
         DisplayObject.prototype.transform = function (offsetX, offsetY) {
             this.__$offsetX__ = offsetX;
@@ -16369,7 +16369,7 @@ var egret;
                 if (displayObject.$cacheDirty || displayObject.$renderDirty ||
                     displayList.$canvasScaleX != egret.sys.DisplayList.$canvasScaleX ||
                     displayList.$canvasScaleY != egret.sys.DisplayList.$canvasScaleY) {
-                    drawCalls += displayList.drawToSurface();
+                    //drawCalls += displayList.drawToSurface();
                 }
                 node = displayList.$renderNode;
             }

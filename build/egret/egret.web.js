@@ -7386,9 +7386,9 @@ var egret;
                     if (displayObject.$cacheDirty || displayObject.$renderDirty ||
                         displayList.$canvasScaleX !== egret.sys.DisplayList.$canvasScaleX ||
                         displayList.$canvasScaleY !== egret.sys.DisplayList.$canvasScaleY) {
-                        displayObject.saveOffsetBeforeDrawToSurface(); ///
-                        drawCalls += displayList.drawToSurface(); ///这里面会有一次render.里面有一个从根的transform, 需要保存下
-                        displayObject.restoreOffsetAfterDrawToSurface(); ///
+                        //displayObject.saveOffsetBeforeDrawToSurface(); ///
+                        //drawCalls += displayList.drawToSurface(); ///这里面会有一次render.里面有一个从根的transform, 需要保存下
+                        //displayObject.restoreOffsetAfterDrawToSurface(); ///
                     }
                     node = displayList.$renderNode;
                 }

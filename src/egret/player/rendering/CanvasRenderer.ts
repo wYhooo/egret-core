@@ -86,7 +86,7 @@ namespace egret {
                 if (displayObject.$cacheDirty || displayObject.$renderDirty ||
                     displayList.$canvasScaleX != sys.DisplayList.$canvasScaleX ||
                     displayList.$canvasScaleY != sys.DisplayList.$canvasScaleY) {
-                    drawCalls += displayList.drawToSurface();
+                    //drawCalls += displayList.drawToSurface();
                 }
                 node = displayList.$renderNode;
             }

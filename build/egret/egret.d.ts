@@ -1298,10 +1298,6 @@ declare namespace egret {
         __$offsetX__: number;
         __$offsetY__: number;
         readonly globalMatrix: Matrix;
-        __$saveOffsetX__: number;
-        __$saveOffsetY__: number;
-        saveOffsetBeforeDrawToSurface(): void;
-        restoreOffsetAfterDrawToSurface(): void;
         transform(offsetX: number, offsetY: number): void;
         transformAsRenderRoot(offsetX: number, offsetY: number, globalMatrix: Matrix): void;
     }
