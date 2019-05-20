@@ -7381,25 +7381,25 @@ var egret;
             WebGLRenderer.prototype.drawDisplayObject = function (displayObject, buffer, offsetX, offsetY, isStage) {
                 var drawCalls = 0;
                 var node;
-                var displayList = displayObject.$displayList;
-                if (displayList && !isStage) {
-                    if (displayObject.$cacheDirty || displayObject.$renderDirty ||
-                        displayList.$canvasScaleX !== egret.sys.DisplayList.$canvasScaleX ||
-                        displayList.$canvasScaleY !== egret.sys.DisplayList.$canvasScaleY) {
-                        //displayObject.saveOffsetBeforeDrawToSurface(); ///
-                        //drawCalls += displayList.drawToSurface(); ///这里面会有一次render.里面有一个从根的transform, 需要保存下
-                        //displayObject.restoreOffsetAfterDrawToSurface(); ///
-                    }
-                    node = displayList.$renderNode;
+                // let displayList = displayObject.$displayList;
+                // if (displayList && !isStage) {
+                //     if (displayObject.$cacheDirty || displayObject.$renderDirty ||
+                //         displayList.$canvasScaleX !== sys.DisplayList.$canvasScaleX ||
+                //         displayList.$canvasScaleY !== sys.DisplayList.$canvasScaleY) {
+                //         //displayObject.saveOffsetBeforeDrawToSurface(); ///
+                //         //drawCalls += displayList.drawToSurface(); ///这里面会有一次render.里面有一个从根的transform, 需要保存下
+                //         //displayObject.restoreOffsetAfterDrawToSurface(); ///
+                //     }
+                //     node = displayList.$renderNode;
+                // }
+                // else {
+                if (displayObject.$renderDirty) {
+                    node = displayObject.$getRenderNode();
                 }
                 else {
-                    if (displayObject.$renderDirty) {
-                        node = displayObject.$getRenderNode();
-                    }
-                    else {
-                        node = displayObject.$renderNode;
-                    }
+                    node = displayObject.$renderNode;
                 }
+                //}
                 displayObject.$cacheDirty = false;
                 if (node) {
                     drawCalls++;
@@ -7442,9 +7442,9 @@ var egret;
                     buffer.$offsetX = 0;
                     buffer.$offsetY = 0;
                 }
-                if (displayList && !isStage) {
-                    return drawCalls;
-                }
+                // if (displayList && !isStage) {
+                //     return drawCalls;
+                // }
                 var children = displayObject.$children;
                 if (children) {
                     var length_8 = children.length;

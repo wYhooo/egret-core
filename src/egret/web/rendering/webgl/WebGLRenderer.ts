@@ -58,7 +58,7 @@ namespace egret.web {
             this.nestLevel++;
             let webglBuffer: WebGLRenderBuffer = <WebGLRenderBuffer>buffer;
             let webglBufferContext: WebGLRenderContext = webglBuffer.context;
-            let root: DisplayObject = forRenderTexture ? displayObject : null;
+            //let root: DisplayObject = forRenderTexture ? displayObject : null;
 
             webglBufferContext.pushBuffer(webglBuffer);
 
@@ -102,25 +102,25 @@ namespace egret.web {
         public drawDisplayObject(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, isStage?: boolean): number {
             let drawCalls = 0;
             let node: sys.RenderNode;
-            let displayList = displayObject.$displayList;
-            if (displayList && !isStage) {
-                if (displayObject.$cacheDirty || displayObject.$renderDirty ||
-                    displayList.$canvasScaleX !== sys.DisplayList.$canvasScaleX ||
-                    displayList.$canvasScaleY !== sys.DisplayList.$canvasScaleY) {
-                    //displayObject.saveOffsetBeforeDrawToSurface(); ///
-                    //drawCalls += displayList.drawToSurface(); ///这里面会有一次render.里面有一个从根的transform, 需要保存下
-                    //displayObject.restoreOffsetAfterDrawToSurface(); ///
-                }
-                node = displayList.$renderNode;
-            }
-            else {
+            // let displayList = displayObject.$displayList;
+            // if (displayList && !isStage) {
+            //     if (displayObject.$cacheDirty || displayObject.$renderDirty ||
+            //         displayList.$canvasScaleX !== sys.DisplayList.$canvasScaleX ||
+            //         displayList.$canvasScaleY !== sys.DisplayList.$canvasScaleY) {
+            //         //displayObject.saveOffsetBeforeDrawToSurface(); ///
+            //         //drawCalls += displayList.drawToSurface(); ///这里面会有一次render.里面有一个从根的transform, 需要保存下
+            //         //displayObject.restoreOffsetAfterDrawToSurface(); ///
+            //     }
+            //     node = displayList.$renderNode;
+            // }
+            // else {
                 if (displayObject.$renderDirty) {
                     node = displayObject.$getRenderNode();
                 }
                 else {
                     node = displayObject.$renderNode;
                 }
-            }
+            //}
             displayObject.$cacheDirty = false;
             if (node) {
                 drawCalls++;
@@ -163,9 +163,9 @@ namespace egret.web {
                 buffer.$offsetX = 0;
                 buffer.$offsetY = 0;
             }
-            if (displayList && !isStage) {
-                return drawCalls;
-            }
+            // if (displayList && !isStage) {
+            //     return drawCalls;
+            // }
             let children = displayObject.$children;
             if (children) {
                 let length = children.length;

@@ -13451,33 +13451,33 @@ var egret;
                 var drawCalls = 0;
                 this.$canvasScaleX = this.offsetMatrix.a = DisplayList.$canvasScaleX;
                 this.$canvasScaleY = this.offsetMatrix.d = DisplayList.$canvasScaleY;
-                if (!this.isStage) {
-                    this.changeSurfaceSize();
-                }
+                // if (!this.isStage) {//对非舞台画布要根据目标显示对象尺寸改变而改变。
+                //     this.changeSurfaceSize();
+                // }
                 var buffer = this.renderBuffer;
                 buffer.clear();
                 drawCalls = sys.systemRenderer.render(this.root, buffer, this.offsetMatrix);
-                if (!this.isStage) {
-                    var surface = buffer.surface;
-                    var renderNode = this.$renderNode;
-                    renderNode.drawData.length = 0;
-                    var width = surface.width;
-                    var height = surface.height;
-                    if (!this.bitmapData) {
-                        this.bitmapData = new egret.BitmapData(surface);
-                    }
-                    else {
-                        this.bitmapData.source = surface;
-                        this.bitmapData.width = width;
-                        this.bitmapData.height = height;
-                    }
-                    renderNode.image = this.bitmapData;
-                    renderNode.imageWidth = width;
-                    renderNode.imageHeight = height;
-                    renderNode.drawImage(0, 0, width, height, -this.offsetX, -this.offsetY, width / this.$canvasScaleX, height / this.$canvasScaleY);
-                }
-                else {
-                }
+                // if (!this.isStage) {//对非舞台画布要保存渲染节点。
+                //     let surface = buffer.surface;
+                //     let renderNode = <BitmapNode>this.$renderNode;
+                //     renderNode.drawData.length = 0;
+                //     let width = surface.width;
+                //     let height = surface.height;
+                //     if (!this.bitmapData) {
+                //         this.bitmapData = new egret.BitmapData(surface);
+                //     }
+                //     else {
+                //         this.bitmapData.source = surface;
+                //         this.bitmapData.width = width;
+                //         this.bitmapData.height = height;
+                //     }
+                //     renderNode.image = this.bitmapData;
+                //     renderNode.imageWidth = width;
+                //     renderNode.imageHeight = height;
+                //     renderNode.drawImage(0, 0, width, height, -this.offsetX, -this.offsetY, width / this.$canvasScaleX, height / this.$canvasScaleY);
+                // }
+                // else {
+                // }
                 return drawCalls;
             };
             /**
@@ -16364,23 +16364,23 @@ var egret;
         CanvasRenderer.prototype.drawDisplayObject = function (displayObject, context, offsetX, offsetY, isStage) {
             var drawCalls = 0;
             var node;
-            var displayList = displayObject.$displayList;
-            if (displayList && !isStage) {
-                if (displayObject.$cacheDirty || displayObject.$renderDirty ||
-                    displayList.$canvasScaleX != egret.sys.DisplayList.$canvasScaleX ||
-                    displayList.$canvasScaleY != egret.sys.DisplayList.$canvasScaleY) {
-                    //drawCalls += displayList.drawToSurface();
-                }
-                node = displayList.$renderNode;
+            // let displayList = displayObject.$displayList;
+            // if (displayList && !isStage) {
+            //     if (displayObject.$cacheDirty || displayObject.$renderDirty ||
+            //         displayList.$canvasScaleX != sys.DisplayList.$canvasScaleX ||
+            //         displayList.$canvasScaleY != sys.DisplayList.$canvasScaleY) {
+            //         //drawCalls += displayList.drawToSurface();
+            //     }
+            //     node = displayList.$renderNode;
+            // }
+            // else {
+            if (displayObject.$renderDirty) {
+                node = displayObject.$getRenderNode();
             }
             else {
-                if (displayObject.$renderDirty) {
-                    node = displayObject.$getRenderNode();
-                }
-                else {
-                    node = displayObject.$renderNode;
-                }
+                node = displayObject.$renderNode;
             }
+            //}
             displayObject.$cacheDirty = false;
             if (node) {
                 drawCalls++;
@@ -16409,9 +16409,9 @@ var egret;
                 context.$offsetX = 0;
                 context.$offsetY = 0;
             }
-            if (displayList && !isStage) {
-                return drawCalls;
-            }
+            // if (displayList && !isStage) {
+            //     return drawCalls;
+            // }
             var children = displayObject.$children;
             if (children) {
                 var length_6 = children.length;
