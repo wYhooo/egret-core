@@ -7384,9 +7384,11 @@ var egret;
                 var displayList = displayObject.$displayList;
                 if (displayList && !isStage) {
                     if (displayObject.$cacheDirty || displayObject.$renderDirty ||
-                        displayList.$canvasScaleX != egret.sys.DisplayList.$canvasScaleX ||
-                        displayList.$canvasScaleY != egret.sys.DisplayList.$canvasScaleY) {
+                        displayList.$canvasScaleX !== egret.sys.DisplayList.$canvasScaleX ||
+                        displayList.$canvasScaleY !== egret.sys.DisplayList.$canvasScaleY) {
+                        displayObject.saveOffsetBeforeDrawToSurface(); ///
                         drawCalls += displayList.drawToSurface();
+                        displayObject.restoreOffsetAfterDrawToSurface(); ///
                     }
                     node = displayList.$renderNode;
                 }
@@ -8371,6 +8373,31 @@ var egret;
                             node.__$offsetY__ = 0;
                             renderMatrix.$preMultiplyInto(m, renderMatrix);
                         }
+                        ///
+                        var image = node.image;
+                        if (image) {
+                            if (image["texture"] || (image.source && image.source["texture"])) {
+                                renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                                node.__$offsetX__ = 0;
+                                node.__$offsetY__ = 0;
+                                var data = node.drawData;
+                                var length_10 = data.length;
+                                var pos = 0;
+                                while (pos < length_10) {
+                                    var sourceX = data[pos++];
+                                    var sourceY = data[pos++];
+                                    var sourceWidth = data[pos++];
+                                    var sourceHeight = data[pos++];
+                                    var destX = data[pos++];
+                                    var destY = data[pos++];
+                                    var destWidth = data[pos++];
+                                    var destHeight = data[pos++];
+                                    egret.$TempMatrix.setTo(1, 0, 0, -1, 0, destHeight + destY * 2);
+                                    renderMatrix.$preMultiplyInto(egret.$TempMatrix, renderMatrix);
+                                    egret.$TempMatrix.identity();
+                                }
+                            }
+                        }
                         break;
                     }
                     case 2 /* TextNode */: {
@@ -8444,7 +8471,28 @@ var egret;
                         var node = _node;
                         node.__$offsetX__ = displayObject.__$offsetX__;
                         node.__$offsetY__ = displayObject.__$offsetY__;
-                        node.renderMatrix._setTo_(displayObject.globalMatrix);
+                        var renderMatrix = node.renderMatrix;
+                        renderMatrix._setTo_(displayObject.globalMatrix);
+                        ///
+                        var image = node.image;
+                        if (image) {
+                            if (image["texture"] || (image.source && image.source["texture"])) {
+                                renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                                node.__$offsetX__ = 0;
+                                node.__$offsetY__ = 0;
+                                var sourceX = node.sourceX;
+                                var sourceY = node.sourceY;
+                                var sourceWidth = node.sourceW;
+                                var sourceHeight = node.sourceH;
+                                var destX = node.drawX;
+                                var destY = node.drawY;
+                                var destWidth = node.drawW;
+                                var destHeight = node.drawH;
+                                egret.$TempMatrix.setTo(1, 0, 0, -1, 0, destHeight + destY * 2);
+                                renderMatrix.$preMultiplyInto(egret.$TempMatrix, renderMatrix);
+                                egret.$TempMatrix.identity();
+                            }
+                        }
                         break;
                     }
                     default: {

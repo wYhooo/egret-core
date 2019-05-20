@@ -2322,13 +2322,27 @@ namespace egret {
         public __$offsetX__: number = 0;
         public __$offsetY__: number = 0;
         public readonly globalMatrix: Matrix = new Matrix;
+
+        //
+        public __$saveOffsetX__: number = 0;
+        public __$saveOffsetY__: number = 0;
+        public saveOffsetBeforeDrawToSurface(): void {
+            this.__$saveOffsetX__ = this.__$offsetX__;
+            this.__$saveOffsetY__ = this.__$offsetY__
+
+        }
+        public restoreOffsetAfterDrawToSurface(): void {
+            this.__$offsetX__ = this.__$saveOffsetX__;
+            this.__$offsetY__ = this.__$saveOffsetY__;
+        }
+
+        //
         public transform(offsetX: number, offsetY: number): void {
             this.__$offsetX__ = offsetX;
             this.__$offsetY__ = offsetY;
         }
 
         public transformAsRenderRoot(offsetX: number, offsetY: number, globalMatrix: Matrix): void {
-            //console.error('transformAsRenderRoot');
             this.__$offsetX__ = offsetX;
             this.__$offsetY__ = offsetY;
             this.globalMatrix._setTo_(globalMatrix);

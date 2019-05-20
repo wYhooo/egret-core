@@ -693,6 +693,9 @@ var egret;
             _this.__$offsetX__ = 0;
             _this.__$offsetY__ = 0;
             _this.globalMatrix = new egret.Matrix;
+            //
+            _this.__$saveOffsetX__ = 0;
+            _this.__$saveOffsetY__ = 0;
             if (egret.nativeRender) {
                 _this.createNativeDisplayObject();
             }
@@ -2713,12 +2716,20 @@ var egret;
             }
             return false;
         };
+        DisplayObject.prototype.saveOffsetBeforeDrawToSurface = function () {
+            this.__$saveOffsetX__ = this.__$offsetX__;
+            this.__$saveOffsetY__ = this.__$offsetY__;
+        };
+        DisplayObject.prototype.restoreOffsetAfterDrawToSurface = function () {
+            this.__$offsetX__ = this.__$saveOffsetX__;
+            this.__$offsetY__ = this.__$saveOffsetY__;
+        };
+        //
         DisplayObject.prototype.transform = function (offsetX, offsetY) {
             this.__$offsetX__ = offsetX;
             this.__$offsetY__ = offsetY;
         };
         DisplayObject.prototype.transformAsRenderRoot = function (offsetX, offsetY, globalMatrix) {
-            //console.error('transformAsRenderRoot');
             this.__$offsetX__ = offsetX;
             this.__$offsetY__ = offsetY;
             this.globalMatrix._setTo_(globalMatrix);

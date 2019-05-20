@@ -105,9 +105,11 @@ namespace egret.web {
             let displayList = displayObject.$displayList;
             if (displayList && !isStage) {
                 if (displayObject.$cacheDirty || displayObject.$renderDirty ||
-                    displayList.$canvasScaleX != sys.DisplayList.$canvasScaleX ||
-                    displayList.$canvasScaleY != sys.DisplayList.$canvasScaleY) {
-                    drawCalls += displayList.drawToSurface();
+                    displayList.$canvasScaleX !== sys.DisplayList.$canvasScaleX ||
+                    displayList.$canvasScaleY !== sys.DisplayList.$canvasScaleY) {
+                    displayObject.saveOffsetBeforeDrawToSurface(); ///
+                    drawCalls += displayList.drawToSurface(); ///这里面会有一次render.里面有一个从根的transform, 需要保存下
+                    displayObject.restoreOffsetAfterDrawToSurface(); ///
                 }
                 node = displayList.$renderNode;
             }
@@ -1145,6 +1147,31 @@ namespace egret.web {
                         node.__$offsetY__ = 0;
                         renderMatrix.$preMultiplyInto(m, renderMatrix);
                     }
+                    ///
+                    const image = node.image;
+                    if (image) {
+                        if (image["texture"] || (image.source && image.source["texture"])) {
+                            renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                            node.__$offsetX__ = 0;
+                            node.__$offsetY__ = 0;
+                            let data = node.drawData;
+                            let length = data.length;
+                            let pos = 0;
+                            while (pos < length) {
+                                const sourceX = data[pos++];
+                                const sourceY = data[pos++];
+                                const sourceWidth = data[pos++];
+                                const sourceHeight = data[pos++];
+                                const destX = data[pos++];
+                                const destY = data[pos++];
+                                const destWidth = data[pos++];
+                                const destHeight = data[pos++];
+                                egret.$TempMatrix.setTo(1, 0, 0, -1, 0, destHeight + destY * 2);
+                                renderMatrix.$preMultiplyInto(egret.$TempMatrix, renderMatrix);
+                                egret.$TempMatrix.identity();
+                            }
+                        }
+                    }
                     break;
                 }
 
@@ -1223,7 +1250,28 @@ namespace egret.web {
                     const node = <sys.NormalBitmapNode>_node;
                     node.__$offsetX__ = displayObject.__$offsetX__;
                     node.__$offsetY__ = displayObject.__$offsetY__;
-                    node.renderMatrix._setTo_(displayObject.globalMatrix);
+                    const renderMatrix = node.renderMatrix;
+                    renderMatrix._setTo_(displayObject.globalMatrix);
+                    ///
+                    const image = node.image;
+                    if (image) {
+                        if (image["texture"] || (image.source && image.source["texture"])) {
+                            renderMatrix.append(1, 0, 0, 1, node.__$offsetX__, node.__$offsetY__);
+                            node.__$offsetX__ = 0;
+                            node.__$offsetY__ = 0;
+                            const sourceX = node.sourceX;
+                            const sourceY = node.sourceY;
+                            const sourceWidth = node.sourceW;
+                            const sourceHeight = node.sourceH;
+                            const destX = node.drawX;
+                            const destY = node.drawY;
+                            const destWidth = node.drawW;
+                            const destHeight = node.drawH;
+                            egret.$TempMatrix.setTo(1, 0, 0, -1, 0, destHeight + destY * 2);
+                            renderMatrix.$preMultiplyInto(egret.$TempMatrix, renderMatrix);
+                            egret.$TempMatrix.identity();
+                        }
+                    }
                     break;
                 }
 
@@ -1297,7 +1345,7 @@ namespace egret.web {
             webglRenderContext.filterSystem._webglRender = this;
             webglRenderContext.maskSystem._webglRender = this;
             const drawAdvancedData = webglRenderContext.drawAdvancedTargetDataPool.pop() || <IDrawAdvancedData>{};
-            
+
             //
             drawAdvancedData.renderTarget = buffer;
             drawAdvancedData.offsetX = offsetX2;
@@ -1308,7 +1356,7 @@ namespace egret.web {
             //
             const filters = displayObject.$_filters;
             const mask = displayObject.$mask || displayObject.$maskRect || displayObject.$scrollRect;
-            
+
             //
             if (filters && filters.length > 0) {
                 /*
