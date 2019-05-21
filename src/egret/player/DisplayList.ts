@@ -124,32 +124,32 @@ namespace egret.sys {
             let drawCalls = 0;
             this.$canvasScaleX = this.offsetMatrix.a = DisplayList.$canvasScaleX;
             this.$canvasScaleY = this.offsetMatrix.d = DisplayList.$canvasScaleY;
-            if (!this.isStage) {//对非舞台画布要根据目标显示对象尺寸改变而改变。
-                this.changeSurfaceSize();
-            }
+            // if (!this.isStage) {//对非舞台画布要根据目标显示对象尺寸改变而改变。
+            //     this.changeSurfaceSize();
+            // }
             let buffer = this.renderBuffer;
             buffer.clear();
             drawCalls = systemRenderer.render(this.root, buffer, this.offsetMatrix);
 
-            if (!this.isStage) {//对非舞台画布要保存渲染节点。
-                let surface = buffer.surface;
-                let renderNode = <BitmapNode>this.$renderNode;
-                renderNode.drawData.length = 0;
-                let width = surface.width;
-                let height = surface.height;
-                if (!this.bitmapData) {
-                    this.bitmapData = new egret.BitmapData(surface);
-                }
-                else {
-                    this.bitmapData.source = surface;
-                    this.bitmapData.width = width;
-                    this.bitmapData.height = height;
-                }
-                renderNode.image = this.bitmapData;
-                renderNode.imageWidth = width;
-                renderNode.imageHeight = height;
-                renderNode.drawImage(0, 0, width, height, -this.offsetX, -this.offsetY, width / this.$canvasScaleX, height / this.$canvasScaleY);
-            }
+            // if (!this.isStage) {//对非舞台画布要保存渲染节点。
+            //     let surface = buffer.surface;
+            //     let renderNode = <BitmapNode>this.$renderNode;
+            //     renderNode.drawData.length = 0;
+            //     let width = surface.width;
+            //     let height = surface.height;
+            //     if (!this.bitmapData) {
+            //         this.bitmapData = new egret.BitmapData(surface);
+            //     }
+            //     else {
+            //         this.bitmapData.source = surface;
+            //         this.bitmapData.width = width;
+            //         this.bitmapData.height = height;
+            //     }
+            //     renderNode.image = this.bitmapData;
+            //     renderNode.imageWidth = width;
+            //     renderNode.imageHeight = height;
+            //     renderNode.drawImage(0, 0, width, height, -this.offsetX, -this.offsetY, width / this.$canvasScaleX, height / this.$canvasScaleY);
+            // }
 
             return drawCalls;
         }

@@ -96,23 +96,24 @@ namespace egret.web {
         private drawDisplayObject(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, isStage?: boolean): number {
             let drawCalls = 0;
             let node: sys.RenderNode;
-            let displayList = displayObject.$displayList;
-            if (displayList && !isStage) {
-                if (displayObject.$cacheDirty || displayObject.$renderDirty ||
-                    displayList.$canvasScaleX != sys.DisplayList.$canvasScaleX ||
-                    displayList.$canvasScaleY != sys.DisplayList.$canvasScaleY) {
-                    drawCalls += displayList.drawToSurface();
-                }
-                node = displayList.$renderNode;
-            }
-            else {
-                if (displayObject.$renderDirty) {
-                    node = displayObject.$getRenderNode();
-                }
-                else {
-                    node = displayObject.$renderNode;
-                }
-            }
+            // let displayList = displayObject.$displayList;
+            // if (displayList && !isStage) {
+            //     if (displayObject.$cacheDirty || displayObject.$renderDirty ||
+            //         displayList.$canvasScaleX != sys.DisplayList.$canvasScaleX ||
+            //         displayList.$canvasScaleY != sys.DisplayList.$canvasScaleY) {
+            //         drawCalls += displayList.drawToSurface();
+            //     }
+            //     node = displayList.$renderNode;
+            // }
+            // else {
+            //     if (displayObject.$renderDirty) {
+            //         node = displayObject.$getRenderNode();
+            //     }
+            //     else {
+            //         node = displayObject.$renderNode;
+            //     }
+            // }
+            node = displayObject.$getRenderNode();
             displayObject.$cacheDirty = false;
             if (node) {
                 drawCalls++;
@@ -141,9 +142,9 @@ namespace egret.web {
                 buffer.$offsetX = 0;
                 buffer.$offsetY = 0;
             }
-            if (displayList && !isStage) {
-                return drawCalls;
-            }
+            // if (displayList && !isStage) {
+            //     return drawCalls;
+            // }
             let children = displayObject.$children;
             if (children) {
                 let length = children.length;
