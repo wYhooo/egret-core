@@ -8359,6 +8359,7 @@ var egret;
                                 break;
                             case 4 /* SCROLLRECT */:
                                 //drawCalls += this.drawWithScrollRect(child, buffer, offsetX2, offsetY2);
+                                this.__transformScrollRect(child, buffer, offsetX2, offsetY2);
                                 break;
                             default:
                                 this.__transformDisplayObject(child, buffer, offsetX2, offsetY2);
@@ -8366,6 +8367,16 @@ var egret;
                         }
                     }
                 }
+            };
+            WebGLRenderer.prototype.__transformScrollRect = function (displayObject, buffer, offsetX, offsetY) {
+                var scrollRect = displayObject.$scrollRect ? displayObject.$scrollRect : displayObject.$maskRect;
+                if (scrollRect.isEmpty()) {
+                    return;
+                }
+                var transform2d = displayObject.transform2d;
+                transform2d.offsetX -= scrollRect.x;
+                transform2d.offsetY -= scrollRect.y;
+                this.__transformDisplayObject(displayObject, buffer, offsetX, offsetY);
             };
             return WebGLRenderer;
         }());

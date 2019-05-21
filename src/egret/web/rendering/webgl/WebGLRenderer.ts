@@ -1188,6 +1188,7 @@ namespace egret.web {
                             break;
                         case RenderMode.SCROLLRECT:
                             //drawCalls += this.drawWithScrollRect(child, buffer, offsetX2, offsetY2);
+                            this.__transformScrollRect(child, buffer, offsetX2, offsetY2);
                             break;
                         default:
                             this.__transformDisplayObject(child, buffer, offsetX2, offsetY2);
@@ -1195,6 +1196,17 @@ namespace egret.web {
                     }
                 }
             }
+        }
+
+        private __transformScrollRect(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number): void {
+            let scrollRect = displayObject.$scrollRect ? displayObject.$scrollRect : displayObject.$maskRect;
+            if (scrollRect.isEmpty()) {
+                return;
+            }
+            const transform2d = displayObject.transform2d;
+            transform2d.offsetX -= scrollRect.x;
+            transform2d.offsetY -= scrollRect.y;
+            this.__transformDisplayObject(displayObject, buffer, offsetX, offsetY);
         }
     }
 }
