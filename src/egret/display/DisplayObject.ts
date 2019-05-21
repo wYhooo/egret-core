@@ -450,6 +450,7 @@ namespace egret {
                 return false;
             }
             self.$x = value;
+            this.onLocalChange();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setX(value);
             }
@@ -517,6 +518,7 @@ namespace egret {
                 return false;
             }
             self.$y = value;
+            this.onLocalChange();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setY(value);
             }
@@ -581,7 +583,7 @@ namespace egret {
             }
             self.$scaleX = value;
             self.$matrixDirty = true;
-
+            this.onLocalChange();
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setScaleX(value);
@@ -645,7 +647,7 @@ namespace egret {
             }
             self.$scaleY = value;
             self.$matrixDirty = true;
-
+            this.onLocalChange();
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setScaleY(value);
@@ -712,7 +714,7 @@ namespace egret {
             self.$skewY += angle;
             self.$rotation = value;
             self.$matrixDirty = true;
-
+            this.onLocalChange();
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setRotation(value);
@@ -766,7 +768,7 @@ namespace egret {
 
             self.$skewX = value;
             self.$matrixDirty = true;
-
+            this.onLocalChange();
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setSkewX(self.$skewXdeg);
@@ -820,7 +822,7 @@ namespace egret {
 
             self.$skewY = value;
             self.$matrixDirty = true;
-
+            this.onLocalChange();
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setSkewY(self.$skewYdeg);
@@ -986,6 +988,7 @@ namespace egret {
                 return;
             }
             self.$anchorOffsetX = value;
+            this.onLocalChange();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setAnchorOffsetX(value);
             }
@@ -1039,6 +1042,7 @@ namespace egret {
                 return;
             }
             self.$anchorOffsetY = value;
+            this.onLocalChange();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setAnchorOffsetY(value);
             }
@@ -2324,30 +2328,34 @@ namespace egret {
         public readonly globalMatrix: Matrix = new Matrix;
 
         //
-        // public __$saveOffsetX__: number = 0;
-        // public __$saveOffsetY__: number = 0;
-        // public saveOffsetBeforeDrawToSurface(): void {
-        //     this.__$saveOffsetX__ = this.__$offsetX__;
-        //     this.__$saveOffsetY__ = this.__$offsetY__
-
-        // }
-        // public restoreOffsetAfterDrawToSurface(): void {
-        //     this.__$offsetX__ = this.__$saveOffsetX__;
-        //     this.__$offsetY__ = this.__$saveOffsetY__;
-        // }
-
-        //
         public transform(offsetX: number, offsetY: number): void {
             this.__$offsetX__ = offsetX;
             this.__$offsetY__ = offsetY;
         }
 
         public transformAsRenderRoot(offsetX: number, offsetY: number, globalMatrix: Matrix): void {
-            this.__$offsetX__ = offsetX;
-            this.__$offsetY__ = offsetY;
+            if (!NumberUtils.matrixEqual(this.globalMatrix, globalMatrix) 
+            || this.__$offsetX__ !== offsetX 
+            || this.__$offsetY__ !== offsetY) {
+                this.onLocalChange();
+            }
             this.globalMatrix._setTo_(globalMatrix);
             this.transform(offsetX, offsetY);
         }
+
+        public onLocalChange(): void {
+            ++this._localID;
+        }
+
+        public onParentChange(): void {
+            this._parentID = -1;
+        }
+
+        //
+        public _localID = 0;
+        public _currentLocalID = 0;
+        public _worldID = 0;
+        public _parentID = 0;
     }
 
     export const transformRefactor: boolean = true;

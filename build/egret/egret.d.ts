@@ -1300,6 +1300,12 @@ declare namespace egret {
         readonly globalMatrix: Matrix;
         transform(offsetX: number, offsetY: number): void;
         transformAsRenderRoot(offsetX: number, offsetY: number, globalMatrix: Matrix): void;
+        onLocalChange(): void;
+        onParentChange(): void;
+        _localID: number;
+        _currentLocalID: number;
+        _worldID: number;
+        _parentID: number;
     }
     const transformRefactor: boolean;
 }

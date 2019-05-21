@@ -179,6 +179,7 @@ namespace egret {
 
             self.$children.splice(index, 0, child);
             child.$setParent(self);
+            child.onParentChange();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.addChildAt(child.$nativeDisplayObject.id, index);
             }
@@ -429,6 +430,7 @@ namespace egret {
             }
             let displayList = this.$displayList || this.$parentDisplayList;
             child.$setParent(null);
+            child.onParentChange();
             let indexNow = children.indexOf(child);
             if (indexNow != -1) {
                 children.splice(indexNow, 1);
@@ -838,6 +840,11 @@ namespace egret {
         }
 
         public transform(offsetX: number, offsetY: number): void {
+            //
+            if (this.__$offsetX__ !== offsetX || this.__$offsetY__ !== offsetY) {
+                this.onLocalChange();
+            }
+            //
             this.__$offsetX__ = offsetX;
             this.__$offsetY__ = offsetY;
             let children = this.$children;
@@ -855,25 +862,19 @@ namespace egret {
                     child.globalMatrix._setTo_(globalMatrix);
                     if (child.$useTranslate) {
                         m = child.$getMatrix();
-                        offsetX2 = offsetX + child.$x;
-                        offsetY2 = offsetY + child.$y;
+                        offsetX2 = this.__$offsetX__ + child.$x;
+                        offsetY2 = this.__$offsetY__ + child.$y;
                         NumberUtils.__transform__(child.globalMatrix, m.a, m.b, m.c, m.d, offsetX2, offsetY2);
                         offsetX2 = -child.$anchorOffsetX;
                         offsetY2 = -child.$anchorOffsetY;
                     }
                     else {
-                        offsetX2 = offsetX + child.$x - child.$anchorOffsetX;
-                        offsetY2 = offsetY + child.$y - child.$anchorOffsetY;
+                        offsetX2 = this.__$offsetX__ + child.$x - child.$anchorOffsetX;
+                        offsetY2 = this.__$offsetY__ + child.$y - child.$anchorOffsetY;
                     }
                     child.transform(offsetX2, offsetY2);
                 }
             }
         }
-
-        // public transformAsRenderRoot(offsetX: number, offsetY: number, globalMatrix: Matrix): void {
-        //     this.__$offsetX__ = offsetX;
-        //     this.__$offsetY__ = offsetY;
-        //     this.globalMatrix._setTo_(globalMatrix);
-        // }
     }
 }

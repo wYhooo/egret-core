@@ -693,6 +693,11 @@ var egret;
             _this.__$offsetX__ = 0;
             _this.__$offsetY__ = 0;
             _this.globalMatrix = new egret.Matrix;
+            //
+            _this._localID = 0;
+            _this._currentLocalID = 0;
+            _this._worldID = 0;
+            _this._parentID = 0;
             if (egret.nativeRender) {
                 _this.createNativeDisplayObject();
             }
@@ -977,6 +982,7 @@ var egret;
                 return false;
             }
             self.$x = value;
+            this.onLocalChange();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setX(value);
             }
@@ -1042,6 +1048,7 @@ var egret;
                 return false;
             }
             self.$y = value;
+            this.onLocalChange();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setY(value);
             }
@@ -1104,6 +1111,7 @@ var egret;
             }
             self.$scaleX = value;
             self.$matrixDirty = true;
+            this.onLocalChange();
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setScaleX(value);
@@ -1165,6 +1173,7 @@ var egret;
             }
             self.$scaleY = value;
             self.$matrixDirty = true;
+            this.onLocalChange();
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setScaleY(value);
@@ -1229,6 +1238,7 @@ var egret;
             self.$skewY += angle;
             self.$rotation = value;
             self.$matrixDirty = true;
+            this.onLocalChange();
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setRotation(value);
@@ -1278,6 +1288,7 @@ var egret;
             value = value / 180 * Math.PI;
             self.$skewX = value;
             self.$matrixDirty = true;
+            this.onLocalChange();
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setSkewX(self.$skewXdeg);
@@ -1327,6 +1338,7 @@ var egret;
             value = (value + self.$rotation) / 180 * Math.PI;
             self.$skewY = value;
             self.$matrixDirty = true;
+            this.onLocalChange();
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setSkewY(self.$skewYdeg);
@@ -1492,6 +1504,7 @@ var egret;
                 return;
             }
             self.$anchorOffsetX = value;
+            this.onLocalChange();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setAnchorOffsetX(value);
             }
@@ -1544,6 +1557,7 @@ var egret;
                 return;
             }
             self.$anchorOffsetY = value;
+            this.onLocalChange();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setAnchorOffsetY(value);
             }
@@ -2714,26 +2728,24 @@ var egret;
             return false;
         };
         //
-        // public __$saveOffsetX__: number = 0;
-        // public __$saveOffsetY__: number = 0;
-        // public saveOffsetBeforeDrawToSurface(): void {
-        //     this.__$saveOffsetX__ = this.__$offsetX__;
-        //     this.__$saveOffsetY__ = this.__$offsetY__
-        // }
-        // public restoreOffsetAfterDrawToSurface(): void {
-        //     this.__$offsetX__ = this.__$saveOffsetX__;
-        //     this.__$offsetY__ = this.__$saveOffsetY__;
-        // }
-        //
         DisplayObject.prototype.transform = function (offsetX, offsetY) {
             this.__$offsetX__ = offsetX;
             this.__$offsetY__ = offsetY;
         };
         DisplayObject.prototype.transformAsRenderRoot = function (offsetX, offsetY, globalMatrix) {
-            this.__$offsetX__ = offsetX;
-            this.__$offsetY__ = offsetY;
+            if (!egret.NumberUtils.matrixEqual(this.globalMatrix, globalMatrix)
+                || this.__$offsetX__ !== offsetX
+                || this.__$offsetY__ !== offsetY) {
+                this.onLocalChange();
+            }
             this.globalMatrix._setTo_(globalMatrix);
             this.transform(offsetX, offsetY);
+        };
+        DisplayObject.prototype.onLocalChange = function () {
+            ++this._localID;
+        };
+        DisplayObject.prototype.onParentChange = function () {
+            this._parentID = -1;
         };
         /**
          * @private
@@ -4534,6 +4546,7 @@ var egret;
             }
             self.$children.splice(index, 0, child);
             child.$setParent(self);
+            child.onParentChange();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.addChildAt(child.$nativeDisplayObject.id, index);
             }
@@ -4776,6 +4789,7 @@ var egret;
             }
             var displayList = this.$displayList || this.$parentDisplayList;
             child.$setParent(null);
+            child.onParentChange();
             var indexNow = children.indexOf(child);
             if (indexNow != -1) {
                 children.splice(indexNow, 1);
@@ -5164,6 +5178,11 @@ var egret;
             return _super.prototype.$hitTest.call(this, stageX, stageY);
         };
         DisplayObjectContainer.prototype.transform = function (offsetX, offsetY) {
+            //
+            if (this.__$offsetX__ !== offsetX || this.__$offsetY__ !== offsetY) {
+                this.onLocalChange();
+            }
+            //
             this.__$offsetX__ = offsetX;
             this.__$offsetY__ = offsetY;
             var children = this.$children;
@@ -5181,15 +5200,15 @@ var egret;
                     child.globalMatrix._setTo_(globalMatrix);
                     if (child.$useTranslate) {
                         m = child.$getMatrix();
-                        offsetX2 = offsetX + child.$x;
-                        offsetY2 = offsetY + child.$y;
+                        offsetX2 = this.__$offsetX__ + child.$x;
+                        offsetY2 = this.__$offsetY__ + child.$y;
                         egret.NumberUtils.__transform__(child.globalMatrix, m.a, m.b, m.c, m.d, offsetX2, offsetY2);
                         offsetX2 = -child.$anchorOffsetX;
                         offsetY2 = -child.$anchorOffsetY;
                     }
                     else {
-                        offsetX2 = offsetX + child.$x - child.$anchorOffsetX;
-                        offsetY2 = offsetY + child.$y - child.$anchorOffsetY;
+                        offsetX2 = this.__$offsetX__ + child.$x - child.$anchorOffsetX;
+                        offsetY2 = this.__$offsetY__ + child.$y - child.$anchorOffsetY;
                     }
                     child.transform(offsetX2, offsetY2);
                 }
