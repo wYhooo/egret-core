@@ -3930,13 +3930,13 @@ var egret;
                 }
                 else {
                     //based on : https://github.com/jondavidjohn/hidpi-canvas-polyfill
-                    var context = egret.sys.canvasHitTestBuffer.context;
-                    var backingStore = context.backingStorePixelRatio ||
-                        context.webkitBackingStorePixelRatio ||
-                        context.mozBackingStorePixelRatio ||
-                        context.msBackingStorePixelRatio ||
-                        context.oBackingStorePixelRatio ||
-                        context.backingStorePixelRatio || 1;
+                    var context_1 = egret.sys.canvasHitTestBuffer.context;
+                    var backingStore = context_1.backingStorePixelRatio ||
+                        context_1.webkitBackingStorePixelRatio ||
+                        context_1.mozBackingStorePixelRatio ||
+                        context_1.msBackingStorePixelRatio ||
+                        context_1.oBackingStorePixelRatio ||
+                        context_1.backingStorePixelRatio || 1;
                     canvasScaleFactor = (window.devicePixelRatio || 1) / backingStore;
                 }
                 egret.sys.DisplayList.$canvasScaleFactor = canvasScaleFactor;
@@ -6173,7 +6173,7 @@ var egret;
                             egret.log('support = ' + ss.extensionName);
                             for (var j = 0, length_6 = ss.supportedFormats.length; j < length_6; ++j) {
                                 var tp = ss.supportedFormats[j];
-                                egret.log(j, tp[0] + ' : ' + tp[1] + ' : ' + ('0x' + tp[1].toString(16)));
+                                egret.log(tp[0] + ' : ' + tp[1] + ' : ' + ('0x' + tp[1].toString(16)));
                             }
                         }
                     }
@@ -6218,9 +6218,9 @@ var egret;
                     if (!this._defaultEmptyTexture) {
                         var size = 16;
                         var canvas = egret.sys.createCanvas(size, size);
-                        var context = egret.sys.getContext2d(canvas); //canvas.getContext('2d');
-                        context.fillStyle = 'white';
-                        context.fillRect(0, 0, size, size);
+                        var context_2 = egret.sys.getContext2d(canvas); //canvas.getContext('2d');
+                        context_2.fillStyle = 'white';
+                        context_2.fillRect(0, 0, size, size);
                         this._defaultEmptyTexture = this.createTexture(canvas);
                         this._defaultEmptyTexture[egret.engine_default_empty_texture] = true;
                     }
@@ -7374,18 +7374,19 @@ var egret;
                     var length_8 = children.length;
                     for (var i = 0; i < length_8; i++) {
                         var child = children[i];
-                        var offsetX2 = void 0;
-                        var offsetY2 = void 0;
-                        var tempAlpha = void 0;
-                        if (child.$alpha != 1) {
+                        var offsetX2 = 0;
+                        var offsetY2 = 0;
+                        var tempAlpha = 0;
+                        if (child.$alpha !== 1) {
                             tempAlpha = buffer.globalAlpha;
                             buffer.globalAlpha *= child.$alpha;
                         }
                         var savedMatrix = void 0;
+                        var m = child.$getMatrix();
                         if (child.$useTranslate) {
-                            var m = child.$getMatrix();
-                            offsetX2 = offsetX + child.$x;
-                            offsetY2 = offsetY + child.$y;
+                            // let m = child.$getMatrix();
+                            // offsetX2 = offsetX + child.$x;
+                            // offsetY2 = offsetY + child.$y;
                             var m2 = buffer.globalMatrix;
                             savedMatrix = egret.Matrix.create();
                             savedMatrix.a = m2.a;
@@ -7394,13 +7395,16 @@ var egret;
                             savedMatrix.d = m2.d;
                             savedMatrix.tx = m2.tx;
                             savedMatrix.ty = m2.ty;
-                            buffer.transform(m.a, m.b, m.c, m.d, offsetX2, offsetY2);
+                            //buffer.transform(m.a, m.b, m.c, m.d, offsetX2, offsetY2);
+                            buffer.transform(m.a, m.b, m.c, m.d, offsetX + m.tx, offsetY + m.ty);
                             offsetX2 = -child.$anchorOffsetX;
                             offsetY2 = -child.$anchorOffsetY;
                         }
                         else {
-                            offsetX2 = offsetX + child.$x - child.$anchorOffsetX;
-                            offsetY2 = offsetY + child.$y - child.$anchorOffsetY;
+                            // offsetX2 = offsetX + child.$x - child.$anchorOffsetX;
+                            // offsetY2 = offsetY + child.$y - child.$anchorOffsetY;
+                            offsetX2 = offsetX + m.tx - child.$anchorOffsetX;
+                            offsetY2 = offsetY + m.ty - child.$anchorOffsetY;
                         }
                         switch (child.$renderMode) {
                             case 1 /* NONE */:
@@ -7422,13 +7426,13 @@ var egret;
                             buffer.globalAlpha = tempAlpha;
                         }
                         if (savedMatrix) {
-                            var m = buffer.globalMatrix;
-                            m.a = savedMatrix.a;
-                            m.b = savedMatrix.b;
-                            m.c = savedMatrix.c;
-                            m.d = savedMatrix.d;
-                            m.tx = savedMatrix.tx;
-                            m.ty = savedMatrix.ty;
+                            var m_1 = buffer.globalMatrix;
+                            m_1.a = savedMatrix.a;
+                            m_1.b = savedMatrix.b;
+                            m_1.c = savedMatrix.c;
+                            m_1.d = savedMatrix.d;
+                            m_1.tx = savedMatrix.tx;
+                            m_1.ty = savedMatrix.ty;
                             egret.Matrix.release(savedMatrix);
                         }
                     }

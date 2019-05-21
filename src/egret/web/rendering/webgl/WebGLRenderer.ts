@@ -149,18 +149,19 @@ namespace egret.web {
                 let length = children.length;
                 for (let i = 0; i < length; i++) {
                     let child = children[i];
-                    let offsetX2;
-                    let offsetY2;
-                    let tempAlpha;
-                    if (child.$alpha != 1) {
+                    let offsetX2 = 0;
+                    let offsetY2 = 0;
+                    let tempAlpha = 0;
+                    if (child.$alpha !== 1) {
                         tempAlpha = buffer.globalAlpha;
                         buffer.globalAlpha *= child.$alpha;
                     }
                     let savedMatrix: Matrix;
+                    let m = child.$getMatrix();
                     if (child.$useTranslate) {
-                        let m = child.$getMatrix();
-                        offsetX2 = offsetX + child.$x;
-                        offsetY2 = offsetY + child.$y;
+                        // let m = child.$getMatrix();
+                        // offsetX2 = offsetX + child.$x;
+                        // offsetY2 = offsetY + child.$y;
                         let m2 = buffer.globalMatrix;
                         savedMatrix = Matrix.create();
                         savedMatrix.a = m2.a;
@@ -169,13 +170,16 @@ namespace egret.web {
                         savedMatrix.d = m2.d;
                         savedMatrix.tx = m2.tx;
                         savedMatrix.ty = m2.ty;
-                        buffer.transform(m.a, m.b, m.c, m.d, offsetX2, offsetY2);
+                        //buffer.transform(m.a, m.b, m.c, m.d, offsetX2, offsetY2);
+                        buffer.transform(m.a, m.b, m.c, m.d, offsetX + m.tx, offsetY + m.ty);
                         offsetX2 = -child.$anchorOffsetX;
                         offsetY2 = -child.$anchorOffsetY;
                     }
                     else {
-                        offsetX2 = offsetX + child.$x - child.$anchorOffsetX;
-                        offsetY2 = offsetY + child.$y - child.$anchorOffsetY;
+                        // offsetX2 = offsetX + child.$x - child.$anchorOffsetX;
+                        // offsetY2 = offsetY + child.$y - child.$anchorOffsetY;
+                        offsetX2 = offsetX + m.tx - child.$anchorOffsetX;
+                        offsetY2 = offsetY + m.ty - child.$anchorOffsetY;
                     }
                     switch (child.$renderMode) {
                         case RenderMode.NONE:
