@@ -7342,7 +7342,7 @@ var egret;
                 this.nestLevel++;
                 var webglBuffer = buffer;
                 var webglBufferContext = webglBuffer.context;
-                var root = forRenderTexture ? displayObject : null;
+                //let root: DisplayObject = forRenderTexture ? displayObject : null;
                 webglBufferContext.pushBuffer(webglBuffer);
                 //绘制显示对象
                 webglBuffer.transform(matrix.a, matrix.b, matrix.c, matrix.d, 0, 0);

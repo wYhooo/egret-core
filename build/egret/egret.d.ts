@@ -9026,6 +9026,7 @@ declare namespace egret.sys {
         /**
          * @private
          * 绘制根节点显示对象到目标画布，返回draw的次数。
+         * 现在就是唯一绘制场景用!!!!!!!
          */
         drawToSurface(): number;
         private bitmapData;

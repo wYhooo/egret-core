@@ -13446,9 +13446,10 @@ var egret;
             /**
              * @private
              * 绘制根节点显示对象到目标画布，返回draw的次数。
+             * 现在就是唯一绘制场景用!!!!!!!
              */
             DisplayList.prototype.drawToSurface = function () {
-                var drawCalls = 0;
+                //let drawCalls = 0;
                 this.$canvasScaleX = this.offsetMatrix.a = DisplayList.$canvasScaleX;
                 this.$canvasScaleY = this.offsetMatrix.d = DisplayList.$canvasScaleY;
                 // if (!this.isStage) {//对非舞台画布要根据目标显示对象尺寸改变而改变。
@@ -13456,7 +13457,7 @@ var egret;
                 // }
                 var buffer = this.renderBuffer;
                 buffer.clear();
-                drawCalls = sys.systemRenderer.render(this.root, buffer, this.offsetMatrix);
+                var drawCalls = sys.systemRenderer.render(this.root, buffer, this.offsetMatrix);
                 // if (!this.isStage) {//对非舞台画布要保存渲染节点。
                 //     let surface = buffer.surface;
                 //     let renderNode = <BitmapNode>this.$renderNode;
