@@ -64,6 +64,14 @@ namespace egret.web {
 
             //绘制显示对象
             webglBuffer.transform(matrix.a, matrix.b, matrix.c, matrix.d, 0, 0);
+            /*
+            *****
+            */
+            this.__setTransformRoot(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
+            this.__transformDisplayObject(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
+            /*
+            *****
+            */
             this.drawDisplayObject(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
             webglBufferContext.$drawWebGL();
             let drawCall = webglBuffer.$drawCalls;
@@ -283,6 +291,14 @@ namespace egret.web {
                 drawCalls += this.drawWithScrollRect(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
             }
             else {
+                /*
+                *****
+                */
+                this.__setTransformRoot(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
+                this.__transformDisplayObject(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
+                /*
+                *****
+                */
                 drawCalls += this.drawDisplayObject(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
             }
 
@@ -403,6 +419,14 @@ namespace egret.web {
                 //绘制显示对象自身，若有scrollRect，应用clip
                 let displayBuffer = this.createRenderBuffer(displayBoundsWidth, displayBoundsHeight);
                 displayBuffer.context.pushBuffer(displayBuffer);
+                /*
+                *****
+                */
+                this.__setTransformRoot(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
+                this.__transformDisplayObject(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
+                /*
+                *****
+                */
                 drawCalls += this.drawDisplayObject(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
                 //绘制遮罩
                 if (mask) {
@@ -414,6 +438,14 @@ namespace egret.web {
                     maskMatrix.translate(-displayBoundsX, -displayBoundsY);
                     maskBuffer.setTransform(maskMatrix.a, maskMatrix.b, maskMatrix.c, maskMatrix.d, maskMatrix.tx, maskMatrix.ty);
                     Matrix.release(maskMatrix);
+                    /*
+                    *****
+                    */
+                    this.__setTransformRoot(mask, maskBuffer, 0, 0);
+                    this.__transformDisplayObject(mask, maskBuffer, 0, 0);
+                    /*
+                    *****
+                    */
                     drawCalls += this.drawDisplayObject(mask, maskBuffer, 0, 0);
                     maskBuffer.context.popBuffer();
                     displayBuffer.context.setGlobalCompositeOperation("destination-in");
@@ -642,6 +674,14 @@ namespace egret.web {
                             drawCalls += this.drawWithScrollRect(child, buffer, 0, 0);
                             break;
                         default:
+                            /*
+                            *****
+                            */
+                            this.__setTransformRoot(child, buffer, 0, 0);
+                            this.__transformDisplayObject(child, buffer, 0, 0);
+                            /*
+                            *****
+                            */
                             drawCalls += this.drawDisplayObject(child, buffer, 0, 0);
                             break;
                     }
@@ -1068,6 +1108,122 @@ namespace egret.web {
                 buffer.$computeDrawCall = false;
             }
             return buffer;
+        }
+
+        public __setTransformRoot(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, isStage?: boolean): void {
+            const transform2d = displayObject.transform2d;
+            transform2d.globalMatrix.copyFrom(buffer.globalMatrix);
+            transform2d.offsetX = offsetX;
+            transform2d.offsetY = offsetY;
+        }
+
+        public __transformDisplayObject(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, isStage?: boolean): void {
+            const node = displayObject.$getRenderNode();
+            //displayObject.$cacheDirty = false;
+            if (node) {
+                //drawCalls++;
+                // buffer.$offsetX = offsetX;
+                // buffer.$offsetY = offsetY;
+                switch (node.type) {
+                    case sys.RenderNodeType.BitmapNode:
+                        //this.renderBitmap(<sys.BitmapNode>node, buffer);
+                        break;
+                    case sys.RenderNodeType.TextNode:
+                        //this.renderText(<sys.TextNode>node, buffer);
+                        break;
+                    case sys.RenderNodeType.GraphicsNode:
+                        //this.renderGraphics(<sys.GraphicsNode>node, buffer);
+                        break;
+                    case sys.RenderNodeType.GroupNode:
+                        //this.renderGroup(<sys.GroupNode>node, buffer);
+                        break;
+                    case sys.RenderNodeType.MeshNode:
+                        //this.renderMesh(<sys.MeshNode>node, buffer);
+                        break;
+                    case sys.RenderNodeType.NormalBitmapNode:
+                        //this.renderNormalBitmap(<sys.NormalBitmapNode>node, buffer);
+                        break;
+                }
+                // buffer.$offsetX = 0;
+                // buffer.$offsetY = 0;
+            }
+            // if (displayList && !isStage) {
+            //     return drawCalls;
+            // }
+            let children = displayObject.$children;
+            if (children) {
+
+
+
+
+
+
+                let length = children.length;
+                for (let i = 0; i < length; i++) {
+                    let child = children[i];
+                    let offsetX2 = 0;
+                    let offsetY2 = 0;
+                    // let tempAlpha = 0;
+                    // if (child.$alpha !== 1) {
+                    //     tempAlpha = buffer.globalAlpha;
+                    //     buffer.globalAlpha *= child.$alpha;
+                    // }
+                    //let savedMatrix: Matrix;
+                    let m = child.$getMatrix();
+                    if (child.$useTranslate) {
+                        // let m = child.$getMatrix();
+                        // offsetX2 = offsetX + child.$x;
+                        // offsetY2 = offsetY + child.$y;
+                        // let m2 = buffer.globalMatrix;
+                        // savedMatrix = Matrix.create();
+                        // savedMatrix.a = m2.a;
+                        // savedMatrix.b = m2.b;
+                        // savedMatrix.c = m2.c;
+                        // savedMatrix.d = m2.d;
+                        // savedMatrix.tx = m2.tx;
+                        // savedMatrix.ty = m2.ty;
+                        //buffer.transform(m.a, m.b, m.c, m.d, offsetX2, offsetY2);
+                        //buffer.transform(m.a, m.b, m.c, m.d, offsetX + m.tx, offsetY + m.ty);
+                        // offsetX2 = -child.$anchorOffsetX;
+                        // offsetY2 = -child.$anchorOffsetY;
+                    }
+                    else {
+                        // offsetX2 = offsetX + child.$x - child.$anchorOffsetX;
+                        // offsetY2 = offsetY + child.$y - child.$anchorOffsetY;
+                        // offsetX2 = offsetX + m.tx - child.$anchorOffsetX;
+                        // offsetY2 = offsetY + m.ty - child.$anchorOffsetY;
+                    }
+                    switch (child.$renderMode) {
+                        case RenderMode.NONE:
+                            break;
+                        case RenderMode.FILTER:
+                            //drawCalls += this.drawWithFilter(child, buffer, offsetX2, offsetY2);
+                            break;
+                        case RenderMode.CLIP:
+                            //drawCalls += this.drawWithClip(child, buffer, offsetX2, offsetY2);
+                            break;
+                        case RenderMode.SCROLLRECT:
+                            //drawCalls += this.drawWithScrollRect(child, buffer, offsetX2, offsetY2);
+                            break;
+                        default:
+                            this.__transformDisplayObject(child, buffer, offsetX2, offsetY2);
+                            break;
+                    }
+                    // if (tempAlpha) {
+                    //     buffer.globalAlpha = tempAlpha;
+                    // }
+                    // if (savedMatrix) {
+                    //     let m = buffer.globalMatrix;
+                    //     m.a = savedMatrix.a;
+                    //     m.b = savedMatrix.b;
+                    //     m.c = savedMatrix.c;
+                    //     m.d = savedMatrix.d;
+                    //     m.tx = savedMatrix.tx;
+                    //     m.ty = savedMatrix.ty;
+                    //     Matrix.release(savedMatrix);
+                    // }
+                }
+            }
         }
     }
 }

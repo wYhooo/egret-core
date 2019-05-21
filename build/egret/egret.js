@@ -518,6 +518,17 @@ var egret;
 //////////////////////////////////////////////////////////////////////////////////////
 var egret;
 (function (egret) {
+    //
+    var Transform2d = (function () {
+        function Transform2d() {
+            this.globalMatrix = new egret.Matrix;
+            this.offsetX = 0;
+            this.offsetY = 0;
+        }
+        return Transform2d;
+    }());
+    egret.Transform2d = Transform2d;
+    __reflect(Transform2d.prototype, "egret.Transform2d");
     ;
     /**
      * @private
@@ -687,6 +698,8 @@ var egret;
             _this.$renderNode = null;
             _this.$renderDirty = false;
             _this.$renderMode = null;
+            //
+            _this.transform2d = new Transform2d;
             if (egret.nativeRender) {
                 _this.createNativeDisplayObject();
             }

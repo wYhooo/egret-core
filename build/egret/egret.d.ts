@@ -303,6 +303,11 @@ declare namespace egret {
     }
 }
 declare namespace egret {
+    class Transform2d {
+        readonly globalMatrix: Matrix;
+        offsetX: number;
+        offsetY: number;
+    }
     /**
      * @private
      */
@@ -1291,6 +1296,7 @@ declare namespace egret {
          * @platform Web,Native
          */
         willTrigger(type: string): boolean;
+        readonly transform2d: Transform2d;
     }
 }
 declare namespace egret {

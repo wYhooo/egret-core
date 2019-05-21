@@ -7292,6 +7292,14 @@ var egret;
                 webglBufferContext.pushBuffer(webglBuffer);
                 //绘制显示对象
                 webglBuffer.transform(matrix.a, matrix.b, matrix.c, matrix.d, 0, 0);
+                /*
+                *****
+                */
+                this.__setTransformRoot(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
+                this.__transformDisplayObject(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
+                /*
+                *****
+                */
                 this.drawDisplayObject(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
                 webglBufferContext.$drawWebGL();
                 var drawCall = webglBuffer.$drawCalls;
@@ -7499,6 +7507,14 @@ var egret;
                     drawCalls += this.drawWithScrollRect(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
                 }
                 else {
+                    /*
+                    *****
+                    */
+                    this.__setTransformRoot(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
+                    this.__transformDisplayObject(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
+                    /*
+                    *****
+                    */
                     drawCalls += this.drawDisplayObject(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
                 }
                 displayBuffer.context.popBuffer();
@@ -7614,6 +7630,14 @@ var egret;
                     //绘制显示对象自身，若有scrollRect，应用clip
                     var displayBuffer = this.createRenderBuffer(displayBoundsWidth, displayBoundsHeight);
                     displayBuffer.context.pushBuffer(displayBuffer);
+                    /*
+                    *****
+                    */
+                    this.__setTransformRoot(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
+                    this.__transformDisplayObject(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
+                    /*
+                    *****
+                    */
                     drawCalls += this.drawDisplayObject(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
                     //绘制遮罩
                     if (mask) {
@@ -7625,6 +7649,14 @@ var egret;
                         maskMatrix.translate(-displayBoundsX, -displayBoundsY);
                         maskBuffer.setTransform(maskMatrix.a, maskMatrix.b, maskMatrix.c, maskMatrix.d, maskMatrix.tx, maskMatrix.ty);
                         egret.Matrix.release(maskMatrix);
+                        /*
+                        *****
+                        */
+                        this.__setTransformRoot(mask, maskBuffer, 0, 0);
+                        this.__transformDisplayObject(mask, maskBuffer, 0, 0);
+                        /*
+                        *****
+                        */
                         drawCalls += this.drawDisplayObject(mask, maskBuffer, 0, 0);
                         maskBuffer.context.popBuffer();
                         displayBuffer.context.setGlobalCompositeOperation("destination-in");
@@ -7840,6 +7872,14 @@ var egret;
                                 drawCalls += this.drawWithScrollRect(child, buffer, 0, 0);
                                 break;
                             default:
+                                /*
+                                *****
+                                */
+                                this.__setTransformRoot(child, buffer, 0, 0);
+                                this.__transformDisplayObject(child, buffer, 0, 0);
+                                /*
+                                *****
+                                */
                                 drawCalls += this.drawDisplayObject(child, buffer, 0, 0);
                                 break;
                         }
@@ -8241,6 +8281,114 @@ var egret;
                     buffer.$computeDrawCall = false;
                 }
                 return buffer;
+            };
+            WebGLRenderer.prototype.__setTransformRoot = function (displayObject, buffer, offsetX, offsetY, isStage) {
+                var transform2d = displayObject.transform2d;
+                transform2d.globalMatrix.copyFrom(buffer.globalMatrix);
+                transform2d.offsetX = offsetX;
+                transform2d.offsetY = offsetY;
+            };
+            WebGLRenderer.prototype.__transformDisplayObject = function (displayObject, buffer, offsetX, offsetY, isStage) {
+                var node = displayObject.$getRenderNode();
+                //displayObject.$cacheDirty = false;
+                if (node) {
+                    //drawCalls++;
+                    // buffer.$offsetX = offsetX;
+                    // buffer.$offsetY = offsetY;
+                    switch (node.type) {
+                        case 1 /* BitmapNode */:
+                            //this.renderBitmap(<sys.BitmapNode>node, buffer);
+                            break;
+                        case 2 /* TextNode */:
+                            //this.renderText(<sys.TextNode>node, buffer);
+                            break;
+                        case 3 /* GraphicsNode */:
+                            //this.renderGraphics(<sys.GraphicsNode>node, buffer);
+                            break;
+                        case 4 /* GroupNode */:
+                            //this.renderGroup(<sys.GroupNode>node, buffer);
+                            break;
+                        case 5 /* MeshNode */:
+                            //this.renderMesh(<sys.MeshNode>node, buffer);
+                            break;
+                        case 6 /* NormalBitmapNode */:
+                            //this.renderNormalBitmap(<sys.NormalBitmapNode>node, buffer);
+                            break;
+                    }
+                    // buffer.$offsetX = 0;
+                    // buffer.$offsetY = 0;
+                }
+                // if (displayList && !isStage) {
+                //     return drawCalls;
+                // }
+                var children = displayObject.$children;
+                if (children) {
+                    var length_10 = children.length;
+                    for (var i = 0; i < length_10; i++) {
+                        var child = children[i];
+                        var offsetX2 = 0;
+                        var offsetY2 = 0;
+                        // let tempAlpha = 0;
+                        // if (child.$alpha !== 1) {
+                        //     tempAlpha = buffer.globalAlpha;
+                        //     buffer.globalAlpha *= child.$alpha;
+                        // }
+                        //let savedMatrix: Matrix;
+                        var m = child.$getMatrix();
+                        if (child.$useTranslate) {
+                            // let m = child.$getMatrix();
+                            // offsetX2 = offsetX + child.$x;
+                            // offsetY2 = offsetY + child.$y;
+                            // let m2 = buffer.globalMatrix;
+                            // savedMatrix = Matrix.create();
+                            // savedMatrix.a = m2.a;
+                            // savedMatrix.b = m2.b;
+                            // savedMatrix.c = m2.c;
+                            // savedMatrix.d = m2.d;
+                            // savedMatrix.tx = m2.tx;
+                            // savedMatrix.ty = m2.ty;
+                            //buffer.transform(m.a, m.b, m.c, m.d, offsetX2, offsetY2);
+                            //buffer.transform(m.a, m.b, m.c, m.d, offsetX + m.tx, offsetY + m.ty);
+                            // offsetX2 = -child.$anchorOffsetX;
+                            // offsetY2 = -child.$anchorOffsetY;
+                        }
+                        else {
+                            // offsetX2 = offsetX + child.$x - child.$anchorOffsetX;
+                            // offsetY2 = offsetY + child.$y - child.$anchorOffsetY;
+                            // offsetX2 = offsetX + m.tx - child.$anchorOffsetX;
+                            // offsetY2 = offsetY + m.ty - child.$anchorOffsetY;
+                        }
+                        switch (child.$renderMode) {
+                            case 1 /* NONE */:
+                                break;
+                            case 2 /* FILTER */:
+                                //drawCalls += this.drawWithFilter(child, buffer, offsetX2, offsetY2);
+                                break;
+                            case 3 /* CLIP */:
+                                //drawCalls += this.drawWithClip(child, buffer, offsetX2, offsetY2);
+                                break;
+                            case 4 /* SCROLLRECT */:
+                                //drawCalls += this.drawWithScrollRect(child, buffer, offsetX2, offsetY2);
+                                break;
+                            default:
+                                this.__transformDisplayObject(child, buffer, offsetX2, offsetY2);
+                                break;
+                        }
+                        // if (tempAlpha) {
+                        //     buffer.globalAlpha = tempAlpha;
+                        // }
+                        // if (savedMatrix) {
+                        //     let m = buffer.globalMatrix;
+                        //     m.a = savedMatrix.a;
+                        //     m.b = savedMatrix.b;
+                        //     m.c = savedMatrix.c;
+                        //     m.d = savedMatrix.d;
+                        //     m.tx = savedMatrix.tx;
+                        //     m.ty = savedMatrix.ty;
+                        //     Matrix.release(savedMatrix);
+                        // }
+                    }
+                }
             };
             return WebGLRenderer;
         }());

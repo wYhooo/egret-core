@@ -29,6 +29,13 @@
 
 namespace egret {
 
+    //
+    export class Transform2d {
+        public readonly globalMatrix = new Matrix;
+        public offsetX: number = 0;
+        public offsetY: number = 0;
+    }
+
     /**
      * @private
      */
@@ -2288,6 +2295,8 @@ namespace egret {
             return false;
         }
 
+        //
+        public readonly transform2d: Transform2d = new Transform2d;
     }
 
 }
