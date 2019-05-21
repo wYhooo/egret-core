@@ -127,6 +127,17 @@ namespace egret.web {
                 drawCalls++;
                 buffer.$offsetX = offsetX;
                 buffer.$offsetY = offsetY;
+                /*
+                *************************************************
+                */
+                if (!NumberUtils.matrixEqual(buffer.globalMatrix, displayObject.transform2d.globalMatrix)
+                    || buffer.$offsetX !== displayObject.transform2d.offsetX
+                    || buffer.$offsetY !== displayObject.transform2d.offsetY) {
+                    console.error('drawDisplayObject transform error');
+                }
+                /*
+                *************************************************
+                */
                 switch (node.type) {
                     case sys.RenderNodeType.BitmapNode:
                         this.renderBitmap(<sys.BitmapNode>node, buffer);
