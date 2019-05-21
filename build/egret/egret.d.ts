@@ -14334,6 +14334,10 @@ declare namespace egret {
          * @returns
          */
         private static cosInt(value);
+        private static readonly EPSILON;
+        static fequal(left: number, right: number): boolean;
+        static __transform__(globalMatrix: Matrix, a: number, b: number, c: number, d: number, tx: number, ty: number): void;
+        static matrixEqual(left: Matrix, right: Matrix): boolean;
     }
 }
 /**

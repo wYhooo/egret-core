@@ -1119,11 +1119,7 @@ namespace egret.web {
 
         public __transformDisplayObject(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, isStage?: boolean): void {
             const node = displayObject.$getRenderNode();
-            //displayObject.$cacheDirty = false;
             if (node) {
-                //drawCalls++;
-                // buffer.$offsetX = offsetX;
-                // buffer.$offsetY = offsetY;
                 switch (node.type) {
                     case sys.RenderNodeType.BitmapNode:
                         //this.renderBitmap(<sys.BitmapNode>node, buffer);
@@ -1144,55 +1140,32 @@ namespace egret.web {
                         //this.renderNormalBitmap(<sys.NormalBitmapNode>node, buffer);
                         break;
                 }
-                // buffer.$offsetX = 0;
-                // buffer.$offsetY = 0;
             }
-            // if (displayList && !isStage) {
-            //     return drawCalls;
-            // }
             let children = displayObject.$children;
             if (children) {
-
-
-
-
-
-
                 let length = children.length;
                 for (let i = 0; i < length; i++) {
                     let child = children[i];
                     let offsetX2 = 0;
                     let offsetY2 = 0;
-                    // let tempAlpha = 0;
-                    // if (child.$alpha !== 1) {
-                    //     tempAlpha = buffer.globalAlpha;
-                    //     buffer.globalAlpha *= child.$alpha;
-                    // }
-                    //let savedMatrix: Matrix;
-                    let m = child.$getMatrix();
+                    let m = child.$getMatrix(); //child local
+                    //先拷贝给孩子，再和孩子的local
+                    const selfTransform = displayObject.transform2d;
+                    const childTransform = child.transform2d;
+                    childTransform.globalMatrix.copyFrom(selfTransform.globalMatrix);
                     if (child.$useTranslate) {
-                        // let m = child.$getMatrix();
-                        // offsetX2 = offsetX + child.$x;
-                        // offsetY2 = offsetY + child.$y;
-                        // let m2 = buffer.globalMatrix;
-                        // savedMatrix = Matrix.create();
-                        // savedMatrix.a = m2.a;
-                        // savedMatrix.b = m2.b;
-                        // savedMatrix.c = m2.c;
-                        // savedMatrix.d = m2.d;
-                        // savedMatrix.tx = m2.tx;
-                        // savedMatrix.ty = m2.ty;
-                        //buffer.transform(m.a, m.b, m.c, m.d, offsetX2, offsetY2);
-                        //buffer.transform(m.a, m.b, m.c, m.d, offsetX + m.tx, offsetY + m.ty);
-                        // offsetX2 = -child.$anchorOffsetX;
-                        // offsetY2 = -child.$anchorOffsetY;
+                        NumberUtils.__transform__(childTransform.globalMatrix, m.a, m.b, m.c, m.d, selfTransform.offsetX + m.tx, selfTransform.offsetY + m.ty);
+                        offsetX2 = -child.$anchorOffsetX;
+                        offsetY2 = -child.$anchorOffsetY;
                     }
                     else {
-                        // offsetX2 = offsetX + child.$x - child.$anchorOffsetX;
-                        // offsetY2 = offsetY + child.$y - child.$anchorOffsetY;
-                        // offsetX2 = offsetX + m.tx - child.$anchorOffsetX;
-                        // offsetY2 = offsetY + m.ty - child.$anchorOffsetY;
+                        offsetX2 = selfTransform.offsetX + m.tx - child.$anchorOffsetX;
+                        offsetY2 = selfTransform.offsetY + m.ty - child.$anchorOffsetY;
                     }
+                    ///
+                    childTransform.offsetX = offsetX2;
+                    childTransform.offsetY = offsetY2;
+                    ///
                     switch (child.$renderMode) {
                         case RenderMode.NONE:
                             break;
@@ -1209,19 +1182,6 @@ namespace egret.web {
                             this.__transformDisplayObject(child, buffer, offsetX2, offsetY2);
                             break;
                     }
-                    // if (tempAlpha) {
-                    //     buffer.globalAlpha = tempAlpha;
-                    // }
-                    // if (savedMatrix) {
-                    //     let m = buffer.globalMatrix;
-                    //     m.a = savedMatrix.a;
-                    //     m.b = savedMatrix.b;
-                    //     m.c = savedMatrix.c;
-                    //     m.d = savedMatrix.d;
-                    //     m.tx = savedMatrix.tx;
-                    //     m.ty = savedMatrix.ty;
-                    //     Matrix.release(savedMatrix);
-                    // }
                 }
             }
         }
