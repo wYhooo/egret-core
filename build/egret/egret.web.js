@@ -5973,19 +5973,20 @@ var egret;
                 this.onResize();
                 */
             };
-            WebGLRenderContext.prototype._buildSupportedCompressedTextureInfo = function (gl, compressedTextureExNames) {
-                if (compressedTextureExNames.length === 0) {
-                    return [];
-                }
+            WebGLRenderContext.prototype._buildSupportedCompressedTextureInfo = function (/*gl: WebGLRenderingContext, compressedTextureExNames: string[],*/ extensions) {
+                // if (compressedTextureExNames.length === 0) {
+                //     return [];
+                // }
                 var returnValue = [];
-                for (var _i = 0, compressedTextureExNames_1 = compressedTextureExNames; _i < compressedTextureExNames_1.length; _i++) {
-                    var exName = compressedTextureExNames_1[_i];
-                    var extension = gl.getExtension(exName);
+                // for (const exName of compressedTextureExNames) {
+                //     const extension = gl.getExtension(exName);
+                for (var _i = 0, extensions_1 = extensions; _i < extensions_1.length; _i++) {
+                    var extension = extensions_1[_i];
                     if (!extension) {
                         continue;
                     }
                     var info = {
-                        extensionName: exName,
+                        extensionName: extension.name,
                         supportedFormats: []
                     };
                     //
@@ -5995,10 +5996,10 @@ var egret;
                     //
                     if (true) {
                         if (info.supportedFormats.length === 0) {
-                            console.error('buildSupportedCompressedTextureInfo failed = ' + exName);
+                            console.error('buildSupportedCompressedTextureInfo failed = ' + extension.name);
                         }
                         else {
-                            egret.log('support: ' + exName);
+                            egret.log('support: ' + extension.name);
                             for (var key in extension) {
                                 egret.log(key, extension[key], '0x' + extension[key].toString(16));
                             }
@@ -6022,15 +6023,28 @@ var egret;
                 // this._caps.etc1 = this._gl.getExtension('WEBGL_compressed_texture_etc1') || this._gl.getExtension('WEBKIT_WEBGL_compressed_texture_etc1');
                 // this._caps.etc2 = this._gl.getExtension('WEBGL_compressed_texture_etc') || this._gl.getExtension('WEBKIT_WEBGL_compressed_texture_etc') ||
                 //     this._gl.getExtension('WEBGL_compressed_texture_es3_0'); // also a requirement of OpenGL ES 3
-                var compressedTextureExNames = [
-                    'WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc',
-                    'WEBGL_compressed_texture_etc1', 'WEBKIT_WEBGL_compressed_texture_etc1',
-                    'WEBGL_compressed_texture_etc', 'WEBKIT_WEBGL_compressed_texture_etc',
-                    'WEBGL_compressed_texture_astc', 'WEBKIT_WEBGL_compressed_texture_astc',
-                    'WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc',
-                    'WEBGL_compressed_texture_es3_0'
-                ];
-                this._supportedCompressedTextureInfo = this._buildSupportedCompressedTextureInfo(this.context, compressedTextureExNames);
+                // const compressedTextureExNames = [
+                //     'WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc',
+                //     'WEBGL_compressed_texture_etc1', 'WEBKIT_WEBGL_compressed_texture_etc1',
+                //     'WEBGL_compressed_texture_etc', 'WEBKIT_WEBGL_compressed_texture_etc',
+                //     'WEBGL_compressed_texture_astc', 'WEBKIT_WEBGL_compressed_texture_astc',
+                //     'WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc',
+                //     'WEBGL_compressed_texture_es3_0'];
+                var capabilities = egret.Capabilities;
+                //
+                this.pvrtc = gl.getExtension('WEBGL_compressed_texture_pvrtc') || gl.getExtension('WEBKIT_WEBGL_compressed_texture_pvrtc');
+                if (this.pvrtc) {
+                    this.pvrtc.name = 'WEBGL_compressed_texture_pvrtc';
+                    capabilities['pvrtc'] = this.pvrtc;
+                }
+                //
+                this.etc1 = gl.getExtension('WEBGL_compressed_texture_etc1') || gl.getExtension('WEBKIT_WEBGL_compressed_texture_etc1');
+                if (this.etc1) {
+                    this.etc1.name = 'WEBGL_compressed_texture_etc1';
+                    capabilities['etc1'] = this.etc1;
+                }
+                //
+                this._supportedCompressedTextureInfo = this._buildSupportedCompressedTextureInfo(/*this.context, compressedTextureExNames,*/ [this.etc1, this.pvrtc]);
             };
             WebGLRenderContext.prototype.handleContextLost = function () {
                 this.contextLost = true;
