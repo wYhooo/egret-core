@@ -8348,7 +8348,7 @@ var egret;
                     textureTransform.offsetY = transform2d.offsetY;
                     switch (node.type) {
                         case 1 /* BitmapNode */:
-                            //this.renderBitmap(<sys.BitmapNode>node, buffer);
+                            this.__transformBitmap__(displayObject, node, buffer);
                             break;
                         case 2 /* TextNode */:
                             this.__transformText__(displayObject, node, buffer);
@@ -8357,13 +8357,12 @@ var egret;
                             this.__transformGraphics__(displayObject, node, buffer);
                             break;
                         case 4 /* GroupNode */:
-                            //this.renderGroup(<sys.GroupNode>node, buffer);
+                            this.__transformGroup__(displayObject, node, buffer);
                             break;
                         case 5 /* MeshNode */:
-                            //this.renderMesh(<sys.MeshNode>node, buffer);
+                            this.__transformMesh__(displayObject, node, buffer);
                             break;
                         case 6 /* NormalBitmapNode */:
-                            //this.renderNormalBitmap(<sys.NormalBitmapNode>node, buffer);
                             this.__transformNormalBitmap__(displayObject, node, buffer);
                             break;
                     }
@@ -8482,6 +8481,105 @@ var egret;
                     egret.$TempMatrix.setTo(1, 0, 0, 1, x / canvasScaleX, y / canvasScaleY);
                     var textureTransform = node.textureTransform;
                     textureTransform.globalMatrix.$preMultiplyInto(egret.$TempMatrix, textureTransform.globalMatrix);
+                }
+            };
+            WebGLRenderer.prototype.__transformGroup__ = function (displayObject, groupNode, buffer) {
+                //const groupNode = groupNode;
+                var textureTransform = groupNode.textureTransform;
+                if (groupNode.matrix) {
+                    var m = groupNode.matrix;
+                    //buffer.useOffset();
+                    if (textureTransform.offsetX !== 0 || textureTransform.offsetY !== 0) {
+                        textureTransform.globalMatrix.append(1, 0, 0, 1, textureTransform.offsetX, textureTransform.offsetY);
+                        textureTransform.offsetX = 0;
+                        textureTransform.offsetY = 0;
+                    }
+                    //buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+                    egret.NumberUtils.__transform__(textureTransform.globalMatrix, m.a, m.b, m.c, m.d, m.tx, m.ty);
+                }
+                var children = groupNode.drawData;
+                var length = children.length;
+                for (var i = 0; i < length; i++) {
+                    var node = children[i];
+                    node.textureTransform.globalMatrix.copyFrom(textureTransform.globalMatrix);
+                    node.textureTransform.offsetX = textureTransform.offsetX;
+                    node.textureTransform.offsetY = textureTransform.offsetY;
+                    this.__transformRenderNode__(displayObject, node, buffer, buffer.$offsetX, buffer.$offsetY);
+                }
+            };
+            /**
+             * @private
+             */
+            WebGLRenderer.prototype.__transformRenderNode__ = function (displayObject, node, buffer, offsetX, offsetY, forHitTest) {
+                switch (node.type) {
+                    case 1 /* BitmapNode */:
+                        this.__transformBitmap__(displayObject, node, buffer);
+                        break;
+                    case 2 /* TextNode */:
+                        this.__transformText__(displayObject, node, buffer);
+                        break;
+                    case 3 /* GraphicsNode */:
+                        this.__transformGraphics__(displayObject, node, buffer, forHitTest);
+                        break;
+                    case 4 /* GroupNode */:
+                        this.__transformGroup__(displayObject, node, buffer);
+                        break;
+                    case 5 /* MeshNode */:
+                        this.__transformMesh__(displayObject, node, buffer);
+                        break;
+                    case 6 /* NormalBitmapNode */:
+                        this.__transformNormalBitmap__(displayObject, node, buffer);
+                        break;
+                }
+            };
+            /**
+             * @private
+             */
+            WebGLRenderer.prototype.__transformMesh__ = function (displayObject, node, buffer) {
+            };
+            /**
+             * @private
+             */
+            WebGLRenderer.prototype.__transformBitmap__ = function (displayObject, node, buffer) {
+                //
+                var textureTransform = node.textureTransform;
+                if (node.matrix) {
+                    var m = node.matrix;
+                    //buffer.useOffset();
+                    if (textureTransform.offsetX !== 0 || textureTransform.offsetY !== 0) {
+                        textureTransform.globalMatrix.append(1, 0, 0, 1, textureTransform.offsetX, textureTransform.offsetY);
+                        textureTransform.offsetX = 0;
+                        textureTransform.offsetY = 0;
+                    }
+                    //buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+                    egret.NumberUtils.__transform__(textureTransform.globalMatrix, m.a, m.b, m.c, m.d, m.tx, m.ty);
+                }
+                ///
+                var image = node.image;
+                if (image) {
+                    if (image["texture"] || (image.source && image.source["texture"])) {
+                        //
+                        textureTransform.globalMatrix.append(1, 0, 0, 1, textureTransform.offsetX, textureTransform.offsetY);
+                        textureTransform.offsetX = 0;
+                        textureTransform.offsetY = 0;
+                        //
+                        var data = node.drawData;
+                        var length_10 = data.length;
+                        var pos = 0;
+                        while (pos < length_10) {
+                            var sourceX = data[pos++];
+                            var sourceY = data[pos++];
+                            var sourceWidth = data[pos++];
+                            var sourceHeight = data[pos++];
+                            var destX = data[pos++];
+                            var destY = data[pos++];
+                            var destWidth = data[pos++];
+                            var destHeight = data[pos++];
+                            egret.$TempMatrix.setTo(1, 0, 0, -1, 0, destHeight + destY * 2);
+                            textureTransform.globalMatrix.$preMultiplyInto(egret.$TempMatrix, textureTransform.globalMatrix);
+                            egret.$TempMatrix.identity();
+                        }
+                    }
                 }
             };
             return WebGLRenderer;

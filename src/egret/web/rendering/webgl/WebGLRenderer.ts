@@ -1145,7 +1145,7 @@ namespace egret.web {
                 textureTransform.offsetY = transform2d.offsetY;
                 switch (node.type) {
                     case sys.RenderNodeType.BitmapNode:
-                        //this.renderBitmap(<sys.BitmapNode>node, buffer);
+                        this.__transformBitmap__(displayObject, <sys.BitmapNode>node, buffer);
                         break;
                     case sys.RenderNodeType.TextNode:
                         this.__transformText__(displayObject, <sys.TextNode>node, buffer);
@@ -1154,13 +1154,12 @@ namespace egret.web {
                         this.__transformGraphics__(displayObject, <sys.GraphicsNode>node, buffer);
                         break;
                     case sys.RenderNodeType.GroupNode:
-                        //this.renderGroup(<sys.GroupNode>node, buffer);
+                        this.__transformGroup__(displayObject, <sys.GroupNode>node, buffer);
                         break;
                     case sys.RenderNodeType.MeshNode:
-                        //this.renderMesh(<sys.MeshNode>node, buffer);
+                        this.__transformMesh__(displayObject, <sys.MeshNode>node, buffer);
                         break;
                     case sys.RenderNodeType.NormalBitmapNode:
-                        //this.renderNormalBitmap(<sys.NormalBitmapNode>node, buffer);
                         this.__transformNormalBitmap__(displayObject, <sys.NormalBitmapNode>node, buffer);
                         break;
                 }
@@ -1238,7 +1237,7 @@ namespace egret.web {
          */
         private __transformNormalBitmap__(displayObject: DisplayObject, node: sys.NormalBitmapNode, buffer: WebGLRenderBuffer): void {
             const image = node.image;
-            if (image && (image["texture"] || (image.source && image.source["texture"])) ) {
+            if (image && (image["texture"] || (image.source && image.source["texture"]))) {
                 //
                 const textureTransform = node.textureTransform;
                 textureTransform.globalMatrix.append(1, 0, 0, 1, textureTransform.offsetX, textureTransform.offsetY);
@@ -1283,6 +1282,109 @@ namespace egret.web {
                 $TempMatrix.setTo(1, 0, 0, 1, x / canvasScaleX, y / canvasScaleY);
                 const textureTransform = node.textureTransform;
                 textureTransform.globalMatrix.$preMultiplyInto($TempMatrix, textureTransform.globalMatrix);
+            }
+        }
+
+        private __transformGroup__(displayObject: DisplayObject, groupNode: sys.GroupNode, buffer: WebGLRenderBuffer): void {
+            //const groupNode = groupNode;
+            const textureTransform = groupNode.textureTransform;
+            if (groupNode.matrix) {
+                const m = groupNode.matrix;
+                //buffer.useOffset();
+                if (textureTransform.offsetX !== 0 || textureTransform.offsetY !== 0) {
+                    textureTransform.globalMatrix.append(1, 0, 0, 1, textureTransform.offsetX, textureTransform.offsetY);
+                    textureTransform.offsetX = 0;
+                    textureTransform.offsetY = 0;
+                }
+                //buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+                NumberUtils.__transform__(textureTransform.globalMatrix, m.a, m.b, m.c, m.d, m.tx, m.ty);
+            }
+            const children = groupNode.drawData;
+            const length = children.length;
+            for (let i = 0; i < length; i++) {
+                const node: sys.RenderNode = children[i];
+                node.textureTransform.globalMatrix.copyFrom(textureTransform.globalMatrix);
+                node.textureTransform.offsetX = textureTransform.offsetX;
+                node.textureTransform.offsetY = textureTransform.offsetY;
+                this.__transformRenderNode__(displayObject, node, buffer, buffer.$offsetX, buffer.$offsetY);
+            }
+        }
+
+        /**
+         * @private
+         */
+        private __transformRenderNode__(displayObject: DisplayObject, node: sys.RenderNode, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, forHitTest?: boolean): void {
+            switch (node.type) {
+                case sys.RenderNodeType.BitmapNode:
+                    this.__transformBitmap__(displayObject, <sys.BitmapNode>node, buffer);
+                    break;
+                case sys.RenderNodeType.TextNode:
+                    this.__transformText__(displayObject, <sys.TextNode>node, buffer);
+                    break;
+                case sys.RenderNodeType.GraphicsNode:
+                    this.__transformGraphics__(displayObject, <sys.GraphicsNode>node, buffer, forHitTest);
+                    break;
+                case sys.RenderNodeType.GroupNode:
+                    this.__transformGroup__(displayObject, <sys.GroupNode>node, buffer);
+                    break;
+                case sys.RenderNodeType.MeshNode:
+                    this.__transformMesh__(displayObject, <sys.MeshNode>node, buffer);
+                    break;
+                case sys.RenderNodeType.NormalBitmapNode:
+                    this.__transformNormalBitmap__(displayObject, <sys.NormalBitmapNode>node, buffer);
+                    break;
+            }
+        }
+
+        /**
+         * @private
+         */
+        private __transformMesh__(displayObject: DisplayObject, node: sys.MeshNode, buffer: WebGLRenderBuffer): void {
+        }
+
+        /**
+         * @private
+         */
+        private __transformBitmap__(displayObject: DisplayObject, node: sys.BitmapNode, buffer: WebGLRenderBuffer): void {
+            //
+            const textureTransform = node.textureTransform;
+            if (node.matrix) {
+                const m = node.matrix;
+                //buffer.useOffset();
+                if (textureTransform.offsetX !== 0 || textureTransform.offsetY !== 0) {
+                    textureTransform.globalMatrix.append(1, 0, 0, 1, textureTransform.offsetX, textureTransform.offsetY);
+                    textureTransform.offsetX = 0;
+                    textureTransform.offsetY = 0;
+                }
+                //buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+                NumberUtils.__transform__(textureTransform.globalMatrix, m.a, m.b, m.c, m.d, m.tx, m.ty);
+            }
+            ///
+            const image = node.image;
+            if (image) {
+                if (image["texture"] || (image.source && image.source["texture"])) {
+                    //
+                    textureTransform.globalMatrix.append(1, 0, 0, 1, textureTransform.offsetX, textureTransform.offsetY);
+                    textureTransform.offsetX = 0;
+                    textureTransform.offsetY = 0;
+                    //
+                    let data = node.drawData;
+                    let length = data.length;
+                    let pos = 0;
+                    while (pos < length) {
+                        const sourceX = data[pos++];
+                        const sourceY = data[pos++];
+                        const sourceWidth = data[pos++];
+                        const sourceHeight = data[pos++];
+                        const destX = data[pos++];
+                        const destY = data[pos++];
+                        const destWidth = data[pos++];
+                        const destHeight = data[pos++];
+                        egret.$TempMatrix.setTo(1, 0, 0, -1, 0, destHeight + destY * 2);
+                        textureTransform.globalMatrix.$preMultiplyInto(egret.$TempMatrix, textureTransform.globalMatrix);
+                        egret.$TempMatrix.identity();
+                    }
+                }
             }
         }
     }
