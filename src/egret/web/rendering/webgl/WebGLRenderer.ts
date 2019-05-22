@@ -1148,10 +1148,10 @@ namespace egret.web {
                         //this.renderBitmap(<sys.BitmapNode>node, buffer);
                         break;
                     case sys.RenderNodeType.TextNode:
-                        //this.renderText(<sys.TextNode>node, buffer);
+                        this.__transformText__(displayObject, <sys.TextNode>node, buffer);
                         break;
                     case sys.RenderNodeType.GraphicsNode:
-                        //this.renderGraphics(<sys.GraphicsNode>node, buffer);
+                        this.__transformGraphics__(displayObject, <sys.GraphicsNode>node, buffer);
                         break;
                     case sys.RenderNodeType.GroupNode:
                         //this.renderGroup(<sys.GroupNode>node, buffer);
@@ -1225,6 +1225,17 @@ namespace egret.web {
         /**
          * @private
          */
+        private __transformGraphics__(displayObject: DisplayObject, node: sys.GraphicsNode, buffer: WebGLRenderBuffer, forHitTest?: boolean): void {
+            if (node.x || node.y) {
+                $TempMatrix.setTo(1, 0, 0, 1, node.x, node.y);
+                const textureTransform = node.textureTransform;
+                textureTransform.globalMatrix.$preMultiplyInto($TempMatrix, textureTransform.globalMatrix);
+            }
+        }
+
+        /**
+         * @private
+         */
         private __transformNormalBitmap__(displayObject: DisplayObject, node: sys.NormalBitmapNode, buffer: WebGLRenderBuffer): void {
             const image = node.image;
             if (image && (image["texture"] || (image.source && image.source["texture"])) ) {
@@ -1243,6 +1254,35 @@ namespace egret.web {
                 //const destWidth = node.drawW;
                 const destHeight = node.drawH;
                 NumberUtils.__transform__(textureTransform.globalMatrix, 1, 0, 0, -1, 0, destHeight + destY * 2);
+            }
+        }
+
+        /**
+         * @private
+         */
+        private __transformText__(displayObject: DisplayObject, node: sys.TextNode, buffer: WebGLRenderBuffer): void {
+            let width = node.width - node.x;
+            let height = node.height - node.y;
+            if (width <= 0 || height <= 0 || !width || !height || node.drawData.length == 0) {
+                return;
+            }
+            let canvasScaleX = sys.DisplayList.$canvasScaleX;
+            let canvasScaleY = sys.DisplayList.$canvasScaleY;
+            let maxTextureSize = buffer.context.$maxTextureSize;
+            if (width * canvasScaleX > maxTextureSize) {
+                canvasScaleX *= maxTextureSize / (width * canvasScaleX);
+            }
+            if (height * canvasScaleY > maxTextureSize) {
+                canvasScaleY *= maxTextureSize / (height * canvasScaleY);
+            }
+            width *= canvasScaleX;
+            height *= canvasScaleY;
+            const x = node.x * canvasScaleX;
+            const y = node.y * canvasScaleY;
+            if (x || y) {
+                $TempMatrix.setTo(1, 0, 0, 1, x / canvasScaleX, y / canvasScaleY);
+                const textureTransform = node.textureTransform;
+                textureTransform.globalMatrix.$preMultiplyInto($TempMatrix, textureTransform.globalMatrix);
             }
         }
     }
