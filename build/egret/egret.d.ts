@@ -10819,6 +10819,10 @@ declare namespace egret {
          */
         const OPPOGAME = "oppogame";
     }
+    interface SupportedCompressedTexture {
+        pvrtc: boolean;
+        etc1: boolean;
+    }
     /**
      * The Capabilities class provides properties that describe the system and runtime that are hosting the application.
      * @version Egret 2.4
@@ -10995,6 +10999,19 @@ declare namespace egret {
          * @language zh_CN
          */
         static readonly boundingClientHeight: number;
+        /***
+         * supported compressed texture
+         * @version Egret 5.2.19
+         * @platform Web,Native
+         * @language en_US
+         */
+        /***
+         * supported compressed texture
+         * @version Egret 5.2.19
+         * @platform Web,Native
+         * @language zh_CN
+         */
+        static supportedCompressedTexture: SupportedCompressedTexture;
     }
 }
 declare namespace egret {
