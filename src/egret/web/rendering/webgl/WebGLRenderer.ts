@@ -1340,6 +1340,18 @@ namespace egret.web {
          * @private
          */
         private __transformMesh__(displayObject: DisplayObject, node: sys.MeshNode, buffer: WebGLRenderBuffer): void {
+            const textureTransform = node.textureTransform;
+            if (node.matrix) {
+                const m = node.matrix;
+                //buffer.useOffset();
+                if (textureTransform.offsetX !== 0 || textureTransform.offsetY !== 0) {
+                    textureTransform.globalMatrix.append(1, 0, 0, 1, textureTransform.offsetX, textureTransform.offsetY);
+                    textureTransform.offsetX = 0;
+                    textureTransform.offsetY = 0;
+                }
+                //buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+                NumberUtils.__transform__(textureTransform.globalMatrix, m.a, m.b, m.c, m.d, m.tx, m.ty);
+            }
         }
 
         /**

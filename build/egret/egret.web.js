@@ -8536,6 +8536,18 @@ var egret;
              * @private
              */
             WebGLRenderer.prototype.__transformMesh__ = function (displayObject, node, buffer) {
+                var textureTransform = node.textureTransform;
+                if (node.matrix) {
+                    var m = node.matrix;
+                    //buffer.useOffset();
+                    if (textureTransform.offsetX !== 0 || textureTransform.offsetY !== 0) {
+                        textureTransform.globalMatrix.append(1, 0, 0, 1, textureTransform.offsetX, textureTransform.offsetY);
+                        textureTransform.offsetX = 0;
+                        textureTransform.offsetY = 0;
+                    }
+                    //buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+                    egret.NumberUtils.__transform__(textureTransform.globalMatrix, m.a, m.b, m.c, m.d, m.tx, m.ty);
+                }
             };
             /**
              * @private
