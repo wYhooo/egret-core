@@ -307,6 +307,7 @@ declare namespace egret {
         readonly globalMatrix: Matrix;
         offsetX: number;
         offsetY: number;
+        clear(): void;
     }
     /**
      * @private
@@ -3386,9 +3387,11 @@ declare namespace egret.sys {
         /**
          * 在显示对象的$updateRenderNode()方法被调用前，自动清空自身的drawData数据。
          */
+        readonly textureTransform: Transform2d;
         cleanBeforeRender(): void;
         $getRenderCount(): number;
     }
+    let debugRenderNode: RenderNode;
 }
 declare namespace egret.sys {
     /**

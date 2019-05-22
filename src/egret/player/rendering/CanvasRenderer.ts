@@ -104,6 +104,7 @@ namespace egret {
                 drawCalls++;
                 context.$offsetX = offsetX;
                 context.$offsetY = offsetY;
+                egret.sys.debugRenderNode = node;
                 switch (node.type) {
                     case sys.RenderNodeType.BitmapNode:
                         this.renderBitmap(<sys.BitmapNode>node, context);
@@ -451,6 +452,7 @@ namespace egret {
             let drawCalls = 0;
             if (node) {
                 drawCalls++;
+                egret.sys.debugRenderNode = node;
                 switch (node.type) {
                     case sys.RenderNodeType.BitmapNode:
                         this.renderBitmap(<sys.BitmapNode>node, context);
@@ -500,6 +502,7 @@ namespace egret {
 
         private renderNode(node: sys.RenderNode, context: CanvasRenderingContext2D, forHitTest?: boolean): number {
             let drawCalls = 0;
+            egret.sys.debugRenderNode = node;
             switch (node.type) {
                 case sys.RenderNodeType.BitmapNode:
                     drawCalls = this.renderBitmap(<sys.BitmapNode>node, context);

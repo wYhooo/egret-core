@@ -68,25 +68,30 @@ namespace egret.sys {
         /**
          * 节点类型..
          */
-        public type:number = 0;
+        public type: number = 0;
         /**
          * 绘制数据
          */
-        public drawData:any[] = [];
+        public drawData: any[] = [];
         /**
          * 绘制次数
          */
-        protected renderCount:number = 0;
+        protected renderCount: number = 0;
         /**
          * 在显示对象的$updateRenderNode()方法被调用前，自动清空自身的drawData数据。
          */
-        public cleanBeforeRender():void{
+
+        public readonly textureTransform: Transform2d = new Transform2d;
+        public cleanBeforeRender(): void {
             this.drawData.length = 0;
             this.renderCount = 0;
+            this.textureTransform.clear();
         }
 
-        public $getRenderCount():number {
+        public $getRenderCount(): number {
             return this.renderCount;
         }
     }
+
+    export let debugRenderNode: RenderNode = null;
 }

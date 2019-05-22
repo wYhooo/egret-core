@@ -525,6 +525,11 @@ var egret;
             this.offsetX = 0;
             this.offsetY = 0;
         }
+        Transform2d.prototype.clear = function () {
+            this.globalMatrix.identity();
+            this.offsetX = 0;
+            this.offsetY = 0;
+        };
         return Transform2d;
     }());
     egret.Transform2d = Transform2d;
@@ -6020,13 +6025,15 @@ var egret;
                  * 绘制次数
                  */
                 this.renderCount = 0;
+                /**
+                 * 在显示对象的$updateRenderNode()方法被调用前，自动清空自身的drawData数据。
+                 */
+                this.textureTransform = new egret.Transform2d;
             }
-            /**
-             * 在显示对象的$updateRenderNode()方法被调用前，自动清空自身的drawData数据。
-             */
             RenderNode.prototype.cleanBeforeRender = function () {
                 this.drawData.length = 0;
                 this.renderCount = 0;
+                this.textureTransform.clear();
             };
             RenderNode.prototype.$getRenderCount = function () {
                 return this.renderCount;
@@ -6035,6 +6042,7 @@ var egret;
         }());
         sys.RenderNode = RenderNode;
         __reflect(RenderNode.prototype, "egret.sys.RenderNode");
+        sys.debugRenderNode = null;
     })(sys = egret.sys || (egret.sys = {}));
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
@@ -16258,6 +16266,7 @@ var egret;
                 drawCalls++;
                 context.$offsetX = offsetX;
                 context.$offsetY = offsetY;
+                egret.sys.debugRenderNode = node;
                 switch (node.type) {
                     case 1 /* BitmapNode */:
                         this.renderBitmap(node, context);
@@ -16593,6 +16602,7 @@ var egret;
             var drawCalls = 0;
             if (node) {
                 drawCalls++;
+                egret.sys.debugRenderNode = node;
                 switch (node.type) {
                     case 1 /* BitmapNode */:
                         this.renderBitmap(node, context);
@@ -16641,6 +16651,7 @@ var egret;
         };
         CanvasRenderer.prototype.renderNode = function (node, context, forHitTest) {
             var drawCalls = 0;
+            egret.sys.debugRenderNode = node;
             switch (node.type) {
                 case 1 /* BitmapNode */:
                     drawCalls = this.renderBitmap(node, context);

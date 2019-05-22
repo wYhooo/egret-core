@@ -34,6 +34,11 @@ namespace egret {
         public readonly globalMatrix = new Matrix;
         public offsetX: number = 0;
         public offsetY: number = 0;
+        public clear(): void {
+            this.globalMatrix.identity();
+            this.offsetX = 0;
+            this.offsetY = 0;
+        }
     }
 
     /**
