@@ -7459,6 +7459,7 @@ var egret;
                             offsetX2 = offsetX + m.tx - child.$anchorOffsetX;
                             offsetY2 = offsetY + m.ty - child.$anchorOffsetY;
                         }
+                        egret.sys.debugRenderNode = null;
                         switch (child.$renderMode) {
                             case 1 /* NONE */:
                                 break;
@@ -7554,8 +7555,8 @@ var egret;
                     /*
                     *****
                     */
-                    this.__setTransform__(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
-                    this.__transformDisplayObject__(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
+                    //this.__setTransform__(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
+                    //this.__transformDisplayObject__(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
                     /*
                     *****
                     */
@@ -7580,6 +7581,7 @@ var egret;
                     savedMatrix.tx = curMatrix.tx;
                     savedMatrix.ty = curMatrix.ty;
                     buffer.useOffset();
+                    egret.sys.debugRenderNode = null; ///
                     buffer.context.drawTargetWidthFilters(filters, displayBuffer);
                     curMatrix.a = savedMatrix.a;
                     curMatrix.b = savedMatrix.b;
@@ -8396,7 +8398,7 @@ var egret;
                             case 1 /* NONE */:
                                 break;
                             case 2 /* FILTER */:
-                                //drawCalls += this.drawWithFilter(child, buffer, offsetX2, offsetY2);
+                                this.__transformFilter__(child, buffer, offsetX2, offsetY2);
                                 break;
                             case 3 /* CLIP */:
                                 //drawCalls += this.drawWithClip(child, buffer, offsetX2, offsetY2);
@@ -8593,6 +8595,80 @@ var egret;
                         }
                     }
                 }
+            };
+            /**
+             * @private
+             */
+            WebGLRenderer.prototype.__transformFilter__ = function (displayObject, buffer, offsetX, offsetY) {
+                return;
+                //let drawCalls = 0;
+                if (displayObject.$children && displayObject.$children.length == 0 && (!displayObject.$renderNode || displayObject.$renderNode.$getRenderCount() == 0)) {
+                    return;
+                }
+                var filters = displayObject.$filters;
+                // let hasBlendMode = (displayObject.$blendMode !== 0);
+                // let compositeOp: string;
+                // if (hasBlendMode) {
+                //     compositeOp = blendModes[displayObject.$blendMode];
+                //     if (!compositeOp) {
+                //         compositeOp = defaultCompositeOp;
+                //     }
+                // }
+                var displayBounds = displayObject.$getOriginalBounds();
+                var displayBoundsX = displayBounds.x;
+                var displayBoundsY = displayBounds.y;
+                var displayBoundsWidth = displayBounds.width;
+                var displayBoundsHeight = displayBounds.height;
+                if (displayBoundsWidth <= 0 || displayBoundsHeight <= 0) {
+                    return;
+                }
+                if (!displayObject.mask && filters.length == 1 && (filters[0].type == "colorTransform" || (filters[0].type === "custom" && filters[0].padding === 0))) {
+                    var childrenDrawCount = this.getRenderCount(displayObject);
+                    if (!displayObject.$children || childrenDrawCount == 1) {
+                        // if (hasBlendMode) {
+                        //     buffer.context.setGlobalCompositeOperation(compositeOp);
+                        // }
+                        //buffer.context.$filter = <ColorMatrixFilter>filters[0];
+                        if (displayObject.$mask) {
+                            //drawCalls += this.drawWithClip(displayObject, buffer, offsetX, offsetY);
+                        }
+                        else if (displayObject.$scrollRect || displayObject.$maskRect) {
+                            //drawCalls += this.drawWithScrollRect(displayObject, buffer, offsetX, offsetY);
+                        }
+                        else {
+                            //drawCalls += this.__transformDisplayObject__(displayObject, buffer, offsetX, offsetY);
+                            this.__transformDisplayObject__(displayObject, buffer, offsetX, offsetY);
+                        }
+                        //buffer.context.$filter = null;
+                        // if (hasBlendMode) {
+                        //     buffer.context.setGlobalCompositeOperation(defaultCompositeOp);
+                        // }
+                        return;
+                    }
+                }
+                // 为显示对象创建一个新的buffer
+                // let displayBuffer = this.createRenderBuffer(displayBoundsWidth, displayBoundsHeight);
+                // displayBuffer.context.pushBuffer(displayBuffer);
+                var displayBuffer = null;
+                //todo 可以优化减少draw次数
+                if (displayObject.$mask) {
+                    //drawCalls += this.drawWithClip(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
+                }
+                else if (displayObject.$scrollRect || displayObject.$maskRect) {
+                    //drawCalls += this.drawWithScrollRect(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
+                }
+                else {
+                    /*
+                    *****
+                    */
+                    this.__setTransform__(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
+                    this.__transformDisplayObject__(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
+                    /*
+                    *****
+                    */
+                    //drawCalls += this.drawDisplayObject(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
+                }
+                //displayBuffer.context.popBuffer();
             };
             return WebGLRenderer;
         }());
