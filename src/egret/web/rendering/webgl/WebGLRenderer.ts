@@ -136,6 +136,34 @@ namespace egret.web {
                     console.error('drawDisplayObject transform error');
                 }
                 egret.sys.debugRenderNode = node;
+
+                //渲染之前，先将object的globalMatrix设置给node
+                const transform2d = displayObject.transform2d;
+                const textureTransform = node.textureTransform;
+                textureTransform.globalMatrix.copyFrom(transform2d.globalMatrix);
+                textureTransform.offsetX = transform2d.offsetX;
+                textureTransform.offsetY = transform2d.offsetY;
+
+                switch (node.type) {
+                    case sys.RenderNodeType.BitmapNode:
+                        this.__transformBitmap__(displayObject, <sys.BitmapNode>node, buffer);
+                        break;
+                    case sys.RenderNodeType.TextNode:
+                        this.__transformText__(displayObject, <sys.TextNode>node, buffer);
+                        break;
+                    case sys.RenderNodeType.GraphicsNode:
+                        this.__transformGraphics__(displayObject, <sys.GraphicsNode>node, buffer);
+                        break;
+                    case sys.RenderNodeType.GroupNode:
+                        this.__transformGroup__(displayObject, <sys.GroupNode>node, buffer);
+                        break;
+                    case sys.RenderNodeType.MeshNode:
+                        this.__transformMesh__(displayObject, <sys.MeshNode>node, buffer);
+                        break;
+                    case sys.RenderNodeType.NormalBitmapNode:
+                        this.__transformNormalBitmap__(displayObject, <sys.NormalBitmapNode>node, buffer);
+                        break;
+                }
                 /*
                 *************************************************
                 */
@@ -1137,35 +1165,35 @@ namespace egret.web {
         }
 
         public __transformDisplayObject__(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, isStage?: boolean): void {
-            const node = displayObject.$getRenderNode();
-            if (node) {
+            //const node = displayObject.$getRenderNode();
+            //if (node) {
                 //渲染之前，先将object的globalMatrix设置给node
-                const transform2d = displayObject.transform2d;
-                const textureTransform = node.textureTransform;
-                textureTransform.globalMatrix.copyFrom(transform2d.globalMatrix);
-                textureTransform.offsetX = transform2d.offsetX;
-                textureTransform.offsetY = transform2d.offsetY;
-                switch (node.type) {
-                    case sys.RenderNodeType.BitmapNode:
-                        this.__transformBitmap__(displayObject, <sys.BitmapNode>node, buffer);
-                        break;
-                    case sys.RenderNodeType.TextNode:
-                        this.__transformText__(displayObject, <sys.TextNode>node, buffer);
-                        break;
-                    case sys.RenderNodeType.GraphicsNode:
-                        this.__transformGraphics__(displayObject, <sys.GraphicsNode>node, buffer);
-                        break;
-                    case sys.RenderNodeType.GroupNode:
-                        this.__transformGroup__(displayObject, <sys.GroupNode>node, buffer);
-                        break;
-                    case sys.RenderNodeType.MeshNode:
-                        this.__transformMesh__(displayObject, <sys.MeshNode>node, buffer);
-                        break;
-                    case sys.RenderNodeType.NormalBitmapNode:
-                        this.__transformNormalBitmap__(displayObject, <sys.NormalBitmapNode>node, buffer);
-                        break;
-                }
-            }
+                // const transform2d = displayObject.transform2d;
+                // const textureTransform = node.textureTransform;
+                // textureTransform.globalMatrix.copyFrom(transform2d.globalMatrix);
+                // textureTransform.offsetX = transform2d.offsetX;
+                // textureTransform.offsetY = transform2d.offsetY;
+                // switch (node.type) {
+                //     case sys.RenderNodeType.BitmapNode:
+                //         this.__transformBitmap__(displayObject, <sys.BitmapNode>node, buffer);
+                //         break;
+                //     case sys.RenderNodeType.TextNode:
+                //         this.__transformText__(displayObject, <sys.TextNode>node, buffer);
+                //         break;
+                //     case sys.RenderNodeType.GraphicsNode:
+                //         this.__transformGraphics__(displayObject, <sys.GraphicsNode>node, buffer);
+                //         break;
+                //     case sys.RenderNodeType.GroupNode:
+                //         this.__transformGroup__(displayObject, <sys.GroupNode>node, buffer);
+                //         break;
+                //     case sys.RenderNodeType.MeshNode:
+                //         this.__transformMesh__(displayObject, <sys.MeshNode>node, buffer);
+                //         break;
+                //     case sys.RenderNodeType.NormalBitmapNode:
+                //         this.__transformNormalBitmap__(displayObject, <sys.NormalBitmapNode>node, buffer);
+                //         break;
+                // }
+            //}
             let children = displayObject.$children;
             if (children) {
                 let length = children.length;
@@ -1195,7 +1223,7 @@ namespace egret.web {
                         case RenderMode.NONE:
                             break;
                         case RenderMode.FILTER:
-                            this.__transformFilter__(child, buffer, offsetX2, offsetY2);
+                            //this.__transformFilter__(child, buffer, offsetX2, offsetY2);
                             break;
                         case RenderMode.CLIP:
                             //drawCalls += this.drawWithClip(child, buffer, offsetX2, offsetY2);

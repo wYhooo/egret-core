@@ -7393,6 +7393,32 @@ var egret;
                         console.error('drawDisplayObject transform error');
                     }
                     egret.sys.debugRenderNode = node;
+                    //渲染之前，先将object的globalMatrix设置给node
+                    var transform2d = displayObject.transform2d;
+                    var textureTransform = node.textureTransform;
+                    textureTransform.globalMatrix.copyFrom(transform2d.globalMatrix);
+                    textureTransform.offsetX = transform2d.offsetX;
+                    textureTransform.offsetY = transform2d.offsetY;
+                    switch (node.type) {
+                        case 1 /* BitmapNode */:
+                            this.__transformBitmap__(displayObject, node, buffer);
+                            break;
+                        case 2 /* TextNode */:
+                            this.__transformText__(displayObject, node, buffer);
+                            break;
+                        case 3 /* GraphicsNode */:
+                            this.__transformGraphics__(displayObject, node, buffer);
+                            break;
+                        case 4 /* GroupNode */:
+                            this.__transformGroup__(displayObject, node, buffer);
+                            break;
+                        case 5 /* MeshNode */:
+                            this.__transformMesh__(displayObject, node, buffer);
+                            break;
+                        case 6 /* NormalBitmapNode */:
+                            this.__transformNormalBitmap__(displayObject, node, buffer);
+                            break;
+                    }
                     /*
                     *************************************************
                     */
@@ -8343,31 +8369,31 @@ var egret;
                 var node = displayObject.$getRenderNode();
                 if (node) {
                     //渲染之前，先将object的globalMatrix设置给node
-                    var transform2d = displayObject.transform2d;
-                    var textureTransform = node.textureTransform;
-                    textureTransform.globalMatrix.copyFrom(transform2d.globalMatrix);
-                    textureTransform.offsetX = transform2d.offsetX;
-                    textureTransform.offsetY = transform2d.offsetY;
-                    switch (node.type) {
-                        case 1 /* BitmapNode */:
-                            this.__transformBitmap__(displayObject, node, buffer);
-                            break;
-                        case 2 /* TextNode */:
-                            this.__transformText__(displayObject, node, buffer);
-                            break;
-                        case 3 /* GraphicsNode */:
-                            this.__transformGraphics__(displayObject, node, buffer);
-                            break;
-                        case 4 /* GroupNode */:
-                            this.__transformGroup__(displayObject, node, buffer);
-                            break;
-                        case 5 /* MeshNode */:
-                            this.__transformMesh__(displayObject, node, buffer);
-                            break;
-                        case 6 /* NormalBitmapNode */:
-                            this.__transformNormalBitmap__(displayObject, node, buffer);
-                            break;
-                    }
+                    // const transform2d = displayObject.transform2d;
+                    // const textureTransform = node.textureTransform;
+                    // textureTransform.globalMatrix.copyFrom(transform2d.globalMatrix);
+                    // textureTransform.offsetX = transform2d.offsetX;
+                    // textureTransform.offsetY = transform2d.offsetY;
+                    // switch (node.type) {
+                    //     case sys.RenderNodeType.BitmapNode:
+                    //         this.__transformBitmap__(displayObject, <sys.BitmapNode>node, buffer);
+                    //         break;
+                    //     case sys.RenderNodeType.TextNode:
+                    //         this.__transformText__(displayObject, <sys.TextNode>node, buffer);
+                    //         break;
+                    //     case sys.RenderNodeType.GraphicsNode:
+                    //         this.__transformGraphics__(displayObject, <sys.GraphicsNode>node, buffer);
+                    //         break;
+                    //     case sys.RenderNodeType.GroupNode:
+                    //         this.__transformGroup__(displayObject, <sys.GroupNode>node, buffer);
+                    //         break;
+                    //     case sys.RenderNodeType.MeshNode:
+                    //         this.__transformMesh__(displayObject, <sys.MeshNode>node, buffer);
+                    //         break;
+                    //     case sys.RenderNodeType.NormalBitmapNode:
+                    //         this.__transformNormalBitmap__(displayObject, <sys.NormalBitmapNode>node, buffer);
+                    //         break;
+                    // }
                 }
                 var children = displayObject.$children;
                 if (children) {
@@ -8398,7 +8424,7 @@ var egret;
                             case 1 /* NONE */:
                                 break;
                             case 2 /* FILTER */:
-                                this.__transformFilter__(child, buffer, offsetX2, offsetY2);
+                                //this.__transformFilter__(child, buffer, offsetX2, offsetY2);
                                 break;
                             case 3 /* CLIP */:
                                 //drawCalls += this.drawWithClip(child, buffer, offsetX2, offsetY2);
