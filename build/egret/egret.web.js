@@ -7328,7 +7328,6 @@ var egret;
                 *****
                 */
                 this.__setTransform__(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
-                this.__transformDisplayObject__(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
                 /*
                 *****
                 */
@@ -7581,8 +7580,7 @@ var egret;
                     /*
                     *****
                     */
-                    //this.__setTransform__(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
-                    //this.__transformDisplayObject__(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
+                    this.__setTransform__(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
                     /*
                     *****
                     */
@@ -7706,7 +7704,6 @@ var egret;
                     *****
                     */
                     this.__setTransform__(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
-                    this.__transformDisplayObject__(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
                     /*
                     *****
                     */
@@ -7725,7 +7722,6 @@ var egret;
                         *****
                         */
                         this.__setTransform__(mask, maskBuffer, 0, 0);
-                        this.__transformDisplayObject__(mask, maskBuffer, 0, 0);
                         /*
                         *****
                         */
@@ -7735,6 +7731,7 @@ var egret;
                         displayBuffer.setTransform(1, 0, 0, -1, 0, maskBuffer.height);
                         var maskBufferWidth = maskBuffer.rootRenderTarget.width;
                         var maskBufferHeight = maskBuffer.rootRenderTarget.height;
+                        egret.sys.debugRenderNode = null;
                         displayBuffer.context.drawTexture(maskBuffer.rootRenderTarget.texture, 0, 0, maskBufferWidth, maskBufferHeight, 0, 0, maskBufferWidth, maskBufferHeight, maskBufferWidth, maskBufferHeight);
                         displayBuffer.setTransform(1, 0, 0, 1, 0, 0);
                         displayBuffer.context.setGlobalCompositeOperation("source-over");
@@ -8361,40 +8358,43 @@ var egret;
             };
             WebGLRenderer.prototype.__setTransform__ = function (displayObject, buffer, offsetX, offsetY, isStage) {
                 var transform2d = displayObject.transform2d;
-                transform2d.globalMatrix.copyFrom(buffer.globalMatrix);
+                egret.$TempMatrix.identity();
+                transform2d.globalMatrix.copyFrom(buffer ? buffer.globalMatrix : egret.$TempMatrix);
                 transform2d.offsetX = offsetX;
                 transform2d.offsetY = offsetY;
+                //
+                this.__transformDisplayObject__(displayObject, buffer, offsetX, offsetY, isStage);
             };
             WebGLRenderer.prototype.__transformDisplayObject__ = function (displayObject, buffer, offsetX, offsetY, isStage) {
-                var node = displayObject.$getRenderNode();
-                if (node) {
-                    //渲染之前，先将object的globalMatrix设置给node
-                    // const transform2d = displayObject.transform2d;
-                    // const textureTransform = node.textureTransform;
-                    // textureTransform.globalMatrix.copyFrom(transform2d.globalMatrix);
-                    // textureTransform.offsetX = transform2d.offsetX;
-                    // textureTransform.offsetY = transform2d.offsetY;
-                    // switch (node.type) {
-                    //     case sys.RenderNodeType.BitmapNode:
-                    //         this.__transformBitmap__(displayObject, <sys.BitmapNode>node, buffer);
-                    //         break;
-                    //     case sys.RenderNodeType.TextNode:
-                    //         this.__transformText__(displayObject, <sys.TextNode>node, buffer);
-                    //         break;
-                    //     case sys.RenderNodeType.GraphicsNode:
-                    //         this.__transformGraphics__(displayObject, <sys.GraphicsNode>node, buffer);
-                    //         break;
-                    //     case sys.RenderNodeType.GroupNode:
-                    //         this.__transformGroup__(displayObject, <sys.GroupNode>node, buffer);
-                    //         break;
-                    //     case sys.RenderNodeType.MeshNode:
-                    //         this.__transformMesh__(displayObject, <sys.MeshNode>node, buffer);
-                    //         break;
-                    //     case sys.RenderNodeType.NormalBitmapNode:
-                    //         this.__transformNormalBitmap__(displayObject, <sys.NormalBitmapNode>node, buffer);
-                    //         break;
-                    // }
-                }
+                //const node = displayObject.$getRenderNode();
+                //if (node) {
+                //渲染之前，先将object的globalMatrix设置给node
+                // const transform2d = displayObject.transform2d;
+                // const textureTransform = node.textureTransform;
+                // textureTransform.globalMatrix.copyFrom(transform2d.globalMatrix);
+                // textureTransform.offsetX = transform2d.offsetX;
+                // textureTransform.offsetY = transform2d.offsetY;
+                // switch (node.type) {
+                //     case sys.RenderNodeType.BitmapNode:
+                //         this.__transformBitmap__(displayObject, <sys.BitmapNode>node, buffer);
+                //         break;
+                //     case sys.RenderNodeType.TextNode:
+                //         this.__transformText__(displayObject, <sys.TextNode>node, buffer);
+                //         break;
+                //     case sys.RenderNodeType.GraphicsNode:
+                //         this.__transformGraphics__(displayObject, <sys.GraphicsNode>node, buffer);
+                //         break;
+                //     case sys.RenderNodeType.GroupNode:
+                //         this.__transformGroup__(displayObject, <sys.GroupNode>node, buffer);
+                //         break;
+                //     case sys.RenderNodeType.MeshNode:
+                //         this.__transformMesh__(displayObject, <sys.MeshNode>node, buffer);
+                //         break;
+                //     case sys.RenderNodeType.NormalBitmapNode:
+                //         this.__transformNormalBitmap__(displayObject, <sys.NormalBitmapNode>node, buffer);
+                //         break;
+                // }
+                //}
                 var children = displayObject.$children;
                 if (children) {
                     var length_9 = children.length;
@@ -8626,75 +8626,6 @@ var egret;
              * @private
              */
             WebGLRenderer.prototype.__transformFilter__ = function (displayObject, buffer, offsetX, offsetY) {
-                return;
-                //let drawCalls = 0;
-                if (displayObject.$children && displayObject.$children.length == 0 && (!displayObject.$renderNode || displayObject.$renderNode.$getRenderCount() == 0)) {
-                    return;
-                }
-                var filters = displayObject.$filters;
-                // let hasBlendMode = (displayObject.$blendMode !== 0);
-                // let compositeOp: string;
-                // if (hasBlendMode) {
-                //     compositeOp = blendModes[displayObject.$blendMode];
-                //     if (!compositeOp) {
-                //         compositeOp = defaultCompositeOp;
-                //     }
-                // }
-                var displayBounds = displayObject.$getOriginalBounds();
-                var displayBoundsX = displayBounds.x;
-                var displayBoundsY = displayBounds.y;
-                var displayBoundsWidth = displayBounds.width;
-                var displayBoundsHeight = displayBounds.height;
-                if (displayBoundsWidth <= 0 || displayBoundsHeight <= 0) {
-                    return;
-                }
-                if (!displayObject.mask && filters.length == 1 && (filters[0].type == "colorTransform" || (filters[0].type === "custom" && filters[0].padding === 0))) {
-                    var childrenDrawCount = this.getRenderCount(displayObject);
-                    if (!displayObject.$children || childrenDrawCount == 1) {
-                        // if (hasBlendMode) {
-                        //     buffer.context.setGlobalCompositeOperation(compositeOp);
-                        // }
-                        //buffer.context.$filter = <ColorMatrixFilter>filters[0];
-                        if (displayObject.$mask) {
-                            //drawCalls += this.drawWithClip(displayObject, buffer, offsetX, offsetY);
-                        }
-                        else if (displayObject.$scrollRect || displayObject.$maskRect) {
-                            //drawCalls += this.drawWithScrollRect(displayObject, buffer, offsetX, offsetY);
-                        }
-                        else {
-                            //drawCalls += this.__transformDisplayObject__(displayObject, buffer, offsetX, offsetY);
-                            this.__transformDisplayObject__(displayObject, buffer, offsetX, offsetY);
-                        }
-                        //buffer.context.$filter = null;
-                        // if (hasBlendMode) {
-                        //     buffer.context.setGlobalCompositeOperation(defaultCompositeOp);
-                        // }
-                        return;
-                    }
-                }
-                // 为显示对象创建一个新的buffer
-                // let displayBuffer = this.createRenderBuffer(displayBoundsWidth, displayBoundsHeight);
-                // displayBuffer.context.pushBuffer(displayBuffer);
-                var displayBuffer = null;
-                //todo 可以优化减少draw次数
-                if (displayObject.$mask) {
-                    //drawCalls += this.drawWithClip(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
-                }
-                else if (displayObject.$scrollRect || displayObject.$maskRect) {
-                    //drawCalls += this.drawWithScrollRect(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
-                }
-                else {
-                    /*
-                    *****
-                    */
-                    this.__setTransform__(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
-                    this.__transformDisplayObject__(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
-                    /*
-                    *****
-                    */
-                    //drawCalls += this.drawDisplayObject(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
-                }
-                //displayBuffer.context.popBuffer();
             };
             return WebGLRenderer;
         }());

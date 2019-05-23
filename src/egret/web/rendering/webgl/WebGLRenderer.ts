@@ -68,7 +68,6 @@ namespace egret.web {
             *****
             */
             this.__setTransform__(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
-            this.__transformDisplayObject__(displayObject, webglBuffer, matrix.tx, matrix.ty, true);
             /*
             *****
             */
@@ -335,8 +334,7 @@ namespace egret.web {
                 /*
                 *****
                 */
-                //this.__setTransform__(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
-                //this.__transformDisplayObject__(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
+                this.__setTransform__(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
                 /*
                 *****
                 */
@@ -465,7 +463,6 @@ namespace egret.web {
                 *****
                 */
                 this.__setTransform__(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
-                this.__transformDisplayObject__(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
                 /*
                 *****
                 */
@@ -484,7 +481,6 @@ namespace egret.web {
                     *****
                     */
                     this.__setTransform__(mask, maskBuffer, 0, 0);
-                    this.__transformDisplayObject__(mask, maskBuffer, 0, 0);
                     /*
                     *****
                     */
@@ -494,6 +490,7 @@ namespace egret.web {
                     displayBuffer.setTransform(1, 0, 0, -1, 0, maskBuffer.height);
                     let maskBufferWidth = maskBuffer.rootRenderTarget.width;
                     let maskBufferHeight = maskBuffer.rootRenderTarget.height;
+                    egret.sys.debugRenderNode = null;
                     displayBuffer.context.drawTexture(maskBuffer.rootRenderTarget.texture, 0, 0, maskBufferWidth, maskBufferHeight,
                         0, 0, maskBufferWidth, maskBufferHeight, maskBufferWidth, maskBufferHeight);
                     displayBuffer.setTransform(1, 0, 0, 1, 0, 0);
@@ -1159,9 +1156,12 @@ namespace egret.web {
 
         public __setTransform__(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, isStage?: boolean): void {
             const transform2d = displayObject.transform2d;
-            transform2d.globalMatrix.copyFrom(buffer.globalMatrix);
+            $TempMatrix.identity();
+            transform2d.globalMatrix.copyFrom(buffer ? buffer.globalMatrix : $TempMatrix);
             transform2d.offsetX = offsetX;
             transform2d.offsetY = offsetY;
+            //
+            this.__transformDisplayObject__(displayObject, buffer, offsetX, offsetY, isStage);
         }
 
         public __transformDisplayObject__(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, isStage?: boolean): void {
@@ -1434,83 +1434,6 @@ namespace egret.web {
          * @private
          */
         private __transformFilter__(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number): void {
-            return;
-            //let drawCalls = 0;
-            if (displayObject.$children && displayObject.$children.length == 0 && (!displayObject.$renderNode || displayObject.$renderNode.$getRenderCount() == 0)) {
-                return;
-            }
-            let filters = displayObject.$filters;
-            // let hasBlendMode = (displayObject.$blendMode !== 0);
-            // let compositeOp: string;
-            // if (hasBlendMode) {
-            //     compositeOp = blendModes[displayObject.$blendMode];
-            //     if (!compositeOp) {
-            //         compositeOp = defaultCompositeOp;
-            //     }
-            // }
-
-            const displayBounds = displayObject.$getOriginalBounds();
-            const displayBoundsX = displayBounds.x;
-            const displayBoundsY = displayBounds.y;
-            const displayBoundsWidth = displayBounds.width;
-            const displayBoundsHeight = displayBounds.height;
-            if (displayBoundsWidth <= 0 || displayBoundsHeight <= 0) {
-                return;
-            }
-
-            if (!displayObject.mask && filters.length == 1 && (filters[0].type == "colorTransform" || (filters[0].type === "custom" && (<CustomFilter>filters[0]).padding === 0))) {
-                let childrenDrawCount = this.getRenderCount(displayObject);
-                if (!displayObject.$children || childrenDrawCount == 1) {
-                    // if (hasBlendMode) {
-                    //     buffer.context.setGlobalCompositeOperation(compositeOp);
-                    // }
-
-                    //buffer.context.$filter = <ColorMatrixFilter>filters[0];
-                    if (displayObject.$mask) {
-                        //drawCalls += this.drawWithClip(displayObject, buffer, offsetX, offsetY);
-                    }
-                    else if (displayObject.$scrollRect || displayObject.$maskRect) {
-                        //drawCalls += this.drawWithScrollRect(displayObject, buffer, offsetX, offsetY);
-                    }
-                    else {
-                        //drawCalls += this.__transformDisplayObject__(displayObject, buffer, offsetX, offsetY);
-                        this.__transformDisplayObject__(displayObject, buffer, offsetX, offsetY);
-                    }
-
-                    //buffer.context.$filter = null;
-
-                    // if (hasBlendMode) {
-                    //     buffer.context.setGlobalCompositeOperation(defaultCompositeOp);
-                    // }
-
-                    return;
-                }
-            }
-
-            // 为显示对象创建一个新的buffer
-            // let displayBuffer = this.createRenderBuffer(displayBoundsWidth, displayBoundsHeight);
-            // displayBuffer.context.pushBuffer(displayBuffer);
-            let displayBuffer = null;
-            //todo 可以优化减少draw次数
-            if (displayObject.$mask) {
-                //drawCalls += this.drawWithClip(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
-            }
-            else if (displayObject.$scrollRect || displayObject.$maskRect) {
-                //drawCalls += this.drawWithScrollRect(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
-            }
-            else {
-                /*
-                *****
-                */
-                this.__setTransform__(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
-                this.__transformDisplayObject__(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
-                /*
-                *****
-                */
-                //drawCalls += this.drawDisplayObject(displayObject, displayBuffer, -displayBoundsX, -displayBoundsY);
-            }
-
-            //displayBuffer.context.popBuffer();
         }
     }
 }
