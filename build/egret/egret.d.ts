@@ -1304,6 +1304,8 @@ declare namespace egret {
          */
         willTrigger(type: string): boolean;
         readonly transform2d: Transform2d;
+        _transformID: number;
+        _textureID: number;
     }
 }
 declare namespace egret {

@@ -142,7 +142,9 @@ namespace egret.web {
                 textureTransform.globalMatrix.copyFrom(transform2d.globalMatrix);
                 textureTransform.offsetX = transform2d.offsetX;
                 textureTransform.offsetY = transform2d.offsetY;
+                this.__calculateVertices__(displayObject, node, buffer);
 
+                /*
                 switch (node.type) {
                     case sys.RenderNodeType.BitmapNode:
                         this.__transformBitmap__(displayObject, <sys.BitmapNode>node, buffer);
@@ -163,6 +165,7 @@ namespace egret.web {
                         this.__transformNormalBitmap__(displayObject, <sys.NormalBitmapNode>node, buffer);
                         break;
                 }
+                */
                 /*
                 *************************************************
                 */
@@ -229,7 +232,6 @@ namespace egret.web {
                         offsetX2 = offsetX + m.tx - child.$anchorOffsetX;
                         offsetY2 = offsetY + m.ty - child.$anchorOffsetY;
                     }
-                    //egret.sys.debugRenderNode = null;
                     switch (child.$renderMode) {
                         case RenderMode.NONE:
                             break;
@@ -361,8 +363,6 @@ namespace egret.web {
                 savedMatrix.tx = curMatrix.tx;
                 savedMatrix.ty = curMatrix.ty;
                 buffer.useOffset();
-                egret.sys.debugRenderNode = null; ///
-                egret.sys.advancedDrawMode = 'drawTargetWidthFilters';
                 buffer.context.drawTargetWidthFilters(filters, displayBuffer);
                 curMatrix.a = savedMatrix.a;
                 curMatrix.b = savedMatrix.b;
@@ -1360,7 +1360,8 @@ namespace egret.web {
                 node.textureTransform.globalMatrix.copyFrom(textureTransform.globalMatrix);
                 node.textureTransform.offsetX = textureTransform.offsetX;
                 node.textureTransform.offsetY = textureTransform.offsetY;
-                this.__transformRenderNode__(displayObject, node, buffer, buffer.$offsetX, buffer.$offsetY);
+                this.__calculateVertices__(displayObject, node, buffer);
+                //this.__transformRenderNode__(displayObject, node, buffer, buffer.$offsetX, buffer.$offsetY);
             }
         }
 
@@ -1387,6 +1388,10 @@ namespace egret.web {
                 case sys.RenderNodeType.NormalBitmapNode:
                     this.__transformNormalBitmap__(displayObject, <sys.NormalBitmapNode>node, buffer);
                     break;
+                default: {
+                    console.error('undefined node.type = ' + node.type);
+                    break;
+                }
             }
         }
 
@@ -1455,5 +1460,17 @@ namespace egret.web {
         }
 
         private readonly forceTransform: boolean = false;
+
+
+        private __calculateVertices__(displayObject: DisplayObject, node: sys.RenderNode, buffer: WebGLRenderBuffer): void {
+            if (displayObject._transformID !== displayObject.transform2d._worldID /*&& displayObject._textureID === displayObject.transform2d._updateID*/) {
+                //return;
+                displayObject._transformID = displayObject.transform2d._worldID;
+            }
+            
+            this.__transformRenderNode__(displayObject, node, buffer, 0, 0);
+            //displayObject._textureID = this._texture._updateID;
+        }
+
     }
 }

@@ -3930,13 +3930,13 @@ var egret;
                 }
                 else {
                     //based on : https://github.com/jondavidjohn/hidpi-canvas-polyfill
-                    var context = egret.sys.canvasHitTestBuffer.context;
-                    var backingStore = context.backingStorePixelRatio ||
-                        context.webkitBackingStorePixelRatio ||
-                        context.mozBackingStorePixelRatio ||
-                        context.msBackingStorePixelRatio ||
-                        context.oBackingStorePixelRatio ||
-                        context.backingStorePixelRatio || 1;
+                    var context_1 = egret.sys.canvasHitTestBuffer.context;
+                    var backingStore = context_1.backingStorePixelRatio ||
+                        context_1.webkitBackingStorePixelRatio ||
+                        context_1.mozBackingStorePixelRatio ||
+                        context_1.msBackingStorePixelRatio ||
+                        context_1.oBackingStorePixelRatio ||
+                        context_1.backingStorePixelRatio || 1;
                     canvasScaleFactor = (window.devicePixelRatio || 1) / backingStore;
                 }
                 egret.sys.DisplayList.$canvasScaleFactor = canvasScaleFactor;
@@ -6254,9 +6254,9 @@ var egret;
                     if (!this._defaultEmptyTexture) {
                         var size = 16;
                         var canvas = egret.sys.createCanvas(size, size);
-                        var context = egret.sys.getContext2d(canvas); //canvas.getContext('2d');
-                        context.fillStyle = 'white';
-                        context.fillRect(0, 0, size, size);
+                        var context_2 = egret.sys.getContext2d(canvas); //canvas.getContext('2d');
+                        context_2.fillStyle = 'white';
+                        context_2.fillRect(0, 0, size, size);
                         this._defaultEmptyTexture = this.createTexture(canvas);
                         this._defaultEmptyTexture[egret.engine_default_empty_texture] = true;
                     }
@@ -6843,6 +6843,8 @@ var egret;
                     }
                 }
                 // 绘制input结果到舞台
+                egret.sys.debugRenderNode = null; ///
+                egret.sys.advancedDrawMode = 'drawToRenderTarget';
                 output.saveTransform();
                 output.transform(1, 0, 0, -1, 0, height);
                 this.vao.cacheArrays(output, 0, 0, width, height, 0, 0, width, height, width, height);
@@ -7403,26 +7405,29 @@ var egret;
                     textureTransform.globalMatrix.copyFrom(transform2d.globalMatrix);
                     textureTransform.offsetX = transform2d.offsetX;
                     textureTransform.offsetY = transform2d.offsetY;
+                    this.__calculateVertices__(displayObject, node, buffer);
+                    /*
                     switch (node.type) {
-                        case 1 /* BitmapNode */:
-                            this.__transformBitmap__(displayObject, node, buffer);
+                        case sys.RenderNodeType.BitmapNode:
+                            this.__transformBitmap__(displayObject, <sys.BitmapNode>node, buffer);
                             break;
-                        case 2 /* TextNode */:
-                            this.__transformText__(displayObject, node, buffer);
+                        case sys.RenderNodeType.TextNode:
+                            this.__transformText__(displayObject, <sys.TextNode>node, buffer);
                             break;
-                        case 3 /* GraphicsNode */:
-                            this.__transformGraphics__(displayObject, node, buffer);
+                        case sys.RenderNodeType.GraphicsNode:
+                            this.__transformGraphics__(displayObject, <sys.GraphicsNode>node, buffer);
                             break;
-                        case 4 /* GroupNode */:
-                            this.__transformGroup__(displayObject, node, buffer);
+                        case sys.RenderNodeType.GroupNode:
+                            this.__transformGroup__(displayObject, <sys.GroupNode>node, buffer);
                             break;
-                        case 5 /* MeshNode */:
-                            this.__transformMesh__(displayObject, node, buffer);
+                        case sys.RenderNodeType.MeshNode:
+                            this.__transformMesh__(displayObject, <sys.MeshNode>node, buffer);
                             break;
-                        case 6 /* NormalBitmapNode */:
-                            this.__transformNormalBitmap__(displayObject, node, buffer);
+                        case sys.RenderNodeType.NormalBitmapNode:
+                            this.__transformNormalBitmap__(displayObject, <sys.NormalBitmapNode>node, buffer);
                             break;
                     }
+                    */
                     /*
                     *************************************************
                     */
@@ -7489,7 +7494,6 @@ var egret;
                             offsetX2 = offsetX + m.tx - child.$anchorOffsetX;
                             offsetY2 = offsetY + m.ty - child.$anchorOffsetY;
                         }
-                        //egret.sys.debugRenderNode = null;
                         switch (child.$renderMode) {
                             case 1 /* NONE */:
                                 break;
@@ -7610,8 +7614,6 @@ var egret;
                     savedMatrix.tx = curMatrix.tx;
                     savedMatrix.ty = curMatrix.ty;
                     buffer.useOffset();
-                    egret.sys.debugRenderNode = null; ///
-                    egret.sys.advancedDrawMode = 'drawTargetWidthFilters';
                     buffer.context.drawTargetWidthFilters(filters, displayBuffer);
                     curMatrix.a = savedMatrix.a;
                     curMatrix.b = savedMatrix.b;
@@ -8560,7 +8562,8 @@ var egret;
                     node.textureTransform.globalMatrix.copyFrom(textureTransform.globalMatrix);
                     node.textureTransform.offsetX = textureTransform.offsetX;
                     node.textureTransform.offsetY = textureTransform.offsetY;
-                    this.__transformRenderNode__(displayObject, node, buffer, buffer.$offsetX, buffer.$offsetY);
+                    this.__calculateVertices__(displayObject, node, buffer);
+                    //this.__transformRenderNode__(displayObject, node, buffer, buffer.$offsetX, buffer.$offsetY);
                 }
             };
             /**
@@ -8586,6 +8589,10 @@ var egret;
                     case 6 /* NormalBitmapNode */:
                         this.__transformNormalBitmap__(displayObject, node, buffer);
                         break;
+                    default: {
+                        console.error('undefined node.type = ' + node.type);
+                        break;
+                    }
                 }
             };
             /**
@@ -8649,6 +8656,14 @@ var egret;
                         }
                     }
                 }
+            };
+            WebGLRenderer.prototype.__calculateVertices__ = function (displayObject, node, buffer) {
+                if (displayObject._transformID !== displayObject.transform2d._worldID /*&& displayObject._textureID === displayObject.transform2d._updateID*/) {
+                    //return;
+                    displayObject._transformID = displayObject.transform2d._worldID;
+                }
+                this.__transformRenderNode__(displayObject, node, buffer, 0, 0);
+                //displayObject._textureID = this._texture._updateID;
             };
             return WebGLRenderer;
         }());

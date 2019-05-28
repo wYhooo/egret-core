@@ -1238,6 +1238,8 @@ namespace egret.web {
             }
 
             // 绘制input结果到舞台
+            egret.sys.debugRenderNode = null; ///
+            egret.sys.advancedDrawMode = 'drawToRenderTarget';
             output.saveTransform();
             output.transform(1, 0, 0, -1, 0, height);
             this.vao.cacheArrays(output, 0, 0, width, height, 0, 0, width, height, width, height);
