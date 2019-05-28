@@ -8658,15 +8658,17 @@ var egret;
                 }
             };
             WebGLRenderer.prototype.__calculateVertices__ = function (displayObject, node, buffer, textureTransform) {
-                if (node._transformID !== displayObject.transform2d._worldID /*&& displayObject._textureID === displayObject.transform2d._updateID*/) {
+                var textureChanged = (node.type === 2 /* TextNode */ || node.type === 3 /* GraphicsNode */);
+                if (node._transformID !== displayObject.transform2d._worldID || textureChanged /*&& displayObject._textureID === displayObject.transform2d._updateID*/) {
                     //return;
                     node._transformID = displayObject.transform2d._worldID;
+                    //
+                    var nodeTexTransform = node.textureTransform;
+                    nodeTexTransform.globalMatrix.copyFrom(textureTransform.globalMatrix);
+                    nodeTexTransform.offsetX = textureTransform.offsetX;
+                    nodeTexTransform.offsetY = textureTransform.offsetY;
                 }
                 //
-                var nodeTexTransform = node.textureTransform;
-                nodeTexTransform.globalMatrix.copyFrom(textureTransform.globalMatrix);
-                nodeTexTransform.offsetX = textureTransform.offsetX;
-                nodeTexTransform.offsetY = textureTransform.offsetY;
                 this.__transformRenderNode__(displayObject, node, buffer, 0, 0);
                 //displayObject._textureID = this._texture._updateID;
             };
