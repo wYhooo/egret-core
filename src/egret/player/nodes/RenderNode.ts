@@ -91,6 +91,8 @@ namespace egret.sys {
         public $getRenderCount(): number {
             return this.renderCount;
         }
+
+        public _transformID: number = -1;
     }
 
     export let debugRenderNode: RenderNode = null;

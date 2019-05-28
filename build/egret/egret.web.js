@@ -7400,12 +7400,12 @@ var egret;
                     }
                     egret.sys.debugRenderNode = node;
                     //渲染之前，先将object的globalMatrix设置给node
-                    var transform2d = displayObject.transform2d;
-                    var textureTransform = node.textureTransform;
-                    textureTransform.globalMatrix.copyFrom(transform2d.globalMatrix);
-                    textureTransform.offsetX = transform2d.offsetX;
-                    textureTransform.offsetY = transform2d.offsetY;
-                    this.__calculateVertices__(displayObject, node, buffer);
+                    // const transform2d = displayObject.transform2d;
+                    // const textureTransform = node.textureTransform;
+                    // textureTransform.globalMatrix.copyFrom(transform2d.globalMatrix);
+                    // textureTransform.offsetX = transform2d.offsetX;
+                    // textureTransform.offsetY = transform2d.offsetY;
+                    this.__calculateVertices__(displayObject, node, buffer, displayObject.transform2d);
                     /*
                     switch (node.type) {
                         case sys.RenderNodeType.BitmapNode:
@@ -8543,26 +8543,26 @@ var egret;
             };
             WebGLRenderer.prototype.__transformGroup__ = function (displayObject, groupNode, buffer) {
                 //const groupNode = groupNode;
-                var textureTransform = groupNode.textureTransform;
+                var groupNodeTexTransform = groupNode.textureTransform;
                 if (groupNode.matrix) {
                     var m = groupNode.matrix;
                     //buffer.useOffset();
-                    if (textureTransform.offsetX !== 0 || textureTransform.offsetY !== 0) {
-                        textureTransform.globalMatrix.append(1, 0, 0, 1, textureTransform.offsetX, textureTransform.offsetY);
-                        textureTransform.offsetX = 0;
-                        textureTransform.offsetY = 0;
+                    if (groupNodeTexTransform.offsetX !== 0 || groupNodeTexTransform.offsetY !== 0) {
+                        groupNodeTexTransform.globalMatrix.append(1, 0, 0, 1, groupNodeTexTransform.offsetX, groupNodeTexTransform.offsetY);
+                        groupNodeTexTransform.offsetX = 0;
+                        groupNodeTexTransform.offsetY = 0;
                     }
                     //buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-                    egret.NumberUtils.__transform__(textureTransform.globalMatrix, m.a, m.b, m.c, m.d, m.tx, m.ty);
+                    egret.NumberUtils.__transform__(groupNodeTexTransform.globalMatrix, m.a, m.b, m.c, m.d, m.tx, m.ty);
                 }
                 var children = groupNode.drawData;
                 var length = children.length;
                 for (var i = 0; i < length; i++) {
                     var node = children[i];
-                    node.textureTransform.globalMatrix.copyFrom(textureTransform.globalMatrix);
-                    node.textureTransform.offsetX = textureTransform.offsetX;
-                    node.textureTransform.offsetY = textureTransform.offsetY;
-                    this.__calculateVertices__(displayObject, node, buffer);
+                    // node.textureTransform.globalMatrix.copyFrom(textureTransform.globalMatrix);
+                    // node.textureTransform.offsetX = textureTransform.offsetX;
+                    // node.textureTransform.offsetY = textureTransform.offsetY;
+                    this.__calculateVertices__(displayObject, node, buffer, groupNodeTexTransform);
                     //this.__transformRenderNode__(displayObject, node, buffer, buffer.$offsetX, buffer.$offsetY);
                 }
             };
@@ -8657,11 +8657,16 @@ var egret;
                     }
                 }
             };
-            WebGLRenderer.prototype.__calculateVertices__ = function (displayObject, node, buffer) {
-                if (displayObject._transformID !== displayObject.transform2d._worldID /*&& displayObject._textureID === displayObject.transform2d._updateID*/) {
+            WebGLRenderer.prototype.__calculateVertices__ = function (displayObject, node, buffer, textureTransform) {
+                if (node._transformID !== displayObject.transform2d._worldID /*&& displayObject._textureID === displayObject.transform2d._updateID*/) {
                     //return;
-                    displayObject._transformID = displayObject.transform2d._worldID;
+                    node._transformID = displayObject.transform2d._worldID;
                 }
+                //
+                var nodeTexTransform = node.textureTransform;
+                nodeTexTransform.globalMatrix.copyFrom(textureTransform.globalMatrix);
+                nodeTexTransform.offsetX = textureTransform.offsetX;
+                nodeTexTransform.offsetY = textureTransform.offsetY;
                 this.__transformRenderNode__(displayObject, node, buffer, 0, 0);
                 //displayObject._textureID = this._texture._updateID;
             };
