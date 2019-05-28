@@ -1872,6 +1872,7 @@ var egret;
                     self.$nativeDisplayObject.setScrollRect(0, 0, 0, 0);
                 }
             }
+            this.transform2d.onLocalChange();
             if (!egret.nativeRender) {
                 self.$updateRenderMode();
                 var p = self.$parent;
