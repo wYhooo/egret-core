@@ -8363,38 +8363,9 @@ var egret;
                 transform2d.offsetX = offsetX;
                 transform2d.offsetY = offsetY;
                 //
-                this.__transformDisplayObject__(displayObject, buffer, offsetX, offsetY, isStage);
+                this.__transformDisplayObject__(displayObject /*, buffer, offsetX, offsetY, isStage*/);
             };
-            WebGLRenderer.prototype.__transformDisplayObject__ = function (displayObject, buffer, offsetX, offsetY, isStage) {
-                //const node = displayObject.$getRenderNode();
-                //if (node) {
-                //渲染之前，先将object的globalMatrix设置给node
-                // const transform2d = displayObject.transform2d;
-                // const textureTransform = node.textureTransform;
-                // textureTransform.globalMatrix.copyFrom(transform2d.globalMatrix);
-                // textureTransform.offsetX = transform2d.offsetX;
-                // textureTransform.offsetY = transform2d.offsetY;
-                // switch (node.type) {
-                //     case sys.RenderNodeType.BitmapNode:
-                //         this.__transformBitmap__(displayObject, <sys.BitmapNode>node, buffer);
-                //         break;
-                //     case sys.RenderNodeType.TextNode:
-                //         this.__transformText__(displayObject, <sys.TextNode>node, buffer);
-                //         break;
-                //     case sys.RenderNodeType.GraphicsNode:
-                //         this.__transformGraphics__(displayObject, <sys.GraphicsNode>node, buffer);
-                //         break;
-                //     case sys.RenderNodeType.GroupNode:
-                //         this.__transformGroup__(displayObject, <sys.GroupNode>node, buffer);
-                //         break;
-                //     case sys.RenderNodeType.MeshNode:
-                //         this.__transformMesh__(displayObject, <sys.MeshNode>node, buffer);
-                //         break;
-                //     case sys.RenderNodeType.NormalBitmapNode:
-                //         this.__transformNormalBitmap__(displayObject, <sys.NormalBitmapNode>node, buffer);
-                //         break;
-                // }
-                //}
+            WebGLRenderer.prototype.__transformDisplayObject__ = function (displayObject /*, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, isStage?: boolean*/) {
                 var children = displayObject.$children;
                 if (children) {
                     var length_9 = children.length;
@@ -8431,16 +8402,16 @@ var egret;
                                 break;
                             case 4 /* SCROLLRECT */:
                                 //drawCalls += this.drawWithScrollRect(child, buffer, offsetX2, offsetY2);
-                                this.__transformScrollRect__(child, buffer, offsetX2, offsetY2);
+                                this.__transformScrollRect__(child /*, buffer, offsetX2, offsetY2*/);
                                 break;
                             default:
-                                this.__transformDisplayObject__(child, buffer, offsetX2, offsetY2);
+                                this.__transformDisplayObject__(child /*, buffer, offsetX2, offsetY2*/);
                                 break;
                         }
                     }
                 }
             };
-            WebGLRenderer.prototype.__transformScrollRect__ = function (displayObject, buffer, offsetX, offsetY) {
+            WebGLRenderer.prototype.__transformScrollRect__ = function (displayObject /*, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number*/) {
                 var scrollRect = displayObject.$scrollRect ? displayObject.$scrollRect : displayObject.$maskRect;
                 if (scrollRect.isEmpty()) {
                     return;
@@ -8448,7 +8419,7 @@ var egret;
                 var transform2d = displayObject.transform2d;
                 transform2d.offsetX -= scrollRect.x;
                 transform2d.offsetY -= scrollRect.y;
-                this.__transformDisplayObject__(displayObject, buffer, offsetX, offsetY);
+                this.__transformDisplayObject__(displayObject /*, buffer, offsetX, offsetY*/);
             };
             /**
              * @private
@@ -8621,11 +8592,6 @@ var egret;
                         }
                     }
                 }
-            };
-            /**
-             * @private
-             */
-            WebGLRenderer.prototype.__transformFilter__ = function (displayObject, buffer, offsetX, offsetY) {
             };
             return WebGLRenderer;
         }());

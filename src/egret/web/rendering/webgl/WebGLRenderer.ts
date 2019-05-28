@@ -1161,39 +1161,10 @@ namespace egret.web {
             transform2d.offsetX = offsetX;
             transform2d.offsetY = offsetY;
             //
-            this.__transformDisplayObject__(displayObject, buffer, offsetX, offsetY, isStage);
+            this.__transformDisplayObject__(displayObject/*, buffer, offsetX, offsetY, isStage*/);
         }
 
-        public __transformDisplayObject__(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, isStage?: boolean): void {
-            //const node = displayObject.$getRenderNode();
-            //if (node) {
-                //渲染之前，先将object的globalMatrix设置给node
-                // const transform2d = displayObject.transform2d;
-                // const textureTransform = node.textureTransform;
-                // textureTransform.globalMatrix.copyFrom(transform2d.globalMatrix);
-                // textureTransform.offsetX = transform2d.offsetX;
-                // textureTransform.offsetY = transform2d.offsetY;
-                // switch (node.type) {
-                //     case sys.RenderNodeType.BitmapNode:
-                //         this.__transformBitmap__(displayObject, <sys.BitmapNode>node, buffer);
-                //         break;
-                //     case sys.RenderNodeType.TextNode:
-                //         this.__transformText__(displayObject, <sys.TextNode>node, buffer);
-                //         break;
-                //     case sys.RenderNodeType.GraphicsNode:
-                //         this.__transformGraphics__(displayObject, <sys.GraphicsNode>node, buffer);
-                //         break;
-                //     case sys.RenderNodeType.GroupNode:
-                //         this.__transformGroup__(displayObject, <sys.GroupNode>node, buffer);
-                //         break;
-                //     case sys.RenderNodeType.MeshNode:
-                //         this.__transformMesh__(displayObject, <sys.MeshNode>node, buffer);
-                //         break;
-                //     case sys.RenderNodeType.NormalBitmapNode:
-                //         this.__transformNormalBitmap__(displayObject, <sys.NormalBitmapNode>node, buffer);
-                //         break;
-                // }
-            //}
+        public __transformDisplayObject__(displayObject: DisplayObject/*, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, isStage?: boolean*/): void {
             let children = displayObject.$children;
             if (children) {
                 let length = children.length;
@@ -1230,17 +1201,17 @@ namespace egret.web {
                             break;
                         case RenderMode.SCROLLRECT:
                             //drawCalls += this.drawWithScrollRect(child, buffer, offsetX2, offsetY2);
-                            this.__transformScrollRect__(child, buffer, offsetX2, offsetY2);
+                            this.__transformScrollRect__(child/*, buffer, offsetX2, offsetY2*/);
                             break;
                         default:
-                            this.__transformDisplayObject__(child, buffer, offsetX2, offsetY2);
+                            this.__transformDisplayObject__(child/*, buffer, offsetX2, offsetY2*/);
                             break;
                     }
                 }
             }
         }
 
-        private __transformScrollRect__(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number): void {
+        private __transformScrollRect__(displayObject: DisplayObject/*, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number*/): void {
             let scrollRect = displayObject.$scrollRect ? displayObject.$scrollRect : displayObject.$maskRect;
             if (scrollRect.isEmpty()) {
                 return;
@@ -1248,7 +1219,7 @@ namespace egret.web {
             const transform2d = displayObject.transform2d;
             transform2d.offsetX -= scrollRect.x;
             transform2d.offsetY -= scrollRect.y;
-            this.__transformDisplayObject__(displayObject, buffer, offsetX, offsetY);
+            this.__transformDisplayObject__(displayObject/*, buffer, offsetX, offsetY*/);
         }
 
         /**
@@ -1433,7 +1404,7 @@ namespace egret.web {
         /**
          * @private
          */
-        private __transformFilter__(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number): void {
-        }
+        // private __transformFilter__(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number): void {
+        // }
     }
 }
