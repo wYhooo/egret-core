@@ -3392,6 +3392,7 @@ declare namespace egret.sys {
         $getRenderCount(): number;
     }
     let debugRenderNode: RenderNode;
+    let advancedDrawMode: string;
 }
 declare namespace egret.sys {
     /**

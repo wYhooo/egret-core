@@ -5489,6 +5489,10 @@ var egret;
                             || buffer.$offsetY !== textureTransform.offsetY) {
                             console.error('cacheArrays transform check');
                         }
+                        console.log('egret.sys.debugRenderNode = ' + egret.sys.debugRenderNode);
+                    }
+                    else {
+                        console.log('egret.sys.advancedDrawMode = ' + egret.sys.advancedDrawMode);
                     }
                 }
                 /*
@@ -7461,7 +7465,7 @@ var egret;
                         }
                         var savedMatrix = void 0;
                         var m = child.$getMatrix();
-                        if (child.$useTranslate) {
+                        if (child.$useTranslate || true) {
                             // let m = child.$getMatrix();
                             // offsetX2 = offsetX + child.$x;
                             // offsetY2 = offsetY + child.$y;
@@ -7484,7 +7488,7 @@ var egret;
                             offsetX2 = offsetX + m.tx - child.$anchorOffsetX;
                             offsetY2 = offsetY + m.ty - child.$anchorOffsetY;
                         }
-                        egret.sys.debugRenderNode = null;
+                        //egret.sys.debugRenderNode = null;
                         switch (child.$renderMode) {
                             case 1 /* NONE */:
                                 break;
@@ -7606,6 +7610,7 @@ var egret;
                     savedMatrix.ty = curMatrix.ty;
                     buffer.useOffset();
                     egret.sys.debugRenderNode = null; ///
+                    egret.sys.advancedDrawMode = 'drawTargetWidthFilters';
                     buffer.context.drawTargetWidthFilters(filters, displayBuffer);
                     curMatrix.a = savedMatrix.a;
                     curMatrix.b = savedMatrix.b;
@@ -7732,6 +7737,7 @@ var egret;
                         var maskBufferWidth = maskBuffer.rootRenderTarget.width;
                         var maskBufferHeight = maskBuffer.rootRenderTarget.height;
                         egret.sys.debugRenderNode = null;
+                        egret.sys.advancedDrawMode = 'drawWithClip:mask';
                         displayBuffer.context.drawTexture(maskBuffer.rootRenderTarget.texture, 0, 0, maskBufferWidth, maskBufferHeight, 0, 0, maskBufferWidth, maskBufferHeight, maskBufferWidth, maskBufferHeight);
                         displayBuffer.setTransform(1, 0, 0, 1, 0, 0);
                         displayBuffer.context.setGlobalCompositeOperation("source-over");
@@ -8378,7 +8384,7 @@ var egret;
                         var selfTransform = displayObject.transform2d;
                         var childTransform = child.transform2d;
                         childTransform.globalMatrix.copyFrom(selfTransform.globalMatrix);
-                        if (child.$useTranslate) {
+                        if (child.$useTranslate || true) {
                             egret.NumberUtils.__transform__(childTransform.globalMatrix, m.a, m.b, m.c, m.d, selfTransform.offsetX + m.tx, selfTransform.offsetY + m.ty);
                             offsetX2 = -child.$anchorOffsetX;
                             offsetY2 = -child.$anchorOffsetY;

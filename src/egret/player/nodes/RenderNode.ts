@@ -94,4 +94,5 @@ namespace egret.sys {
     }
 
     export let debugRenderNode: RenderNode = null;
+    export let advancedDrawMode: string = '';
 }

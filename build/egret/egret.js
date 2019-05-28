@@ -6043,6 +6043,7 @@ var egret;
         sys.RenderNode = RenderNode;
         __reflect(RenderNode.prototype, "egret.sys.RenderNode");
         sys.debugRenderNode = null;
+        sys.advancedDrawMode = '';
     })(sys = egret.sys || (egret.sys = {}));
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
