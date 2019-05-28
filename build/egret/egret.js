@@ -524,11 +524,21 @@ var egret;
             this.globalMatrix = new egret.Matrix;
             this.offsetX = 0;
             this.offsetY = 0;
+            this._localID = 0;
+            this._currentLocalID = 0;
+            this._worldID = 0;
+            this._parentID = 0;
         }
         Transform2d.prototype.clear = function () {
             this.globalMatrix.identity();
             this.offsetX = 0;
             this.offsetY = 0;
+        };
+        Transform2d.prototype.onLocalChange = function () {
+            ++this._localID;
+        };
+        Transform2d.prototype.onParentChange = function () {
+            this._parentID = -1;
         };
         return Transform2d;
     }());
@@ -989,6 +999,7 @@ var egret;
                 return false;
             }
             self.$x = value;
+            this.transform2d.onLocalChange();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setX(value);
             }
@@ -1054,6 +1065,7 @@ var egret;
                 return false;
             }
             self.$y = value;
+            this.transform2d.onLocalChange();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setY(value);
             }
@@ -1116,6 +1128,7 @@ var egret;
             }
             self.$scaleX = value;
             self.$matrixDirty = true;
+            this.transform2d.onLocalChange();
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setScaleX(value);
@@ -1177,6 +1190,7 @@ var egret;
             }
             self.$scaleY = value;
             self.$matrixDirty = true;
+            this.transform2d.onLocalChange();
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setScaleY(value);
@@ -1241,6 +1255,7 @@ var egret;
             self.$skewY += angle;
             self.$rotation = value;
             self.$matrixDirty = true;
+            this.transform2d.onLocalChange();
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setRotation(value);
@@ -1290,6 +1305,7 @@ var egret;
             value = value / 180 * Math.PI;
             self.$skewX = value;
             self.$matrixDirty = true;
+            this.transform2d.onLocalChange();
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setSkewX(self.$skewXdeg);
@@ -1339,6 +1355,7 @@ var egret;
             value = (value + self.$rotation) / 180 * Math.PI;
             self.$skewY = value;
             self.$matrixDirty = true;
+            this.transform2d.onLocalChange();
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setSkewY(self.$skewYdeg);
@@ -1504,6 +1521,7 @@ var egret;
                 return;
             }
             self.$anchorOffsetX = value;
+            this.transform2d.onLocalChange();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setAnchorOffsetX(value);
             }
@@ -1556,6 +1574,7 @@ var egret;
                 return;
             }
             self.$anchorOffsetY = value;
+            this.transform2d.onLocalChange();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setAnchorOffsetY(value);
             }
@@ -4495,6 +4514,7 @@ var egret;
             }
             self.$children.splice(index, 0, child);
             child.$setParent(self);
+            child.transform2d.onParentChange();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.addChildAt(child.$nativeDisplayObject.id, index);
             }
@@ -4737,6 +4757,7 @@ var egret;
             }
             var displayList = this.$displayList || this.$parentDisplayList;
             child.$setParent(null);
+            child.transform2d.onParentChange();
             var indexNow = children.indexOf(child);
             if (indexNow != -1) {
                 children.splice(indexNow, 1);

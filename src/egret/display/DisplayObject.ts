@@ -34,10 +34,23 @@ namespace egret {
         public readonly globalMatrix = new Matrix;
         public offsetX: number = 0;
         public offsetY: number = 0;
+        public _localID = 0;
+        public _currentLocalID = 0;
+        public _worldID = 0;
+        public _parentID = 0;
+        
         public clear(): void {
             this.globalMatrix.identity();
             this.offsetX = 0;
             this.offsetY = 0;
+        }
+
+        public onLocalChange(): void {
+            ++this._localID;
+        }
+
+        public onParentChange(): void {
+            this._parentID = -1;
         }
     }
 
@@ -462,6 +475,7 @@ namespace egret {
                 return false;
             }
             self.$x = value;
+            this.transform2d.onLocalChange();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setX(value);
             }
@@ -529,6 +543,7 @@ namespace egret {
                 return false;
             }
             self.$y = value;
+            this.transform2d.onLocalChange();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setY(value);
             }
@@ -593,7 +608,7 @@ namespace egret {
             }
             self.$scaleX = value;
             self.$matrixDirty = true;
-
+            this.transform2d.onLocalChange();
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setScaleX(value);
@@ -657,7 +672,7 @@ namespace egret {
             }
             self.$scaleY = value;
             self.$matrixDirty = true;
-
+            this.transform2d.onLocalChange();
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setScaleY(value);
@@ -724,7 +739,7 @@ namespace egret {
             self.$skewY += angle;
             self.$rotation = value;
             self.$matrixDirty = true;
-
+            this.transform2d.onLocalChange();
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setRotation(value);
@@ -778,7 +793,7 @@ namespace egret {
 
             self.$skewX = value;
             self.$matrixDirty = true;
-
+            this.transform2d.onLocalChange();
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setSkewX(self.$skewXdeg);
@@ -832,7 +847,7 @@ namespace egret {
 
             self.$skewY = value;
             self.$matrixDirty = true;
-
+            this.transform2d.onLocalChange();
             self.$updateUseTransform();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setSkewY(self.$skewYdeg);
@@ -998,6 +1013,7 @@ namespace egret {
                 return;
             }
             self.$anchorOffsetX = value;
+            this.transform2d.onLocalChange();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setAnchorOffsetX(value);
             }
@@ -1051,6 +1067,7 @@ namespace egret {
                 return;
             }
             self.$anchorOffsetY = value;
+            this.transform2d.onLocalChange();
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setAnchorOffsetY(value);
             }

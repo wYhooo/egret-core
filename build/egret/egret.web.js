@@ -5489,10 +5489,10 @@ var egret;
                             || buffer.$offsetY !== textureTransform.offsetY) {
                             console.error('cacheArrays transform check');
                         }
-                        console.log('egret.sys.debugRenderNode = ' + egret.sys.debugRenderNode);
+                        //console.log('egret.sys.debugRenderNode = ' + egret.sys.debugRenderNode);
                     }
                     else {
-                        console.log('egret.sys.advancedDrawMode = ' + egret.sys.advancedDrawMode);
+                        //console.log('egret.sys.advancedDrawMode = ' + egret.sys.advancedDrawMode);
                     }
                 }
                 /*

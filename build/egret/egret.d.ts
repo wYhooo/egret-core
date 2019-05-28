@@ -307,7 +307,13 @@ declare namespace egret {
         readonly globalMatrix: Matrix;
         offsetX: number;
         offsetY: number;
+        _localID: number;
+        _currentLocalID: number;
+        _worldID: number;
+        _parentID: number;
         clear(): void;
+        onLocalChange(): void;
+        onParentChange(): void;
     }
     /**
      * @private
