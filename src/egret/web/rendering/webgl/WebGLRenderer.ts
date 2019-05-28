@@ -1157,8 +1157,27 @@ namespace egret.web {
         }
 
         public __setTransform__(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, isStage?: boolean): void {
+            //
             const transform2d = displayObject.transform2d;
             $TempMatrix.identity();
+            const targetMatrix = buffer ? buffer.globalMatrix : $TempMatrix;
+            //
+            if (!NumberUtils.matrixEqual(targetMatrix, transform2d.globalMatrix)
+                || offsetX !== transform2d.offsetX
+                || offsetY !== transform2d.offsetY) {
+                transform2d.onLocalChange();
+            }
+            //
+            if (transform2d._localID !== transform2d._currentLocalID) {
+                transform2d._currentLocalID = transform2d._localID;
+                transform2d._parentID = -1;
+            }
+            //
+            if (transform2d._parentID !== 0) {
+                transform2d._parentID = 0;
+                ++transform2d._worldID;
+            }
+            //
             transform2d.globalMatrix.copyFrom(buffer ? buffer.globalMatrix : $TempMatrix);
             transform2d.offsetX = offsetX;
             transform2d.offsetY = offsetY;
@@ -1174,10 +1193,41 @@ namespace egret.web {
                     let child = children[i];
                     let offsetX2 = 0;
                     let offsetY2 = 0;
-                    let m = child.$getMatrix(); //child local
-                    //先拷贝给孩子，再和孩子的local
-                    const selfTransform = displayObject.transform2d;
+
                     const childTransform = child.transform2d;
+                    let m = child.$getMatrix(); //child local
+                    //
+                    if (childTransform._localID !== childTransform._currentLocalID) {
+                        childTransform._currentLocalID = childTransform._localID;
+                        childTransform._parentID = -1;
+                    }
+                    //
+                    const parentTransform = displayObject.transform2d;
+                    if (childTransform._parentID !== parentTransform._worldID || this.forceTransform) {
+                        /*
+                        **************************
+                        */
+                        childTransform.globalMatrix.copyFrom(parentTransform.globalMatrix);//这一步其实还能优化
+                        if (child.$useTranslate || true) {
+                            NumberUtils.__transform__(childTransform.globalMatrix, m.a, m.b, m.c, m.d, parentTransform.offsetX + m.tx, parentTransform.offsetY + m.ty);
+                            offsetX2 = -child.$anchorOffsetX;
+                            offsetY2 = -child.$anchorOffsetY;
+                        }
+                        else {
+                            offsetX2 = parentTransform.offsetX + m.tx - child.$anchorOffsetX;
+                            offsetY2 = parentTransform.offsetY + m.ty - child.$anchorOffsetY;
+                        }
+                        ///
+                        childTransform.offsetX = offsetX2;
+                        childTransform.offsetY = offsetY2;
+                        /*
+                        **************************
+                        */
+                        childTransform._parentID = parentTransform._worldID;
+                        ++childTransform._worldID;
+                    }
+                    /* old
+                    //先拷贝给孩子，再和孩子的local
                     childTransform.globalMatrix.copyFrom(selfTransform.globalMatrix);
                     if (child.$useTranslate || true) {
                         NumberUtils.__transform__(childTransform.globalMatrix, m.a, m.b, m.c, m.d, selfTransform.offsetX + m.tx, selfTransform.offsetY + m.ty);
@@ -1191,6 +1241,7 @@ namespace egret.web {
                     ///
                     childTransform.offsetX = offsetX2;
                     childTransform.offsetY = offsetY2;
+                    */
                     ///
                     switch (child.$renderMode) {
                         case RenderMode.NONE:
@@ -1403,10 +1454,6 @@ namespace egret.web {
             }
         }
 
-        /**
-         * @private
-         */
-        // private __transformFilter__(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number): void {
-        // }
+        private readonly forceTransform: boolean = false;
     }
 }

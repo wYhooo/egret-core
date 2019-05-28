@@ -7310,6 +7310,7 @@ var egret;
         var WebGLRenderer = (function () {
             function WebGLRenderer() {
                 this.nestLevel = 0; //渲染的嵌套层次，0表示在调用堆栈的最外层。
+                this.forceTransform = false;
             }
             /**
              * 渲染一个显示对象
@@ -8363,8 +8364,27 @@ var egret;
                 return buffer;
             };
             WebGLRenderer.prototype.__setTransform__ = function (displayObject, buffer, offsetX, offsetY, isStage) {
+                //
                 var transform2d = displayObject.transform2d;
                 egret.$TempMatrix.identity();
+                var targetMatrix = buffer ? buffer.globalMatrix : egret.$TempMatrix;
+                //
+                if (!egret.NumberUtils.matrixEqual(targetMatrix, transform2d.globalMatrix)
+                    || offsetX !== transform2d.offsetX
+                    || offsetY !== transform2d.offsetY) {
+                    transform2d.onLocalChange();
+                }
+                //
+                if (transform2d._localID !== transform2d._currentLocalID) {
+                    transform2d._currentLocalID = transform2d._localID;
+                    transform2d._parentID = -1;
+                }
+                //
+                if (transform2d._parentID !== 0) {
+                    transform2d._parentID = 0;
+                    ++transform2d._worldID;
+                }
+                //
                 transform2d.globalMatrix.copyFrom(buffer ? buffer.globalMatrix : egret.$TempMatrix);
                 transform2d.offsetX = offsetX;
                 transform2d.offsetY = offsetY;
@@ -8379,13 +8399,43 @@ var egret;
                         var child = children[i];
                         var offsetX2 = 0;
                         var offsetY2 = 0;
-                        var m = child.$getMatrix(); //child local
-                        //先拷贝给孩子，再和孩子的local
-                        var selfTransform = displayObject.transform2d;
                         var childTransform = child.transform2d;
+                        var m = child.$getMatrix(); //child local
+                        //
+                        if (childTransform._localID !== childTransform._currentLocalID) {
+                            childTransform._currentLocalID = childTransform._localID;
+                            childTransform._parentID = -1;
+                        }
+                        //
+                        var parentTransform = displayObject.transform2d;
+                        if (childTransform._parentID !== parentTransform._worldID || this.forceTransform) {
+                            /*
+                            **************************
+                            */
+                            childTransform.globalMatrix.copyFrom(parentTransform.globalMatrix); //这一步其实还能优化
+                            if (child.$useTranslate || true) {
+                                egret.NumberUtils.__transform__(childTransform.globalMatrix, m.a, m.b, m.c, m.d, parentTransform.offsetX + m.tx, parentTransform.offsetY + m.ty);
+                                offsetX2 = -child.$anchorOffsetX;
+                                offsetY2 = -child.$anchorOffsetY;
+                            }
+                            else {
+                                offsetX2 = parentTransform.offsetX + m.tx - child.$anchorOffsetX;
+                                offsetY2 = parentTransform.offsetY + m.ty - child.$anchorOffsetY;
+                            }
+                            ///
+                            childTransform.offsetX = offsetX2;
+                            childTransform.offsetY = offsetY2;
+                            /*
+                            **************************
+                            */
+                            childTransform._parentID = parentTransform._worldID;
+                            ++childTransform._worldID;
+                        }
+                        /* old
+                        //先拷贝给孩子，再和孩子的local
                         childTransform.globalMatrix.copyFrom(selfTransform.globalMatrix);
                         if (child.$useTranslate || true) {
-                            egret.NumberUtils.__transform__(childTransform.globalMatrix, m.a, m.b, m.c, m.d, selfTransform.offsetX + m.tx, selfTransform.offsetY + m.ty);
+                            NumberUtils.__transform__(childTransform.globalMatrix, m.a, m.b, m.c, m.d, selfTransform.offsetX + m.tx, selfTransform.offsetY + m.ty);
                             offsetX2 = -child.$anchorOffsetX;
                             offsetY2 = -child.$anchorOffsetY;
                         }
@@ -8396,6 +8446,7 @@ var egret;
                         ///
                         childTransform.offsetX = offsetX2;
                         childTransform.offsetY = offsetY2;
+                        */
                         ///
                         switch (child.$renderMode) {
                             case 1 /* NONE */:
