@@ -1463,7 +1463,7 @@ namespace egret.web {
 
 
         private __calculateVertices__(displayObject: DisplayObject, node: sys.RenderNode, buffer: WebGLRenderBuffer, textureTransform: Transform2d): void {
-            const textureChanged = (node.type === sys.RenderNodeType.TextNode || node.type === sys.RenderNodeType.GraphicsNode);
+            const textureChanged = true || (node.type === sys.RenderNodeType.TextNode || node.type === sys.RenderNodeType.GraphicsNode);
             if (node._transformID !== displayObject.transform2d._worldID || textureChanged /*&& displayObject._textureID === displayObject.transform2d._updateID*/) {
                 //return;
                 node._transformID = displayObject.transform2d._worldID;

@@ -715,8 +715,6 @@ var egret;
             _this.$renderMode = null;
             //
             _this.transform2d = new Transform2d;
-            //public _transformID = -1;
-            _this._textureID = -1;
             if (egret.nativeRender) {
                 _this.createNativeDisplayObject();
             }
@@ -6054,6 +6052,8 @@ var egret;
                  */
                 this.textureTransform = new egret.Transform2d;
                 this._transformID = -1;
+                this._textureID = 0;
+                this._currentTextureID = -1;
             }
             RenderNode.prototype.cleanBeforeRender = function () {
                 this.drawData.length = 0;
@@ -6062,6 +6062,9 @@ var egret;
             };
             RenderNode.prototype.$getRenderCount = function () {
                 return this.renderCount;
+            };
+            RenderNode.prototype.onTextureChange = function () {
+                ++this._textureID;
             };
             return RenderNode;
         }());

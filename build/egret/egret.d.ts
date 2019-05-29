@@ -1304,7 +1304,6 @@ declare namespace egret {
          */
         willTrigger(type: string): boolean;
         readonly transform2d: Transform2d;
-        _textureID: number;
     }
 }
 declare namespace egret {
@@ -3398,6 +3397,9 @@ declare namespace egret.sys {
         cleanBeforeRender(): void;
         $getRenderCount(): number;
         _transformID: number;
+        _textureID: number;
+        _currentTextureID: number;
+        onTextureChange(): void;
     }
     let debugRenderNode: RenderNode;
     let advancedDrawMode: string;

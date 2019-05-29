@@ -2321,6 +2321,6 @@ namespace egret {
         //
         public readonly transform2d: Transform2d = new Transform2d;
         //public _transformID = -1;
-        public _textureID = -1;
+        //public _textureID = -1;
     }
 }

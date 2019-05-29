@@ -8658,7 +8658,7 @@ var egret;
                 }
             };
             WebGLRenderer.prototype.__calculateVertices__ = function (displayObject, node, buffer, textureTransform) {
-                var textureChanged = (node.type === 2 /* TextNode */ || node.type === 3 /* GraphicsNode */);
+                var textureChanged = true || (node.type === 2 /* TextNode */ || node.type === 3 /* GraphicsNode */);
                 if (node._transformID !== displayObject.transform2d._worldID || textureChanged /*&& displayObject._textureID === displayObject.transform2d._updateID*/) {
                     //return;
                     node._transformID = displayObject.transform2d._worldID;

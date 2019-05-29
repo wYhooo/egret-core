@@ -93,6 +93,12 @@ namespace egret.sys {
         }
 
         public _transformID: number = -1;
+        public _textureID = 0;
+        public _currentTextureID = -1;
+
+        public onTextureChange(): void {
+            ++this._textureID;
+        }
     }
 
     export let debugRenderNode: RenderNode = null;
