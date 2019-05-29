@@ -1191,6 +1191,9 @@ namespace egret.web {
                 let length = children.length;
                 for (let i = 0; i < length; i++) {
                     let child = children[i];
+                    if (!child.visible) {
+                        continue;
+                    }
                     let offsetX2 = 0;
                     let offsetY2 = 0;
 
@@ -1463,22 +1466,22 @@ namespace egret.web {
 
 
         private __calculateVertices__(displayObject: DisplayObject, node: sys.RenderNode, buffer: WebGLRenderBuffer, textureTransform: Transform2d): void {
-            const textureChanged = true || (node.type === sys.RenderNodeType.TextNode || node.type === sys.RenderNodeType.GraphicsNode);
-            if (node._transformID !== displayObject.transform2d._worldID || textureChanged /*&& displayObject._textureID === displayObject.transform2d._updateID*/) {
-                //return;
-                node._transformID = displayObject.transform2d._worldID;
-
-                //
-                const nodeTexTransform = node.textureTransform;
-                nodeTexTransform.globalMatrix.copyFrom(textureTransform.globalMatrix);
-                nodeTexTransform.offsetX = textureTransform.offsetX;
-                nodeTexTransform.offsetY = textureTransform.offsetY;
+            if (!displayObject || !node) {
+                return;
             }
-            
-            //
+            if (node._transformID === displayObject.transform2d._worldID && node._currentTextureID === node._textureID) {
+                return;//无任何变化
+            }
+            //关掉变量
+            node._transformID = displayObject.transform2d._worldID;
+            node._currentTextureID = node._textureID;
+            //赋值
+            const nodeTexTransform = node.textureTransform;
+            nodeTexTransform.globalMatrix.copyFrom(textureTransform.globalMatrix);
+            nodeTexTransform.offsetX = textureTransform.offsetX;
+            nodeTexTransform.offsetY = textureTransform.offsetY;
+            //texture空间转换  
             this.__transformRenderNode__(displayObject, node, buffer, 0, 0);
-            //displayObject._textureID = this._texture._updateID;
         }
-
     }
 }

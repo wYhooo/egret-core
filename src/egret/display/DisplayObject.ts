@@ -1925,6 +1925,7 @@ namespace egret {
             if (self.$renderDirty) {
                 node.cleanBeforeRender();
                 self.$updateRenderNode();
+                this.$renderNode.onTextureChange();
                 self.$renderDirty = false;
                 node = self.$renderNode;
             }

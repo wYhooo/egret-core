@@ -2351,6 +2351,7 @@ var egret;
             if (self.$renderDirty) {
                 node.cleanBeforeRender();
                 self.$updateRenderNode();
+                this.$renderNode.onTextureChange();
                 self.$renderDirty = false;
                 node = self.$renderNode;
             }
@@ -18489,6 +18490,7 @@ var egret;
             this.$renderDirty = true;
             this.$textLinesChanged = true;
             //todo lcj
+            this.$renderNode.onTextureChange();
             this.$updateRenderNode();
         };
         /**

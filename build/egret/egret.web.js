@@ -8399,6 +8399,9 @@ var egret;
                     var length_9 = children.length;
                     for (var i = 0; i < length_9; i++) {
                         var child = children[i];
+                        if (!child.visible) {
+                            continue;
+                        }
                         var offsetX2 = 0;
                         var offsetY2 = 0;
                         var childTransform = child.transform2d;
@@ -8658,19 +8661,22 @@ var egret;
                 }
             };
             WebGLRenderer.prototype.__calculateVertices__ = function (displayObject, node, buffer, textureTransform) {
-                var textureChanged = true || (node.type === 2 /* TextNode */ || node.type === 3 /* GraphicsNode */);
-                if (node._transformID !== displayObject.transform2d._worldID || textureChanged /*&& displayObject._textureID === displayObject.transform2d._updateID*/) {
-                    //return;
-                    node._transformID = displayObject.transform2d._worldID;
-                    //
-                    var nodeTexTransform = node.textureTransform;
-                    nodeTexTransform.globalMatrix.copyFrom(textureTransform.globalMatrix);
-                    nodeTexTransform.offsetX = textureTransform.offsetX;
-                    nodeTexTransform.offsetY = textureTransform.offsetY;
+                if (!displayObject || !node) {
+                    return;
                 }
-                //
+                if (node._transformID === displayObject.transform2d._worldID && node._currentTextureID === node._textureID) {
+                    return; //无任何变化
+                }
+                //关掉变量
+                node._transformID = displayObject.transform2d._worldID;
+                node._currentTextureID = node._textureID;
+                //赋值
+                var nodeTexTransform = node.textureTransform;
+                nodeTexTransform.globalMatrix.copyFrom(textureTransform.globalMatrix);
+                nodeTexTransform.offsetX = textureTransform.offsetX;
+                nodeTexTransform.offsetY = textureTransform.offsetY;
+                //texture空间转换  
                 this.__transformRenderNode__(displayObject, node, buffer, 0, 0);
-                //displayObject._textureID = this._texture._updateID;
             };
             return WebGLRenderer;
         }());
