@@ -129,20 +129,20 @@ namespace egret.web {
                 /*
                 *************************************************
                 */
-                if (!NumberUtils.matrixEqual(buffer.globalMatrix, displayObject.transform2d.globalMatrix)
-                    || buffer.$offsetX !== displayObject.transform2d.offsetX
-                    || buffer.$offsetY !== displayObject.transform2d.offsetY) {
+                if (!NumberUtils.matrixEqual(buffer.globalMatrix, displayObject.transform.globalMatrix)
+                    || buffer.$offsetX !== displayObject.transform.offsetX
+                    || buffer.$offsetY !== displayObject.transform.offsetY) {
                     console.error('drawDisplayObject transform error');
                 }
                 egret.sys.debugRenderNode = node;
 
                 //渲染之前，先将object的globalMatrix设置给node
-                // const transform2d = displayObject.transform2d;
+                // const transform = displayObject.transform;
                 // const textureTransform = node.textureTransform;
-                // textureTransform.globalMatrix.copyFrom(transform2d.globalMatrix);
-                // textureTransform.offsetX = transform2d.offsetX;
-                // textureTransform.offsetY = transform2d.offsetY;
-                this.__calculateVertices__(displayObject, node, buffer, displayObject.transform2d);
+                // textureTransform.globalMatrix.copyFrom(transform.globalMatrix);
+                // textureTransform.offsetX = transform.offsetX;
+                // textureTransform.offsetY = transform.offsetY;
+                this.__calculateVertices__(displayObject, node, buffer, displayObject.transform);
 
                 /*
                 switch (node.type) {
@@ -1158,29 +1158,29 @@ namespace egret.web {
 
         public __setTransform__(displayObject: DisplayObject, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, isStage?: boolean): void {
             //
-            const transform2d = displayObject.transform2d;
+            const transform = displayObject.transform;
             $TempMatrix.identity();
             const targetMatrix = buffer ? buffer.globalMatrix : $TempMatrix;
             //
-            if (!NumberUtils.matrixEqual(targetMatrix, transform2d.globalMatrix)
-                || offsetX !== transform2d.offsetX
-                || offsetY !== transform2d.offsetY) {
-                transform2d.onLocalChange();
+            if (!NumberUtils.matrixEqual(targetMatrix, transform.globalMatrix)
+                || offsetX !== transform.offsetX
+                || offsetY !== transform.offsetY) {
+                transform.onLocalChange();
             }
             //
-            if (transform2d._localID !== transform2d._currentLocalID) {
-                transform2d._currentLocalID = transform2d._localID;
-                transform2d._parentID = -1;
+            if (transform._localID !== transform._currentLocalID) {
+                transform._currentLocalID = transform._localID;
+                transform._parentID = -1;
             }
             //
-            if (transform2d._parentID !== 0) {
-                transform2d._parentID = 0;
-                ++transform2d._worldID;
+            if (transform._parentID !== 0) {
+                transform._parentID = 0;
+                ++transform._worldID;
             }
             //
-            transform2d.globalMatrix.copyFrom(buffer ? buffer.globalMatrix : $TempMatrix);
-            transform2d.offsetX = offsetX;
-            transform2d.offsetY = offsetY;
+            transform.globalMatrix.copyFrom(buffer ? buffer.globalMatrix : $TempMatrix);
+            transform.offsetX = offsetX;
+            transform.offsetY = offsetY;
             //
             this.__transformDisplayObject__(displayObject/*, buffer, offsetX, offsetY, isStage*/);
         }
@@ -1197,7 +1197,7 @@ namespace egret.web {
                     let offsetX2 = 0;
                     let offsetY2 = 0;
 
-                    const childTransform = child.transform2d;
+                    const childTransform = child.transform;
                     let m = child.$getMatrix(); //child local
                     //
                     if (childTransform._localID !== childTransform._currentLocalID) {
@@ -1205,7 +1205,7 @@ namespace egret.web {
                         childTransform._parentID = -1;
                     }
                     //
-                    const parentTransform = displayObject.transform2d;
+                    const parentTransform = displayObject.transform;
                     if (childTransform._parentID !== parentTransform._worldID || this.forceTransform) {
                         /*
                         **************************
@@ -1273,9 +1273,9 @@ namespace egret.web {
             if (scrollRect.isEmpty()) {
                 return;
             }
-            const transform2d = displayObject.transform2d;
-            transform2d.offsetX -= scrollRect.x;
-            transform2d.offsetY -= scrollRect.y;
+            const transform = displayObject.transform;
+            transform.offsetX -= scrollRect.x;
+            transform.offsetY -= scrollRect.y;
             this.__transformDisplayObject__(displayObject/*, buffer, offsetX, offsetY*/);
         }
 
@@ -1477,11 +1477,11 @@ namespace egret.web {
         private readonly forceTransform: boolean = false;
 
 
-        private __calculateVertices__(displayObject: DisplayObject, node: sys.RenderNode, buffer: WebGLRenderBuffer, textureTransform: Transform2d): void {
+        private __calculateVertices__(displayObject: DisplayObject, node: sys.RenderNode, buffer: WebGLRenderBuffer, textureTransform: Transform): void {
             if (!displayObject || !node) {
                 return;
             }
-            if ( (node._transformID === displayObject.transform2d._worldID && node._currentTextureID === node._textureID)) {
+            if ( (node._transformID === displayObject.transform._worldID && node._currentTextureID === node._textureID)) {
                 if (node.type === sys.RenderNodeType.GroupNode) {
                     (<sys.GraphicsNode>node).onTextureChange();//sys.RenderNodeType.GroupNode 要强刷是因为龙骨的版本的问题。
                 }
@@ -1490,7 +1490,7 @@ namespace egret.web {
                 }
             }
             //关掉变量
-            node._transformID = displayObject.transform2d._worldID;
+            node._transformID = displayObject.transform._worldID;
             node._currentTextureID = node._textureID;
             //赋值
             const nodeTexTransform = node.textureTransform;
