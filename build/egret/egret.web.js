@@ -5480,7 +5480,7 @@ var egret;
                 /*
                 *************************************************
                 */
-                if (true) {
+                if (egret.sys.transformCheck && true) {
                     var debugRenderNode = egret.sys.debugRenderNode;
                     if (debugRenderNode) {
                         var textureTransform = debugRenderNode.textureTransform;
@@ -7393,10 +7393,12 @@ var egret;
                     /*
                     *************************************************
                     */
-                    if (!egret.NumberUtils.matrixEqual(buffer.globalMatrix, displayObject.transform.globalMatrix)
-                        || buffer.$offsetX !== displayObject.transform.offsetX
-                        || buffer.$offsetY !== displayObject.transform.offsetY) {
-                        console.error('drawDisplayObject transform error');
+                    if (egret.sys.transformCheck && true) {
+                        if (!egret.NumberUtils.matrixEqual(buffer.globalMatrix, displayObject.transform.globalMatrix)
+                            || buffer.$offsetX !== displayObject.transform.offsetX
+                            || buffer.$offsetY !== displayObject.transform.offsetY) {
+                            console.error('drawDisplayObject transform error');
+                        }
                     }
                     egret.sys.debugRenderNode = node;
                     //渲染之前，先将object的globalMatrix设置给node

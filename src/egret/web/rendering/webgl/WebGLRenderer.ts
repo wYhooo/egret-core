@@ -129,10 +129,12 @@ namespace egret.web {
                 /*
                 *************************************************
                 */
-                if (!NumberUtils.matrixEqual(buffer.globalMatrix, displayObject.transform.globalMatrix)
-                    || buffer.$offsetX !== displayObject.transform.offsetX
-                    || buffer.$offsetY !== displayObject.transform.offsetY) {
-                    console.error('drawDisplayObject transform error');
+                if (sys.transformCheck && DEBUG) {
+                    if (!NumberUtils.matrixEqual(buffer.globalMatrix, displayObject.transform.globalMatrix)
+                        || buffer.$offsetX !== displayObject.transform.offsetX
+                        || buffer.$offsetY !== displayObject.transform.offsetY) {
+                        console.error('drawDisplayObject transform error');
+                    }
                 }
                 egret.sys.debugRenderNode = node;
 
@@ -1212,10 +1214,10 @@ namespace egret.web {
                         */
                         childTransform.globalMatrix.copyFrom(parentTransform.globalMatrix);//这一步其实还能优化
                         //if (child.$useTranslate || true) {
-                            childTransform.transform(m, parentTransform.offsetX, parentTransform.offsetY);
-                            //NumberUtils.__transform__(childTransform.globalMatrix, m.a, m.b, m.c, m.d, parentTransform.offsetX + m.tx, parentTransform.offsetY + m.ty);
-                            offsetX2 = -child.$anchorOffsetX;
-                            offsetY2 = -child.$anchorOffsetY;
+                        childTransform.transform(m, parentTransform.offsetX, parentTransform.offsetY);
+                        //NumberUtils.__transform__(childTransform.globalMatrix, m.a, m.b, m.c, m.d, parentTransform.offsetX + m.tx, parentTransform.offsetY + m.ty);
+                        offsetX2 = -child.$anchorOffsetX;
+                        offsetY2 = -child.$anchorOffsetY;
                         //}
                         // else {
                         //     offsetX2 = parentTransform.offsetX + m.tx - child.$anchorOffsetX;
@@ -1481,7 +1483,7 @@ namespace egret.web {
             if (!displayObject || !node) {
                 return;
             }
-            if ( (node._transformID === displayObject.transform._worldID && node._currentTextureID === node._textureID)) {
+            if ((node._transformID === displayObject.transform._worldID && node._currentTextureID === node._textureID)) {
                 if (node.type === sys.RenderNodeType.GroupNode) {
                     (<sys.GraphicsNode>node).onTextureChange();//sys.RenderNodeType.GroupNode 要强刷是因为龙骨的版本的问题。
                 }

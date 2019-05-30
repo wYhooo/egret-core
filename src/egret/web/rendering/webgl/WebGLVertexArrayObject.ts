@@ -136,7 +136,7 @@ namespace egret.web {
             /*
             *************************************************
             */
-            if (DEBUG) {
+            if (sys.transformCheck && DEBUG) {
                 const debugRenderNode = egret.sys.debugRenderNode;
                 if (debugRenderNode) {
                     const textureTransform = debugRenderNode.textureTransform;

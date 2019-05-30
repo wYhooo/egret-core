@@ -3391,6 +3391,7 @@ declare namespace egret.sys {
     }
     let debugRenderNode: RenderNode;
     let advancedDrawMode: string;
+    const transformCheck: boolean;
 }
 declare namespace egret.sys {
     /**
