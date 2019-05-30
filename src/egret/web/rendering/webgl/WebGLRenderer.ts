@@ -1481,8 +1481,13 @@ namespace egret.web {
             if (!displayObject || !node) {
                 return;
             }
-            if (node._transformID === displayObject.transform2d._worldID && node._currentTextureID === node._textureID) {
-                return;//无任何变化
+            if ( (node._transformID === displayObject.transform2d._worldID && node._currentTextureID === node._textureID)) {
+                if (node.type === sys.RenderNodeType.GroupNode) {
+                    (<sys.GraphicsNode>node).onTextureChange();//sys.RenderNodeType.GroupNode 要强刷是因为龙骨的版本的问题。
+                }
+                else {
+                    return;//无任何变化
+                }
             }
             //关掉变量
             node._transformID = displayObject.transform2d._worldID;
