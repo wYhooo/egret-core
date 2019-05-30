@@ -773,7 +773,7 @@ namespace egret {
         }
 
         private dirty(): void {
-            this.$renderNode.onTextureChange();
+            this.$renderNode ? this.$renderNode.onTextureChange() : void 0;
             let self = this;
             self.$renderNode.dirtyRender = true;
             if (!egret.nativeRender) {

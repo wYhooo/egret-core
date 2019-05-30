@@ -179,7 +179,7 @@ namespace egret {
             this.$renderDirty = true;
             this.$textLinesChanged = true;
             //todo lcj
-            this.$renderNode.onTextureChange();
+            this.$renderNode ? this.$renderNode.onTextureChange() : void 0;
             this.$updateRenderNode();
         }
 

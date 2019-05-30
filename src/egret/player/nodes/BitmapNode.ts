@@ -68,7 +68,7 @@ namespace egret.sys {
         /**
          * 相对透明度
          */
-        public alpha: number = NaN;
+        public alpha: number = 1;
         /**
          * 颜色变换滤镜
          */
@@ -94,7 +94,7 @@ namespace egret.sys {
             this.image = null;
             this.matrix = null;
             this.blendMode = null;
-            this.alpha = NaN;
+            this.alpha = 1;
             this.filter = null;
         }
 

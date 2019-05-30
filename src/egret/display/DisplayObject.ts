@@ -1225,7 +1225,7 @@ namespace egret {
                 return;
             }
             self.$alpha = value;
-
+            this.$renderNode ? this.$renderNode.onTextureChange() : void 0;
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setAlpha(value);
             }

@@ -3381,12 +3381,13 @@ declare namespace egret.sys {
         /**
          * 在显示对象的$updateRenderNode()方法被调用前，自动清空自身的drawData数据。
          */
-        readonly textureTransform: Transform;
         cleanBeforeRender(): void;
         $getRenderCount(): number;
+        readonly textureTransform: Transform;
         _transformID: number;
         _textureID: number;
         _currentTextureID: number;
+        _worldAlpha: number;
         onTextureChange(): void;
     }
     let debugRenderNode: RenderNode;

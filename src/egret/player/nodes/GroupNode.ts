@@ -72,10 +72,9 @@ namespace egret.sys {
         public onTextureChange(): void {
             ++this._textureID;
             for (const childNode of this.drawData) {
-                if (!childNode) {
-                    continue;
+                if (childNode) {
+                    <RenderNode>childNode.onTextureChange();
                 }
-                <RenderNode>childNode.onTextureChange();
             }
         }
     }

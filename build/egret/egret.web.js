@@ -5487,7 +5487,10 @@ var egret;
                         if (!egret.NumberUtils.matrixEqual(buffer.globalMatrix, textureTransform.globalMatrix)
                             || buffer.$offsetX !== textureTransform.offsetX
                             || buffer.$offsetY !== textureTransform.offsetY) {
-                            console.error('cacheArrays transform check');
+                            console.error('cacheArrays transform check failed');
+                        }
+                        if (buffer.globalAlpha !== debugRenderNode._worldAlpha) {
+                            console.error('cacheArrays alpha check failed');
                         }
                         //console.log('egret.sys.debugRenderNode = ' + egret.sys.debugRenderNode);
                     }
@@ -7407,7 +7410,7 @@ var egret;
                     // textureTransform.globalMatrix.copyFrom(transform.globalMatrix);
                     // textureTransform.offsetX = transform.offsetX;
                     // textureTransform.offsetY = transform.offsetY;
-                    this.__calculateVertices__(displayObject, node, buffer, displayObject.transform);
+                    this.__calculateVertices__(displayObject, node, buffer, displayObject.transform, (node.type === 4 /* GroupNode */));
                     /*
                     switch (node.type) {
                         case sys.RenderNodeType.BitmapNode:
@@ -8285,7 +8288,6 @@ var egret;
                 }
                 else {
                     if (node.dirtyRender) {
-                        egret.sys.debugRenderNode = node;
                         this.canvasRenderer.renderGraphics(node, this.canvasRenderBuffer.context);
                         // 拷贝canvas到texture
                         var texture = node.$texture;
@@ -8303,6 +8305,7 @@ var egret;
                     }
                     var textureWidth = node.$textureWidth;
                     var textureHeight = node.$textureHeight;
+                    egret.sys.debugRenderNode = node;
                     buffer.context.drawTexture(node.$texture, 0, 0, textureWidth, textureHeight, 0, 0, textureWidth / canvasScaleX, textureHeight / canvasScaleY, textureWidth, textureHeight);
                 }
                 if (node.x || node.y) {
@@ -8551,7 +8554,7 @@ var egret;
                     textureTransform.globalMatrix.$preMultiplyInto(egret.$TempMatrix, textureTransform.globalMatrix);
                 }
             };
-            WebGLRenderer.prototype.__transformGroup__ = function (displayObject, groupNode, buffer) {
+            WebGLRenderer.prototype.__transformGroup__ = function (displayObject, groupNode, buffer, forceUpdate) {
                 //const groupNode = groupNode;
                 var groupNodeTexTransform = groupNode.textureTransform;
                 if (groupNode.matrix) {
@@ -8574,16 +8577,27 @@ var egret;
                     // node.textureTransform.globalMatrix.copyFrom(textureTransform.globalMatrix);
                     // node.textureTransform.offsetX = textureTransform.offsetX;
                     // node.textureTransform.offsetY = textureTransform.offsetY;
-                    this.__calculateVertices__(displayObject, node, buffer, groupNodeTexTransform);
+                    this.__calculateVertices__(displayObject, node, buffer, groupNodeTexTransform, forceUpdate);
                     //this.__transformRenderNode__(displayObject, node, buffer, buffer.$offsetX, buffer.$offsetY);
                 }
             };
             /**
              * @private
              */
-            WebGLRenderer.prototype.__transformRenderNode__ = function (displayObject, node, buffer, offsetX, offsetY, forHitTest) {
+            WebGLRenderer.prototype.__transformRenderNode__ = function (displayObject, node, buffer, offsetX, offsetY, forceUpdate, forHitTest) {
+                /*
+                ********* 更新alpha
+                */
+                var parent = displayObject.parent;
+                var parentAlpha = parent ? parent.alpha : 1;
+                node._worldAlpha = displayObject.alpha * parentAlpha;
+                /*
+                *********
+                */
                 switch (node.type) {
                     case 1 /* BitmapNode */:
+                        var bitmapNode = node;
+                        bitmapNode._worldAlpha = bitmapNode._worldAlpha * bitmapNode.alpha;
                         this.__transformBitmap__(displayObject, node, buffer);
                         break;
                     case 2 /* TextNode */:
@@ -8593,9 +8607,11 @@ var egret;
                         this.__transformGraphics__(displayObject, node, buffer, forHitTest);
                         break;
                     case 4 /* GroupNode */:
-                        this.__transformGroup__(displayObject, node, buffer);
+                        this.__transformGroup__(displayObject, node, buffer, forceUpdate);
                         break;
                     case 5 /* MeshNode */:
+                        var meshNode = node;
+                        meshNode._worldAlpha = meshNode._worldAlpha * meshNode.alpha;
                         this.__transformMesh__(displayObject, node, buffer);
                         break;
                     case 6 /* NormalBitmapNode */:
@@ -8674,16 +8690,19 @@ var egret;
                     }
                 }
             };
-            WebGLRenderer.prototype.__calculateVertices__ = function (displayObject, node, buffer, textureTransform) {
+            WebGLRenderer.prototype.__calculateVertices__ = function (displayObject, node, buffer, textureTransform, forceUpdate) {
                 if (!displayObject || !node) {
                     return;
                 }
-                if ((node._transformID === displayObject.transform._worldID && node._currentTextureID === node._textureID)) {
-                    if (node.type === 4 /* GroupNode */) {
-                        node.onTextureChange(); //sys.RenderNodeType.GroupNode 要强刷是因为龙骨的版本的问题。
-                    }
-                    else {
+                if (!forceUpdate) {
+                    if ((node._transformID === displayObject.transform._worldID && node._currentTextureID === node._textureID)) {
                         return; //无任何变化
+                        // if (node.type === sys.RenderNodeType.GroupNode) {
+                        //     (<sys.GraphicsNode>node).onTextureChange();//sys.RenderNodeType.GroupNode 要强刷是因为龙骨的版本的问题。
+                        // }
+                        // else {
+                        //     return;//无任何变化
+                        // }
                     }
                 }
                 //关掉变量
@@ -8695,7 +8714,7 @@ var egret;
                 nodeTexTransform.offsetX = textureTransform.offsetX;
                 nodeTexTransform.offsetY = textureTransform.offsetY;
                 //texture空间转换  
-                this.__transformRenderNode__(displayObject, node, buffer, 0, 0);
+                this.__transformRenderNode__(displayObject, node, buffer, 0, 0, forceUpdate);
             };
             return WebGLRenderer;
         }());

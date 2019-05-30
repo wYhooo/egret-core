@@ -1713,6 +1713,7 @@ var egret;
                 return;
             }
             self.$alpha = value;
+            this.$renderNode ? this.$renderNode.onTextureChange() : void 0;
             if (egret.nativeRender) {
                 self.$nativeDisplayObject.setAlpha(value);
             }
@@ -6022,18 +6023,19 @@ var egret;
                  * 绘制次数
                  */
                 this.renderCount = 0;
-                /**
-                 * 在显示对象的$updateRenderNode()方法被调用前，自动清空自身的drawData数据。
-                 */
+                //
                 this.textureTransform = new egret.Transform;
                 this._transformID = -1;
                 this._textureID = 0;
                 this._currentTextureID = -1;
+                this._worldAlpha = 1;
             }
+            /**
+             * 在显示对象的$updateRenderNode()方法被调用前，自动清空自身的drawData数据。
+             */
             RenderNode.prototype.cleanBeforeRender = function () {
                 this.drawData.length = 0;
                 this.renderCount = 0;
-                this.textureTransform.clear();
             };
             RenderNode.prototype.$getRenderCount = function () {
                 return this.renderCount;
@@ -10939,7 +10941,7 @@ var egret;
             this.dirty();
         };
         Graphics.prototype.dirty = function () {
-            this.$renderNode.onTextureChange();
+            this.$renderNode ? this.$renderNode.onTextureChange() : void 0;
             var self = this;
             self.$renderNode.dirtyRender = true;
             if (!egret.nativeRender) {
@@ -15202,7 +15204,7 @@ var egret;
                 /**
                  * 相对透明度
                  */
-                _this.alpha = NaN;
+                _this.alpha = 1;
                 /**
                  * 颜色变换滤镜
                  */
@@ -15229,7 +15231,7 @@ var egret;
                 this.image = null;
                 this.matrix = null;
                 this.blendMode = null;
-                this.alpha = NaN;
+                this.alpha = 1;
                 this.filter = null;
             };
             BitmapNode.$updateTextureData = function (node, image, bitmapX, bitmapY, bitmapWidth, bitmapHeight, offsetX, offsetY, textureWidth, textureHeight, destW, destH, sourceWidth, sourceHeight, fillMode, smoothing) {
@@ -15621,10 +15623,9 @@ var egret;
                 ++this._textureID;
                 for (var _i = 0, _a = this.drawData; _i < _a.length; _i++) {
                     var childNode = _a[_i];
-                    if (!childNode) {
-                        continue;
+                    if (childNode) {
+                        childNode.onTextureChange();
                     }
-                    childNode.onTextureChange();
                 }
             };
             return GroupNode;
@@ -18571,7 +18572,7 @@ var egret;
             this.$renderDirty = true;
             this.$textLinesChanged = true;
             //todo lcj
-            this.$renderNode.onTextureChange();
+            this.$renderNode ? this.$renderNode.onTextureChange() : void 0;
             this.$updateRenderNode();
         };
         /**

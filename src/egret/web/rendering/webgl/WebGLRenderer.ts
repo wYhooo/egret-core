@@ -144,7 +144,7 @@ namespace egret.web {
                 // textureTransform.globalMatrix.copyFrom(transform.globalMatrix);
                 // textureTransform.offsetX = transform.offsetX;
                 // textureTransform.offsetY = transform.offsetY;
-                this.__calculateVertices__(displayObject, node, buffer, displayObject.transform);
+                this.__calculateVertices__(displayObject, node, buffer, displayObject.transform, (node.type === sys.RenderNodeType.GroupNode));
 
                 /*
                 switch (node.type) {
@@ -1071,7 +1071,7 @@ namespace egret.web {
                 buffer.context.drawTexture(texture, 0, 0, width, height, 0, 0, width, height, surface.width, surface.height);
             } else {
                 if (node.dirtyRender) {
-                    egret.sys.debugRenderNode = node;
+                   
                     this.canvasRenderer.renderGraphics(node, this.canvasRenderBuffer.context);
 
                     // 拷贝canvas到texture
@@ -1089,6 +1089,7 @@ namespace egret.web {
                 }
                 let textureWidth = node.$textureWidth;
                 let textureHeight = node.$textureHeight;
+                egret.sys.debugRenderNode = node;
                 buffer.context.drawTexture(node.$texture, 0, 0, textureWidth, textureHeight, 0, 0, textureWidth / canvasScaleX, textureHeight / canvasScaleY, textureWidth, textureHeight);
             }
 
@@ -1349,7 +1350,7 @@ namespace egret.web {
             }
         }
 
-        private __transformGroup__(displayObject: DisplayObject, groupNode: sys.GroupNode, buffer: WebGLRenderBuffer): void {
+        private __transformGroup__(displayObject: DisplayObject, groupNode: sys.GroupNode, buffer: WebGLRenderBuffer, forceUpdate: boolean): void {
             //const groupNode = groupNode;
             const groupNodeTexTransform = groupNode.textureTransform;
             if (groupNode.matrix) {
@@ -1372,7 +1373,7 @@ namespace egret.web {
                 // node.textureTransform.globalMatrix.copyFrom(textureTransform.globalMatrix);
                 // node.textureTransform.offsetX = textureTransform.offsetX;
                 // node.textureTransform.offsetY = textureTransform.offsetY;
-                this.__calculateVertices__(displayObject, node, buffer, groupNodeTexTransform);
+                this.__calculateVertices__(displayObject, node, buffer, groupNodeTexTransform, forceUpdate);
                 //this.__transformRenderNode__(displayObject, node, buffer, buffer.$offsetX, buffer.$offsetY);
             }
         }
@@ -1380,9 +1381,20 @@ namespace egret.web {
         /**
          * @private
          */
-        private __transformRenderNode__(displayObject: DisplayObject, node: sys.RenderNode, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, forHitTest?: boolean): void {
+        private __transformRenderNode__(displayObject: DisplayObject, node: sys.RenderNode, buffer: WebGLRenderBuffer, offsetX: number, offsetY: number, forceUpdate: boolean, forHitTest?: boolean): void {
+            /*
+            ********* 更新alpha
+            */
+            const parent = displayObject.parent;
+            const parentAlpha = parent ? parent.alpha : 1;
+            node._worldAlpha = displayObject.alpha * parentAlpha;
+            /*
+            *********
+            */
             switch (node.type) {
                 case sys.RenderNodeType.BitmapNode:
+                    const bitmapNode = <sys.BitmapNode>node;
+                    bitmapNode._worldAlpha = bitmapNode._worldAlpha * bitmapNode.alpha;
                     this.__transformBitmap__(displayObject, <sys.BitmapNode>node, buffer);
                     break;
                 case sys.RenderNodeType.TextNode:
@@ -1392,9 +1404,11 @@ namespace egret.web {
                     this.__transformGraphics__(displayObject, <sys.GraphicsNode>node, buffer, forHitTest);
                     break;
                 case sys.RenderNodeType.GroupNode:
-                    this.__transformGroup__(displayObject, <sys.GroupNode>node, buffer);
+                    this.__transformGroup__(displayObject, <sys.GroupNode>node, buffer, forceUpdate);
                     break;
                 case sys.RenderNodeType.MeshNode:
+                    const meshNode = <sys.MeshNode>node;
+                    meshNode._worldAlpha = meshNode._worldAlpha * meshNode.alpha;
                     this.__transformMesh__(displayObject, <sys.MeshNode>node, buffer);
                     break;
                 case sys.RenderNodeType.NormalBitmapNode:
@@ -1479,18 +1493,24 @@ namespace egret.web {
         private readonly forceTransform: boolean = false;
 
 
-        private __calculateVertices__(displayObject: DisplayObject, node: sys.RenderNode, buffer: WebGLRenderBuffer, textureTransform: Transform): void {
+        private __calculateVertices__(displayObject: DisplayObject, node: sys.RenderNode, buffer: WebGLRenderBuffer, textureTransform: Transform, forceUpdate: boolean): void {
             if (!displayObject || !node) {
                 return;
             }
-            if ((node._transformID === displayObject.transform._worldID && node._currentTextureID === node._textureID)) {
-                if (node.type === sys.RenderNodeType.GroupNode) {
-                    (<sys.GraphicsNode>node).onTextureChange();//sys.RenderNodeType.GroupNode 要强刷是因为龙骨的版本的问题。
-                }
-                else {
+
+            if (!forceUpdate) {
+                if ((node._transformID === displayObject.transform._worldID && node._currentTextureID === node._textureID)) {
                     return;//无任何变化
+                    // if (node.type === sys.RenderNodeType.GroupNode) {
+                    //     (<sys.GraphicsNode>node).onTextureChange();//sys.RenderNodeType.GroupNode 要强刷是因为龙骨的版本的问题。
+                    // }
+                    // else {
+                    //     return;//无任何变化
+                    // }
                 }
             }
+
+            
             //关掉变量
             node._transformID = displayObject.transform._worldID;
             node._currentTextureID = node._textureID;
@@ -1500,7 +1520,7 @@ namespace egret.web {
             nodeTexTransform.offsetX = textureTransform.offsetX;
             nodeTexTransform.offsetY = textureTransform.offsetY;
             //texture空间转换  
-            this.__transformRenderNode__(displayObject, node, buffer, 0, 0);
+            this.__transformRenderNode__(displayObject, node, buffer, 0, 0, forceUpdate);
         }
     }
 }

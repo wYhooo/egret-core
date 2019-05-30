@@ -143,7 +143,10 @@ namespace egret.web {
                     if (!NumberUtils.matrixEqual(buffer.globalMatrix, textureTransform.globalMatrix)
                         || buffer.$offsetX !== textureTransform.offsetX
                         || buffer.$offsetY !== textureTransform.offsetY) {
-                        console.error('cacheArrays transform check');
+                        console.error('cacheArrays transform check failed');
+                    }
+                    if (buffer.globalAlpha !== debugRenderNode._worldAlpha) {
+                        console.error('cacheArrays alpha check failed');
                     }
                     //console.log('egret.sys.debugRenderNode = ' + egret.sys.debugRenderNode);
                 }

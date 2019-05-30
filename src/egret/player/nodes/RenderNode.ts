@@ -81,21 +81,22 @@ namespace egret.sys {
          * 在显示对象的$updateRenderNode()方法被调用前，自动清空自身的drawData数据。
          */
 
-        public readonly textureTransform: Transform = new Transform;
+        
         public cleanBeforeRender(): void {
             this.drawData.length = 0;
             this.renderCount = 0;
-            this.textureTransform.clear();
         }
 
         public $getRenderCount(): number {
             return this.renderCount;
         }
 
+        //
+        public readonly textureTransform: Transform = new Transform;
         public _transformID: number = -1;
         public _textureID = 0;
         public _currentTextureID = -1;
-
+        public _worldAlpha: number = 1;
         public onTextureChange(): void {
             ++this._textureID;
         }
