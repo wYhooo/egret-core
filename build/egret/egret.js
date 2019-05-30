@@ -10995,6 +10995,7 @@ var egret;
             this.dirty();
         };
         Graphics.prototype.dirty = function () {
+            this.$renderNode.onTextureChange();
             var self = this;
             self.$renderNode.dirtyRender = true;
             if (!egret.nativeRender) {
