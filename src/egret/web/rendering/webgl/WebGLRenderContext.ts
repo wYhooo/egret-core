@@ -592,33 +592,33 @@ namespace egret.web {
         /**
          * 清除矩形区域
          */
-        public clearRect(x: number, y: number, width: number, height: number): void {
-            if (x != 0 || y != 0 || width != this.surface.width || height != this.surface.height) {
-                let buffer = this.currentBuffer;
-                if (buffer.$hasScissor) {
-                    this.setGlobalCompositeOperation("destination-out");
-                    this.drawRect(x, y, width, height);
-                    this.setGlobalCompositeOperation("source-over");
-                } else {
-                    let m = buffer.globalMatrix;
-                    if (m.b == 0 && m.c == 0) {
-                        x = x * m.a + m.tx;
-                        y = y * m.d + m.ty;
-                        width = width * m.a;
-                        height = height * m.d;
-                        this.enableScissor(x, - y - height + buffer.height, width, height);
-                        this.clear();
-                        this.disableScissor();
-                    } else {
-                        this.setGlobalCompositeOperation("destination-out");
-                        this.drawRect(x, y, width, height);
-                        this.setGlobalCompositeOperation("source-over");
-                    }
-                }
-            } else {
-                this.clear();
-            }
-        }
+        // private __clearRect__(x: number, y: number, width: number, height: number): void {
+        //     if (x != 0 || y != 0 || width != this.surface.width || height != this.surface.height) {
+        //         let buffer = this.currentBuffer;
+        //         if (buffer.$hasScissor) {
+        //             this.setGlobalCompositeOperation("destination-out");
+        //             this.__drawRect__(x, y, width, height);
+        //             this.setGlobalCompositeOperation("source-over");
+        //         } else {
+        //             let m = buffer.globalMatrix;
+        //             if (m.b == 0 && m.c == 0) {
+        //                 x = x * m.a + m.tx;
+        //                 y = y * m.d + m.ty;
+        //                 width = width * m.a;
+        //                 height = height * m.d;
+        //                 this.enableScissor(x, - y - height + buffer.height, width, height);
+        //                 this.clear();
+        //                 this.disableScissor();
+        //             } else {
+        //                 this.setGlobalCompositeOperation("destination-out");
+        //                 this.__drawRect__(x, y, width, height);
+        //                 this.setGlobalCompositeOperation("source-over");
+        //             }
+        //         }
+        //     } else {
+        //         this.clear();
+        //     }
+        // }
 
         /**
          * 设置混色
@@ -762,20 +762,20 @@ namespace egret.web {
         /**
          * 绘制矩形（仅用于遮罩擦除等）
          */
-        public drawRect(x: number, y: number, width: number, height: number): void {
-            let buffer = this.currentBuffer;
-            if (this.contextLost || !buffer) {
-                return;
-            }
+        // private __drawRect__(x: number, y: number, width: number, height: number): void {
+        //     let buffer = this.currentBuffer;
+        //     if (this.contextLost || !buffer) {
+        //         return;
+        //     }
 
-            if (this.vao.reachMaxSize()) {
-                this.$drawWebGL();
-            }
+        //     if (this.vao.reachMaxSize()) {
+        //         this.$drawWebGL();
+        //     }
 
-            this.drawCmdManager.pushDrawRect();
+        //     this.drawCmdManager.pushDrawRect();
 
-            this.vao.cacheArrays(buffer, 0, 0, width, height, x, y, width, height, width, height);
-        }
+        //     this.vao.cacheArrays(buffer, 0, 0, width, height, x, y, width, height, width, height);
+        // }
 
         /**
          * 绘制遮罩
