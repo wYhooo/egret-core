@@ -314,6 +314,8 @@ declare namespace egret {
         clear(): void;
         onLocalChange(): void;
         onParentChange(): void;
+        appendOffsetMatrix(): void;
+        transform(_matrix_: Matrix, offetX: number, offsetY: number): void;
     }
     /**
      * @private
@@ -10038,6 +10040,7 @@ declare namespace egret.sys {
          */
         cleanBeforeRender(): void;
         $getRenderCount(): number;
+        onTextureChange(): void;
     }
 }
 declare namespace egret.sys {
@@ -14367,7 +14370,6 @@ declare namespace egret {
         private static cosInt(value);
         private static readonly EPSILON;
         static fequal(left: number, right: number): boolean;
-        static __transform__(globalMatrix: Matrix, a: number, b: number, c: number, d: number, tx: number, ty: number): void;
         static matrixEqual(left: Matrix, right: Matrix): boolean;
     }
 }

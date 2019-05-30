@@ -540,6 +540,37 @@ var egret;
         Transform2d.prototype.onParentChange = function () {
             this._parentID = -1;
         };
+        Transform2d.prototype.appendOffsetMatrix = function () {
+            if (this.offsetX !== 0 || this.offsetY !== 0) {
+                this.globalMatrix.append(1, 0, 0, 1, this.offsetX, this.offsetY);
+                this.offsetX = 0;
+                this.offsetY = 0;
+            }
+        };
+        Transform2d.prototype.transform = function (_matrix_, offetX, offsetY) {
+            //globalMatrix = globalMatrix * _matrix_[a: number, b: number, c: number, d: number, tx: number, ty: number]
+            var matrix = this.globalMatrix;
+            var a1 = matrix.a;
+            var b1 = matrix.b;
+            var c1 = matrix.c;
+            var d1 = matrix.d;
+            //
+            var a = _matrix_.a;
+            var b = _matrix_.b;
+            var c = _matrix_.c;
+            var d = _matrix_.d;
+            var tx = _matrix_.tx + offetX;
+            var ty = _matrix_.ty + offsetY;
+            //
+            if (a !== 1 || b !== 0 || c !== 0 || d !== 1) {
+                matrix.a = a * a1 + b * c1;
+                matrix.b = a * b1 + b * d1;
+                matrix.c = c * a1 + d * c1;
+                matrix.d = c * b1 + d * d1;
+            }
+            matrix.tx = tx * a1 + ty * c1 + matrix.tx;
+            matrix.ty = tx * b1 + ty * d1 + matrix.ty;
+        };
         return Transform2d;
     }());
     egret.Transform2d = Transform2d;
@@ -15546,6 +15577,17 @@ var egret;
                 }
                 return result;
             };
+            //
+            GroupNode.prototype.onTextureChange = function () {
+                ++this._textureID;
+                for (var _i = 0, _a = this.drawData; _i < _a.length; _i++) {
+                    var childNode = _a[_i];
+                    if (!childNode) {
+                        continue;
+                    }
+                    childNode.onTextureChange();
+                }
+            };
             return GroupNode;
         }(sys.RenderNode));
         sys.GroupNode = GroupNode;
@@ -24276,13 +24318,14 @@ var egret;
             return Math.abs(left - right) < NumberUtils.EPSILON;
         };
         //
-        NumberUtils.__transform__ = function (globalMatrix, a, b, c, d, tx, ty) {
+        /*
+        public static __transform__(globalMatrix: Matrix, a: number, b: number, c: number, d: number, tx: number, ty: number): void {
             //globalMatrix = globalMatrix * [a: number, b: number, c: number, d: number, tx: number, ty: number]
-            var matrix = globalMatrix; //this.globalMatrix;
-            var a1 = matrix.a;
-            var b1 = matrix.b;
-            var c1 = matrix.c;
-            var d1 = matrix.d;
+            let matrix = globalMatrix;//this.globalMatrix;
+            let a1 = matrix.a;
+            let b1 = matrix.b;
+            let c1 = matrix.c;
+            let d1 = matrix.d;
             if (a !== 1 || b !== 0 || c !== 0 || d !== 1) {
                 matrix.a = a * a1 + b * c1;
                 matrix.b = a * b1 + b * d1;
@@ -24291,7 +24334,8 @@ var egret;
             }
             matrix.tx = tx * a1 + ty * c1 + matrix.tx;
             matrix.ty = tx * b1 + ty * d1 + matrix.ty;
-        };
+        }
+        */
         NumberUtils.matrixEqual = function (left, right) {
             return NumberUtils.fequal(left.a, right.a)
                 && NumberUtils.fequal(left.b, right.b)

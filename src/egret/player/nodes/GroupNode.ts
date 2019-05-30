@@ -67,5 +67,16 @@ namespace egret.sys {
             }
             return result;
         }
+
+        //
+        public onTextureChange(): void {
+            ++this._textureID;
+            for (const childNode of this.drawData) {
+                if (!childNode) {
+                    continue;
+                }
+                <RenderNode>childNode.onTextureChange();
+            }
+        }
     }
 }

@@ -8418,15 +8418,16 @@ var egret;
                             **************************
                             */
                             childTransform.globalMatrix.copyFrom(parentTransform.globalMatrix); //这一步其实还能优化
-                            if (child.$useTranslate || true) {
-                                egret.NumberUtils.__transform__(childTransform.globalMatrix, m.a, m.b, m.c, m.d, parentTransform.offsetX + m.tx, parentTransform.offsetY + m.ty);
-                                offsetX2 = -child.$anchorOffsetX;
-                                offsetY2 = -child.$anchorOffsetY;
-                            }
-                            else {
-                                offsetX2 = parentTransform.offsetX + m.tx - child.$anchorOffsetX;
-                                offsetY2 = parentTransform.offsetY + m.ty - child.$anchorOffsetY;
-                            }
+                            //if (child.$useTranslate || true) {
+                            childTransform.transform(m, parentTransform.offsetX, parentTransform.offsetY);
+                            //NumberUtils.__transform__(childTransform.globalMatrix, m.a, m.b, m.c, m.d, parentTransform.offsetX + m.tx, parentTransform.offsetY + m.ty);
+                            offsetX2 = -child.$anchorOffsetX;
+                            offsetY2 = -child.$anchorOffsetY;
+                            //}
+                            // else {
+                            //     offsetX2 = parentTransform.offsetX + m.tx - child.$anchorOffsetX;
+                            //     offsetY2 = parentTransform.offsetY + m.ty - child.$anchorOffsetY;
+                            // }
                             ///
                             childTransform.offsetX = offsetX2;
                             childTransform.offsetY = offsetY2;
@@ -8501,9 +8502,10 @@ var egret;
                 if (image && (image["texture"] || (image.source && image.source["texture"]))) {
                     //
                     var textureTransform = node.textureTransform;
-                    textureTransform.globalMatrix.append(1, 0, 0, 1, textureTransform.offsetX, textureTransform.offsetY);
-                    textureTransform.offsetX = 0;
-                    textureTransform.offsetY = 0;
+                    textureTransform.appendOffsetMatrix();
+                    // textureTransform.globalMatrix.append(1, 0, 0, 1, textureTransform.offsetX, textureTransform.offsetY);
+                    // textureTransform.offsetX = 0;
+                    // textureTransform.offsetY = 0;
                     //
                     // const sourceX = node.sourceX;
                     // const sourceY = node.sourceY;
@@ -8513,7 +8515,10 @@ var egret;
                     var destY = node.drawY;
                     //const destWidth = node.drawW;
                     var destHeight = node.drawH;
-                    egret.NumberUtils.__transform__(textureTransform.globalMatrix, 1, 0, 0, -1, 0, destHeight + destY * 2);
+                    //
+                    egret.$TempMatrix.setTo(1, 0, 0, -1, 0, destHeight + destY * 2);
+                    textureTransform.transform(egret.$TempMatrix, 0, 0);
+                    //NumberUtils.__transform__(textureTransform.globalMatrix, 1, 0, 0, -1, 0, destHeight + destY * 2);
                 }
             };
             /**
@@ -8550,13 +8555,15 @@ var egret;
                 if (groupNode.matrix) {
                     var m = groupNode.matrix;
                     //buffer.useOffset();
-                    if (groupNodeTexTransform.offsetX !== 0 || groupNodeTexTransform.offsetY !== 0) {
-                        groupNodeTexTransform.globalMatrix.append(1, 0, 0, 1, groupNodeTexTransform.offsetX, groupNodeTexTransform.offsetY);
-                        groupNodeTexTransform.offsetX = 0;
-                        groupNodeTexTransform.offsetY = 0;
-                    }
+                    groupNodeTexTransform.appendOffsetMatrix();
+                    // if (groupNodeTexTransform.offsetX !== 0 || groupNodeTexTransform.offsetY !== 0) {
+                    //     groupNodeTexTransform.globalMatrix.append(1, 0, 0, 1, groupNodeTexTransform.offsetX, groupNodeTexTransform.offsetY);
+                    //     groupNodeTexTransform.offsetX = 0;
+                    //     groupNodeTexTransform.offsetY = 0;
+                    // }
                     //buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-                    egret.NumberUtils.__transform__(groupNodeTexTransform.globalMatrix, m.a, m.b, m.c, m.d, m.tx, m.ty);
+                    groupNodeTexTransform.transform(m, 0, 0);
+                    //NumberUtils.__transform__(groupNodeTexTransform.globalMatrix, m.a, m.b, m.c, m.d, m.tx, m.ty);
                 }
                 var children = groupNode.drawData;
                 var length = children.length;
@@ -8606,13 +8613,15 @@ var egret;
                 if (node.matrix) {
                     var m = node.matrix;
                     //buffer.useOffset();
-                    if (textureTransform.offsetX !== 0 || textureTransform.offsetY !== 0) {
-                        textureTransform.globalMatrix.append(1, 0, 0, 1, textureTransform.offsetX, textureTransform.offsetY);
-                        textureTransform.offsetX = 0;
-                        textureTransform.offsetY = 0;
-                    }
+                    textureTransform.appendOffsetMatrix();
+                    // if (textureTransform.offsetX !== 0 || textureTransform.offsetY !== 0) {
+                    //     textureTransform.globalMatrix.append(1, 0, 0, 1, textureTransform.offsetX, textureTransform.offsetY);
+                    //     textureTransform.offsetX = 0;
+                    //     textureTransform.offsetY = 0;
+                    // }
                     //buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-                    egret.NumberUtils.__transform__(textureTransform.globalMatrix, m.a, m.b, m.c, m.d, m.tx, m.ty);
+                    textureTransform.transform(m, 0, 0);
+                    //NumberUtils.__transform__(textureTransform.globalMatrix, m.a, m.b, m.c, m.d, m.tx, m.ty);
                 }
             };
             /**
@@ -8624,22 +8633,25 @@ var egret;
                 if (node.matrix) {
                     var m = node.matrix;
                     //buffer.useOffset();
-                    if (textureTransform.offsetX !== 0 || textureTransform.offsetY !== 0) {
-                        textureTransform.globalMatrix.append(1, 0, 0, 1, textureTransform.offsetX, textureTransform.offsetY);
-                        textureTransform.offsetX = 0;
-                        textureTransform.offsetY = 0;
-                    }
+                    textureTransform.appendOffsetMatrix();
+                    // if (textureTransform.offsetX !== 0 || textureTransform.offsetY !== 0) {
+                    //     textureTransform.globalMatrix.append(1, 0, 0, 1, textureTransform.offsetX, textureTransform.offsetY);
+                    //     textureTransform.offsetX = 0;
+                    //     textureTransform.offsetY = 0;
+                    // }
                     //buffer.transform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-                    egret.NumberUtils.__transform__(textureTransform.globalMatrix, m.a, m.b, m.c, m.d, m.tx, m.ty);
+                    textureTransform.transform(m, 0, 0);
+                    //NumberUtils.__transform__(textureTransform.globalMatrix, m.a, m.b, m.c, m.d, m.tx, m.ty);
                 }
                 ///
                 var image = node.image;
                 if (image) {
                     if (image["texture"] || (image.source && image.source["texture"])) {
                         //
-                        textureTransform.globalMatrix.append(1, 0, 0, 1, textureTransform.offsetX, textureTransform.offsetY);
-                        textureTransform.offsetX = 0;
-                        textureTransform.offsetY = 0;
+                        textureTransform.appendOffsetMatrix();
+                        // textureTransform.globalMatrix.append(1, 0, 0, 1, textureTransform.offsetX, textureTransform.offsetY);
+                        // textureTransform.offsetX = 0;
+                        // textureTransform.offsetY = 0;
                         //
                         var data = node.drawData;
                         var length_10 = data.length;

@@ -148,6 +148,7 @@ namespace egret {
             return Math.abs(left - right) < NumberUtils.EPSILON;
         }
         //
+        /*
         public static __transform__(globalMatrix: Matrix, a: number, b: number, c: number, d: number, tx: number, ty: number): void {
             //globalMatrix = globalMatrix * [a: number, b: number, c: number, d: number, tx: number, ty: number]
             let matrix = globalMatrix;//this.globalMatrix;
@@ -164,6 +165,7 @@ namespace egret {
             matrix.tx = tx * a1 + ty * c1 + matrix.tx;
             matrix.ty = tx * b1 + ty * d1 + matrix.ty;
         }
+        */
         public static matrixEqual(left: Matrix, right: Matrix) {
             return NumberUtils.fequal(left.a, right.a)
                 && NumberUtils.fequal(left.b, right.b)
