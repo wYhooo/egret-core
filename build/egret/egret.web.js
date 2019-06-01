@@ -6926,14 +6926,14 @@ var egret;
         var TextAtlasTextureCache = (function () {
             function TextAtlasTextureCache() {
                 this.textAtlasTextures = [];
-                this.finder = {};
+                this.quickFind = {};
             }
-            TextAtlasTextureCache.prototype.createTextAtlasTexture = function () {
-                var textAtlasTexture = new TextAtlasTexture;
-                this.textAtlasTextures.push(textAtlasTexture);
-                return textAtlasTexture;
+            TextAtlasTextureCache.prototype.create = function () {
+                var newAtlas = new TextAtlasTexture;
+                this.textAtlasTextures.push(newAtlas);
+                return newAtlas;
             };
-            TextAtlasTextureCache.prototype.addToExistingAtlas = function (charKey) {
+            TextAtlasTextureCache.prototype.addToExist = function (charKey) {
                 var textAtlasTextures = this.textAtlasTextures;
                 for (var i = 0, length_8 = textAtlasTextures.length; i < length_8; ++i) {
                     var tex = textAtlasTextures[i];
@@ -6943,32 +6943,32 @@ var egret;
                 }
                 return null;
             };
-            TextAtlasTextureCache.prototype.addToFinder = function (charKey, atlas) {
-                var repeat = this.getAtlas(charKey);
+            TextAtlasTextureCache.prototype.markQuickFind = function (charKey, atlas) {
+                var repeat = this.get(charKey);
                 if (repeat) {
-                    console.error('add to atlas finder repeat = ' + charKey._stringKeyValue);
+                    console.error('markQuickFind repeat = ' + charKey._stringKeyValue);
                 }
-                this.finder[charKey._hashCode] = atlas;
+                this.quickFind[charKey._hashCode] = atlas;
             };
             TextAtlasTextureCache.prototype.addAtlas = function (charKey) {
-                var findExisting = this.getAtlas(charKey);
+                var findExisting = this.get(charKey);
                 if (findExisting) {
                     return findExisting;
                 }
-                var addToExisting = this.addToExistingAtlas(charKey);
-                if (addToExisting) {
-                    this.addToFinder(charKey, addToExisting);
-                    return addToExisting;
+                var addToExist = this.addToExist(charKey);
+                if (addToExist) {
+                    this.markQuickFind(charKey, addToExist);
+                    return addToExist;
                 }
-                var createNew = this.createTextAtlasTexture();
+                var createNew = this.create();
                 if (createNew.add(charKey)) {
-                    this.addToFinder(charKey, createNew);
+                    this.markQuickFind(charKey, createNew);
                     return createNew;
                 }
                 return null;
             };
-            TextAtlasTextureCache.prototype.getAtlas = function (charKey) {
-                return this.finder[charKey._hashCode];
+            TextAtlasTextureCache.prototype.get = function (charKey) {
+                return this.quickFind[charKey._hashCode];
             };
             return TextAtlasTextureCache;
         }());

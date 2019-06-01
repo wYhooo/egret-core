@@ -94,9 +94,7 @@ namespace egret.web {
     }
 
     class TextAtlasTexture {
-
         private testHasCode = 0;
-
         public add(charKey: CharKey): boolean {
             if (!this.testHasCode) {
                 console.log(charKey._stringKeyValue + ' | ' + charKey._hashCode);
@@ -110,15 +108,15 @@ namespace egret.web {
     class TextAtlasTextureCache {
 
         private readonly textAtlasTextures: TextAtlasTexture[] = [];
-        private readonly finder: { [index: number]: TextAtlasTexture } = {};
+        private readonly quickFind: { [index: number]: TextAtlasTexture } = {};
 
-        private createTextAtlasTexture(): TextAtlasTexture {
-            const textAtlasTexture = new TextAtlasTexture;
-            this.textAtlasTextures.push(textAtlasTexture);
-            return textAtlasTexture;
+        private create(): TextAtlasTexture {
+            const newAtlas = new TextAtlasTexture;
+            this.textAtlasTextures.push(newAtlas);
+            return newAtlas;
         }
 
-        private addToExistingAtlas(charKey: CharKey): TextAtlasTexture {
+        private addToExist(charKey: CharKey): TextAtlasTexture {
             const textAtlasTextures = this.textAtlasTextures;
             for (let i = 0, length = textAtlasTextures.length; i < length; ++i) {
                 const tex = textAtlasTextures[i];
@@ -129,34 +127,34 @@ namespace egret.web {
             return null;
         }
 
-        private addToFinder(charKey: CharKey, atlas: TextAtlasTexture): void {
-            const repeat = this.getAtlas(charKey);
+        private markQuickFind(charKey: CharKey, atlas: TextAtlasTexture): void {
+            const repeat = this.get(charKey);
             if (repeat) {
-                console.error('add to atlas finder repeat = ' + charKey._stringKeyValue);
+                console.error('markQuickFind repeat = ' + charKey._stringKeyValue);
             }
-            this.finder[charKey._hashCode] = atlas;
+            this.quickFind[charKey._hashCode] = atlas;
         }
 
         public addAtlas(charKey: CharKey): TextAtlasTexture {
-            const findExisting = this.getAtlas(charKey);
+            const findExisting = this.get(charKey);
             if (findExisting) {
                 return findExisting;
             }
-            const addToExisting = this.addToExistingAtlas(charKey);
-            if (addToExisting) {
-                this.addToFinder(charKey, addToExisting);
-                return addToExisting;
+            const addToExist = this.addToExist(charKey);
+            if (addToExist) {
+                this.markQuickFind(charKey, addToExist);
+                return addToExist;
             }
-            const createNew = this.createTextAtlasTexture();
+            const createNew = this.create();
             if (createNew.add(charKey)) {
-                this.addToFinder(charKey, createNew);
+                this.markQuickFind(charKey, createNew);
                 return createNew;
             }
             return null;
         }
 
-        public getAtlas(charKey: CharKey): TextAtlasTexture {
-            return this.finder[charKey._hashCode];
+        public get(charKey: CharKey): TextAtlasTexture {
+            return this.quickFind[charKey._hashCode];
         }
     }
 
@@ -165,7 +163,7 @@ namespace egret.web {
     export class WebGLTextRender {
     
         public readonly textAtlasTextureCache: TextAtlasTextureCache = new TextAtlasTextureCache;
-        
+
         public static render(textNode: sys.TextNode): void {
             if (!__webglTextRender__) {
                 return;
