@@ -15068,8 +15068,6 @@ declare namespace egret {
      */
     function toColorString(value: number): string;
 }
-declare namespace egret.web {
-}
 declare namespace egret.sys {
     /**
      * @private
