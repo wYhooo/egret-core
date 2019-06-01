@@ -62,7 +62,7 @@ namespace egret.web {
         /**
          * ????
          */
-        readonly key: string;
+        readonly __key__: string;
     }
 
     function __hashCode__(str: string): number {
@@ -76,20 +76,31 @@ namespace egret.web {
             hash |= 0; // Convert to 32bit integer
         }
         return hash;
-    };
+    }
 
-    function __charWithStyleKey__(char: string, styleKey: StyleKey): string {
-        return char + ':' + styleKey.key;
-    };
+    class CharKey {
+
+        public readonly _char: string = '';
+        public readonly _styleKey: StyleKey = {} as StyleKey;
+        public readonly _stringKeyValue: string = '';
+        public readonly _hashCode: number = 0;
+
+        constructor (char: string, styleKey: StyleKey) {
+            this._char = char;
+            this._styleKey = styleKey;
+            this._stringKeyValue = char + ':' + styleKey.__key__;
+            this._hashCode = __hashCode__(this._stringKeyValue);
+        }
+    }
 
     class TextAtlasTexture {
 
         private testHasCode = 0;
 
-        public add(charWithStyleKey: string, hash: number): boolean {
+        public add(charKey: CharKey): boolean {
             if (!this.testHasCode) {
-                console.log('charWithStyleKey = ' + charWithStyleKey + ':' + hash);
-                this.testHasCode = hash;
+                console.log(charKey._stringKeyValue + ' | ' + charKey._hashCode);
+                this.testHasCode = charKey._hashCode;
                 return true;
             }
             return false;
@@ -107,82 +118,81 @@ namespace egret.web {
             return textAtlasTexture;
         }
 
-        private addToExistingAtlas(charWithStyleKey: string, hash: number): TextAtlasTexture {
+        private addToExistingAtlas(charKey: CharKey): TextAtlasTexture {
             const textAtlasTextures = this.textAtlasTextures;
             for (let i = 0, length = textAtlasTextures.length; i < length; ++i) {
                 const tex = textAtlasTextures[i];
-                if (tex.add(charWithStyleKey, hash)) {
+                if (tex.add(charKey)) {
                     return tex;
                 }
             }
             return null;
         }
 
-        private addToFinder(charWithStyleKey: string, hash: number, atlas: TextAtlasTexture): void {
-            const repeat = this.getAtlas(charWithStyleKey, hash);
+        private addToFinder(charKey: CharKey, atlas: TextAtlasTexture): void {
+            const repeat = this.getAtlas(charKey);
             if (repeat) {
-                console.error('add to atlas finder repeat = ' + charWithStyleKey);
+                console.error('add to atlas finder repeat = ' + charKey._stringKeyValue);
             }
-            this.finder[hash] = atlas;
+            this.finder[charKey._hashCode] = atlas;
         }
 
-        public addAtlas(charWithStyleKey: string, hash: number): TextAtlasTexture {
-            const findExisting = this.getAtlas(charWithStyleKey, hash);
+        public addAtlas(charKey: CharKey): TextAtlasTexture {
+            const findExisting = this.getAtlas(charKey);
             if (findExisting) {
                 return findExisting;
             }
-            const addToExisting = this.addToExistingAtlas(charWithStyleKey, hash);
+            const addToExisting = this.addToExistingAtlas(charKey);
             if (addToExisting) {
-                this.addToFinder(charWithStyleKey, hash, addToExisting);
+                this.addToFinder(charKey, addToExisting);
                 return addToExisting;
             }
             const createNew = this.createTextAtlasTexture();
-            if (createNew.add(charWithStyleKey, hash)) {
-                this.addToFinder(charWithStyleKey, hash, createNew);
+            if (createNew.add(charKey)) {
+                this.addToFinder(charKey, createNew);
                 return createNew;
             }
             return null;
         }
 
-        public getAtlas(charWithStyleKey: string, hash: number): TextAtlasTexture {
-            return this.finder[hash];
+        public getAtlas(charKey: CharKey): TextAtlasTexture {
+            return this.finder[charKey._hashCode];
         }
     }
 
+    
+
     export class WebGLTextRender {
-
+    
         public readonly textAtlasTextureCache: TextAtlasTextureCache = new TextAtlasTextureCache;
-
-        public catch(textNode: sys.TextNode): void {
+        
+        public static render(textNode: sys.TextNode): void {
+            if (!__webglTextRender__) {
+                return;
+            }
             //
             const offset = 4;
             const drawData = textNode.drawData;
-            const styleKey = this.extractStyleKey(textNode);
+            const styleKey = __webglTextRender__.extractStyleKey(textNode);
             //
             let x = 0;
             let y = 0;
             let string = '';
-            let style: egret.ITextStyle = null;
+            let style: any = null;
             for (let i = 0, length = drawData.length; i < length; i += offset) {
                 x = drawData[i + 0] as number;
                 y = drawData[i + 1] as number;
                 string = drawData[i + 2] as string;
-                style = drawData[i + 3] as egret.ITextStyle;
-                this.handle(string, styleKey);
+                style = drawData[i + 3];
+                __webglTextRender__.handleString(string, styleKey);
             }
         }
 
-        private addAtlas(charWithStyleKey: string, hash: number): TextAtlasTexture {
-            return this.textAtlasTextureCache.addAtlas(charWithStyleKey, hash);
-        }
-
-        private handle(string: string, styleKey: StyleKey): void {
-            let charWithStyleKey = '';
-            let hash = 0;
-            for (const s of string) {
-                charWithStyleKey = __charWithStyleKey__(s, styleKey);
-                hash = __hashCode__(charWithStyleKey);
-                this.addAtlas(charWithStyleKey, hash);
+        private handleString(string: string, styleKey: StyleKey): void {
+            const textAtlasTextureCache = this.textAtlasTextureCache;
+            for (const char of string) {
+                const charKey = new CharKey(char, styleKey);
+                textAtlasTextureCache.addAtlas(charKey);
             }
         }
 
@@ -196,7 +206,7 @@ namespace egret.web {
                 italic: textNode.italic,
                 fontFamily: textNode.fontFamily,
 
-                key: '' + textNode.textColor
+                __key__: '' + textNode.textColor
                     + '-' + textNode.strokeColor
                     + '-' + textNode.size
                     + '-' + textNode.stroke

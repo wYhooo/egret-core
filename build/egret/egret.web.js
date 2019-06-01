@@ -6894,19 +6894,28 @@ var egret;
             }
             return hash;
         }
-        ;
-        function __charWithStyleKey__(char, styleKey) {
-            return char + ':' + styleKey.key;
-        }
-        ;
+        var CharKey = (function () {
+            function CharKey(char, styleKey) {
+                this._char = '';
+                this._styleKey = {};
+                this._stringKeyValue = '';
+                this._hashCode = 0;
+                this._char = char;
+                this._styleKey = styleKey;
+                this._stringKeyValue = char + ':' + styleKey.__key__;
+                this._hashCode = __hashCode__(this._stringKeyValue);
+            }
+            return CharKey;
+        }());
+        __reflect(CharKey.prototype, "CharKey");
         var TextAtlasTexture = (function () {
             function TextAtlasTexture() {
                 this.testHasCode = 0;
             }
-            TextAtlasTexture.prototype.add = function (charWithStyleKey, hash) {
+            TextAtlasTexture.prototype.add = function (charKey) {
                 if (!this.testHasCode) {
-                    console.log('charWithStyleKey = ' + charWithStyleKey + ':' + hash);
-                    this.testHasCode = hash;
+                    console.log(charKey._stringKeyValue + ' | ' + charKey._hashCode);
+                    this.testHasCode = charKey._hashCode;
                     return true;
                 }
                 return false;
@@ -6924,42 +6933,42 @@ var egret;
                 this.textAtlasTextures.push(textAtlasTexture);
                 return textAtlasTexture;
             };
-            TextAtlasTextureCache.prototype.addToExistingAtlas = function (charWithStyleKey, hash) {
+            TextAtlasTextureCache.prototype.addToExistingAtlas = function (charKey) {
                 var textAtlasTextures = this.textAtlasTextures;
                 for (var i = 0, length_8 = textAtlasTextures.length; i < length_8; ++i) {
                     var tex = textAtlasTextures[i];
-                    if (tex.add(charWithStyleKey, hash)) {
+                    if (tex.add(charKey)) {
                         return tex;
                     }
                 }
                 return null;
             };
-            TextAtlasTextureCache.prototype.addToFinder = function (charWithStyleKey, hash, atlas) {
-                var repeat = this.getAtlas(charWithStyleKey, hash);
+            TextAtlasTextureCache.prototype.addToFinder = function (charKey, atlas) {
+                var repeat = this.getAtlas(charKey);
                 if (repeat) {
-                    console.error('add to atlas finder repeat = ' + charWithStyleKey);
+                    console.error('add to atlas finder repeat = ' + charKey._stringKeyValue);
                 }
-                this.finder[hash] = atlas;
+                this.finder[charKey._hashCode] = atlas;
             };
-            TextAtlasTextureCache.prototype.addAtlas = function (charWithStyleKey, hash) {
-                var findExisting = this.getAtlas(charWithStyleKey, hash);
+            TextAtlasTextureCache.prototype.addAtlas = function (charKey) {
+                var findExisting = this.getAtlas(charKey);
                 if (findExisting) {
                     return findExisting;
                 }
-                var addToExisting = this.addToExistingAtlas(charWithStyleKey, hash);
+                var addToExisting = this.addToExistingAtlas(charKey);
                 if (addToExisting) {
-                    this.addToFinder(charWithStyleKey, hash, addToExisting);
+                    this.addToFinder(charKey, addToExisting);
                     return addToExisting;
                 }
                 var createNew = this.createTextAtlasTexture();
-                if (createNew.add(charWithStyleKey, hash)) {
-                    this.addToFinder(charWithStyleKey, hash, createNew);
+                if (createNew.add(charKey)) {
+                    this.addToFinder(charKey, createNew);
                     return createNew;
                 }
                 return null;
             };
-            TextAtlasTextureCache.prototype.getAtlas = function (charWithStyleKey, hash) {
-                return this.finder[hash];
+            TextAtlasTextureCache.prototype.getAtlas = function (charKey) {
+                return this.finder[charKey._hashCode];
             };
             return TextAtlasTextureCache;
         }());
@@ -6968,11 +6977,14 @@ var egret;
             function WebGLTextRender() {
                 this.textAtlasTextureCache = new TextAtlasTextureCache;
             }
-            WebGLTextRender.prototype.catch = function (textNode) {
+            WebGLTextRender.render = function (textNode) {
+                if (!web.__webglTextRender__) {
+                    return;
+                }
                 //
                 var offset = 4;
                 var drawData = textNode.drawData;
-                var styleKey = this.extractStyleKey(textNode);
+                var styleKey = web.__webglTextRender__.extractStyleKey(textNode);
                 //
                 var x = 0;
                 var y = 0;
@@ -6983,20 +6995,15 @@ var egret;
                     y = drawData[i + 1];
                     string = drawData[i + 2];
                     style = drawData[i + 3];
-                    this.handle(string, styleKey);
+                    web.__webglTextRender__.handleString(string, styleKey);
                 }
             };
-            WebGLTextRender.prototype.addAtlas = function (charWithStyleKey, hash) {
-                return this.textAtlasTextureCache.addAtlas(charWithStyleKey, hash);
-            };
-            WebGLTextRender.prototype.handle = function (string, styleKey) {
-                var charWithStyleKey = '';
-                var hash = 0;
+            WebGLTextRender.prototype.handleString = function (string, styleKey) {
+                var textAtlasTextureCache = this.textAtlasTextureCache;
                 for (var _i = 0, string_1 = string; _i < string_1.length; _i++) {
-                    var s = string_1[_i];
-                    charWithStyleKey = __charWithStyleKey__(s, styleKey);
-                    hash = __hashCode__(charWithStyleKey);
-                    this.addAtlas(charWithStyleKey, hash);
+                    var char = string_1[_i];
+                    var charKey = new CharKey(char, styleKey);
+                    textAtlasTextureCache.addAtlas(charKey);
                 }
             };
             WebGLTextRender.prototype.extractStyleKey = function (textNode) {
@@ -7008,7 +7015,7 @@ var egret;
                     bold: textNode.bold,
                     italic: textNode.italic,
                     fontFamily: textNode.fontFamily,
-                    key: '' + textNode.textColor
+                    __key__: '' + textNode.textColor
                         + '-' + textNode.strokeColor
                         + '-' + textNode.size
                         + '-' + textNode.stroke
@@ -8263,7 +8270,7 @@ var egret;
                 }
                 if (node.dirtyRender) {
                     var surface = this.canvasRenderBuffer.surface;
-                    web.__webglTextRender__ ? web.__webglTextRender__.catch(node) : void 0;
+                    web.WebGLTextRender.render(node);
                     this.canvasRenderer.renderText(node, this.canvasRenderBuffer.context);
                     // 拷贝canvas到texture
                     var texture = node.$texture;
