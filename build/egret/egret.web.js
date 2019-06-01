@@ -6908,17 +6908,85 @@ var egret;
             return CharKey;
         }());
         __reflect(CharKey.prototype, "CharKey");
+        var TextAtlasGrid = (function () {
+            function TextAtlasGrid(charKey, width, height) {
+                this.width = 0;
+                this.height = 0;
+                this.locationX = 0;
+                this.locationY = 0;
+                this.charKey = null;
+                this.width = width;
+                this.height = height;
+                this.charKey = charKey;
+            }
+            return TextAtlasGrid;
+        }());
+        __reflect(TextAtlasGrid.prototype, "TextAtlasGrid");
+        var TextAtlasMap = (function () {
+            function TextAtlasMap(width, height) {
+                this.grids = {};
+                this.width = 0;
+                this.height = 0;
+                this.curLocationX = 0;
+                this.curLocationY = 0;
+                this.maxHeight = 0;
+                this.width = width;
+                this.height = height;
+            }
+            TextAtlasMap.prototype.add = function (grid) {
+                var right = this.width;
+                var bottom = this.height;
+                var curX = this.curLocationX;
+                curX += grid.width;
+                if (curX >= right) {
+                    //本行不够，需要换行
+                    var curY = this.curLocationY;
+                    curY += this.maxHeight; //换行
+                    curY += grid.height; //再测试边界
+                    if (curY >= this.height) {
+                        return false; //失败
+                    }
+                    //可以换行
+                    this.curLocationX = 0;
+                    this.curLocationY += this.maxHeight;
+                }
+                else {
+                    var curY = this.curLocationY;
+                    curY += grid.height; //再测试
+                    if (curY >= bottom) {
+                        return false;
+                    }
+                }
+                //
+                this.grids[grid.charKey._hashCode] = grid;
+                grid.locationX = this.curLocationX;
+                grid.locationY = this.curLocationY;
+                this.curLocationX += grid.width;
+                this.maxHeight = Math.max(this.maxHeight, grid.height);
+                return true;
+            };
+            return TextAtlasMap;
+        }());
+        __reflect(TextAtlasMap.prototype, "TextAtlasMap");
         var TextAtlasTexture = (function () {
             function TextAtlasTexture() {
-                this.testHasCode = 0;
+                this.name = '';
+                this.textAtlasMap = new TextAtlasMap(50, 50);
             }
             TextAtlasTexture.prototype.add = function (charKey) {
-                if (!this.testHasCode) {
-                    console.log(charKey._stringKeyValue + ' | ' + charKey._hashCode);
-                    this.testHasCode = charKey._hashCode;
-                    return true;
+                var sz = charKey._styleKey.size;
+                var grid = new TextAtlasGrid(charKey, sz, sz);
+                var rs = this.textAtlasMap.add(grid);
+                return rs;
+            };
+            TextAtlasTexture.prototype.debugLog = function () {
+                console.log('________________________________________');
+                console.log('TextAtlasTexture:' + this.name);
+                var grids = this.textAtlasMap.grids;
+                for (var hash in grids) {
+                    var grid = grids[hash];
+                    console.log("[" + grid.locationX + ":" + grid.locationY + "] => " + grid.charKey._stringKeyValue);
                 }
-                return false;
             };
             return TextAtlasTexture;
         }());
@@ -6931,6 +6999,7 @@ var egret;
             TextAtlasTextureCache.prototype.create = function () {
                 var newAtlas = new TextAtlasTexture;
                 this.textAtlasTextures.push(newAtlas);
+                newAtlas.name = ('text:' + (this.textAtlasTextures.length - 1));
                 return newAtlas;
             };
             TextAtlasTextureCache.prototype.addToExist = function (charKey) {
@@ -6970,6 +7039,13 @@ var egret;
             TextAtlasTextureCache.prototype.get = function (charKey) {
                 return this.quickFind[charKey._hashCode];
             };
+            TextAtlasTextureCache.prototype.debugLog = function () {
+                var textAtlasTextures = this.textAtlasTextures;
+                for (var _i = 0, textAtlasTextures_1 = textAtlasTextures; _i < textAtlasTextures_1.length; _i++) {
+                    var atlas = textAtlasTextures_1[_i];
+                    atlas.debugLog();
+                }
+            };
             return TextAtlasTextureCache;
         }());
         __reflect(TextAtlasTextureCache.prototype, "TextAtlasTextureCache");
@@ -6997,6 +7073,7 @@ var egret;
                     style = drawData[i + 3];
                     web.__webglTextRender__.handleString(string, styleKey);
                 }
+                web.__webglTextRender__.debugLog();
             };
             WebGLTextRender.prototype.handleString = function (string, styleKey) {
                 var textAtlasTextureCache = this.textAtlasTextureCache;
@@ -7023,6 +7100,9 @@ var egret;
                         + '-' + (textNode.italic ? 1 : 0)
                         + '-' + textNode.fontFamily,
                 };
+            };
+            WebGLTextRender.prototype.debugLog = function () {
+                this.textAtlasTextureCache.debugLog();
             };
             return WebGLTextRender;
         }());

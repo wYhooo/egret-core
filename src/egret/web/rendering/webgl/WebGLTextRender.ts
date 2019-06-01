@@ -85,7 +85,7 @@ namespace egret.web {
         public readonly _stringKeyValue: string = '';
         public readonly _hashCode: number = 0;
 
-        constructor (char: string, styleKey: StyleKey) {
+        constructor(char: string, styleKey: StyleKey) {
             this._char = char;
             this._styleKey = styleKey;
             this._stringKeyValue = char + ':' + styleKey.__key__;
@@ -93,15 +93,88 @@ namespace egret.web {
         }
     }
 
-    class TextAtlasTexture {
-        private testHasCode = 0;
-        public add(charKey: CharKey): boolean {
-            if (!this.testHasCode) {
-                console.log(charKey._stringKeyValue + ' | ' + charKey._hashCode);
-                this.testHasCode = charKey._hashCode;
-                return true;
+    class TextAtlasGrid {
+        public readonly width: number = 0;
+        public readonly height: number = 0;
+        public locationX: number = 0;
+        public locationY: number = 0;
+        public readonly charKey: CharKey = null;
+        constructor(charKey: CharKey, width: number, height: number) {
+            this.width = width;
+            this.height = height;
+            this.charKey = charKey;
+        }
+    }
+
+    class TextAtlasMap {
+
+        public readonly grids: { [index: number]: TextAtlasGrid } = {};
+
+        public width: number = 0;
+        public height: number = 0;
+        public curLocationX: number = 0;
+        public curLocationY: number = 0;
+        public maxHeight: number = 0;
+        
+        constructor(width: number, height: number) {
+            this.width = width;
+            this.height = height;
+        }
+
+        public add(grid: TextAtlasGrid): boolean {
+            const right = this.width;
+            const bottom = this.height;
+            let curX = this.curLocationX;
+            curX += grid.width;
+            if (curX >= right) {
+                //本行不够，需要换行
+                let curY = this.curLocationY;
+                curY += this.maxHeight; //换行
+                curY += grid.height;//再测试边界
+                if (curY >= this.height) {
+                    return false;//失败
+                }
+                //可以换行
+                this.curLocationX = 0;
+                this.curLocationY += this.maxHeight;
             }
-            return false;
+            else {
+                let curY = this.curLocationY;
+                curY += grid.height;//再测试
+                if (curY >= bottom) {
+                    return false;
+                }
+            }
+            //
+            this.grids[grid.charKey._hashCode] = grid;
+            grid.locationX = this.curLocationX;
+            grid.locationY = this.curLocationY;
+            this.curLocationX += grid.width;
+            this.maxHeight = Math.max(this.maxHeight, grid.height);
+            return true;
+        }
+    }
+
+    class TextAtlasTexture {
+        
+        public name: string = '';
+        private readonly textAtlasMap: TextAtlasMap = new TextAtlasMap(50, 50);
+
+        public add(charKey: CharKey): boolean {
+            const sz = charKey._styleKey.size;
+            const grid = new TextAtlasGrid(charKey, sz, sz);
+            const rs = this.textAtlasMap.add(grid);
+            return rs;
+        }
+
+        public debugLog(): void {
+            console.log('________________________________________'); 
+            console.log('TextAtlasTexture:' + this.name);
+            const grids = this.textAtlasMap.grids;
+            for (const hash in grids) {
+                const grid = grids[hash]; 
+                console.log(`[${grid.locationX}:${grid.locationY}] => ${grid.charKey._stringKeyValue}`);
+            }
         }
     }
 
@@ -113,6 +186,7 @@ namespace egret.web {
         private create(): TextAtlasTexture {
             const newAtlas = new TextAtlasTexture;
             this.textAtlasTextures.push(newAtlas);
+            newAtlas.name = ('text:' + (this.textAtlasTextures.length - 1));
             return newAtlas;
         }
 
@@ -156,12 +230,19 @@ namespace egret.web {
         public get(charKey: CharKey): TextAtlasTexture {
             return this.quickFind[charKey._hashCode];
         }
+
+        public debugLog(): void {
+            const textAtlasTextures = this.textAtlasTextures;
+            for (const atlas of textAtlasTextures) {
+                atlas.debugLog();
+            }
+        }
     }
 
-    
+
 
     export class WebGLTextRender {
-    
+
         public readonly textAtlasTextureCache: TextAtlasTextureCache = new TextAtlasTextureCache;
 
         public static render(textNode: sys.TextNode): void {
@@ -184,6 +265,7 @@ namespace egret.web {
                 style = drawData[i + 3];
                 __webglTextRender__.handleString(string, styleKey);
             }
+            __webglTextRender__.debugLog();
         }
 
         private handleString(string: string, styleKey: StyleKey): void {
@@ -213,6 +295,10 @@ namespace egret.web {
                     + '-' + textNode.fontFamily,
 
             } as StyleKey;
+        }
+
+        public debugLog(): void {
+            this.textAtlasTextureCache.debugLog();
         }
     }
 
