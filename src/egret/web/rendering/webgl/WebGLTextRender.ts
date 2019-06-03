@@ -129,7 +129,7 @@ namespace egret.web {
             this._hashCode = __hashCode__(this._string);
         }
 
-        public render(canvas: HTMLCanvasElement, offset: number): void {
+        public render(canvas: HTMLCanvasElement): void {
             if (!canvas) {
                 return;
             }
@@ -153,7 +153,7 @@ namespace egret.web {
             const measureText = this.measureText(context, text, context.font);
             if (measureText) {
                 this.renderWidth = measureText.width;
-                this.renderHeight = (measureText.width || this._styleKey.size);
+                this.renderHeight = (measureText['height'] || this._styleKey.size);
             }
             else {
                 console.error('text = ' + text + ', measureText is null');
@@ -161,14 +161,14 @@ namespace egret.web {
                 this.renderHeight = this._styleKey.size;
             }
             //
-            canvas.width = this.renderWidth + offset * 2;
-            canvas.height = this.renderHeight + offset * 2;
+            canvas.width = this.renderWidth;
+            canvas.height = this.renderHeight;
             //
             if (stroke) {
                 context.lineWidth = stroke * 2;
-                context.strokeText(text, x + offset, y + offset);
+                context.strokeText(text, x, y);
             }
-            context.fillText(text, x + offset, y + offset);
+            context.fillText(text, x, y);
         }
 
         private measureText(context: CanvasRenderingContext2D, text: string, font: string): TextMetrics {
@@ -231,7 +231,7 @@ namespace egret.web {
             const canvas = this.canvas;
             for (const char of labelstring) {
                 const charValue = new CharValue(char, styleKey);
-                charValue.render(canvas, __TEXT_RENDER_OFFSET__);
+                charValue.render(canvas);
                 console.log(char + ':' + canvas.width + ', ' + canvas.height);
             }
         }

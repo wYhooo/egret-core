@@ -8353,7 +8353,7 @@ var egret;
                 this._string = char + ':' + styleKey.__string__;
                 this._hashCode = __hashCode__(this._string);
             }
-            CharValue.prototype.render = function (canvas, offset) {
+            CharValue.prototype.render = function (canvas) {
                 if (!canvas) {
                     return;
                 }
@@ -8377,7 +8377,7 @@ var egret;
                 var measureText = this.measureText(context, text, context.font);
                 if (measureText) {
                     this.renderWidth = measureText.width;
-                    this.renderHeight = (measureText.width || this._styleKey.size);
+                    this.renderHeight = (measureText['height'] || this._styleKey.size);
                 }
                 else {
                     console.error('text = ' + text + ', measureText is null');
@@ -8385,14 +8385,14 @@ var egret;
                     this.renderHeight = this._styleKey.size;
                 }
                 //
-                canvas.width = this.renderWidth + offset * 2;
-                canvas.height = this.renderHeight + offset * 2;
+                canvas.width = this.renderWidth;
+                canvas.height = this.renderHeight;
                 //
                 if (stroke) {
                     context.lineWidth = stroke * 2;
-                    context.strokeText(text, x + offset, y + offset);
+                    context.strokeText(text, x, y);
                 }
-                context.fillText(text, x + offset, y + offset);
+                context.fillText(text, x, y);
             };
             CharValue.prototype.measureText = function (context, text, font) {
                 var isChinese = __ChineseCharactersRegExp__.test(text);
@@ -8459,7 +8459,7 @@ var egret;
                 for (var _i = 0, labelstring_1 = labelstring; _i < labelstring_1.length; _i++) {
                     var char = labelstring_1[_i];
                     var charValue = new CharValue(char, styleKey);
-                    charValue.render(canvas, __TEXT_RENDER_OFFSET__);
+                    charValue.render(canvas);
                     console.log(char + ':' + canvas.width + ', ' + canvas.height);
                 }
             };
