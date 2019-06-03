@@ -44,6 +44,11 @@ namespace egret.web {
         return hash;
     }
 
+    //针对中文的加速查找
+    const __ChineseCharactersRegExp__ = new RegExp("^[\u4E00-\u9FA5]$");
+    const __ChineseCharacterMeasureFastMap__: { [index: string]: TextMetrics } = {};
+
+    //
     class StyleKey {
         /**
          * 颜色值
@@ -145,7 +150,7 @@ namespace egret.web {
             context.fillStyle = toColorString(textColor);
             context.strokeStyle = toColorString(strokeColor);
             //重新测试字体大小
-            const measureText = context.measureText(text);
+            const measureText = this.measureText(context, text, context.font);
             if (measureText) {
                 this.renderWidth = measureText.width;
                 this.renderHeight = (measureText.width || this._styleKey.size);
@@ -165,7 +170,24 @@ namespace egret.web {
             }
             context.fillText(text, x + offset, y + offset);
         }
+
+        private measureText(context: CanvasRenderingContext2D, text: string, font: string): TextMetrics {
+            const isChinese = __ChineseCharactersRegExp__.test(text);
+            if (isChinese) {
+                if (__ChineseCharacterMeasureFastMap__[font]) {
+                    return __ChineseCharacterMeasureFastMap__[font];
+                }
+            }
+            context.font = font;
+            const measureText = context.measureText(text);
+            if (isChinese) {
+                __ChineseCharacterMeasureFastMap__[font] = measureText;
+            }
+            return measureText;
+        }
     }
+
+
 
     class TextAtlasTexture {
         public name: string = '';

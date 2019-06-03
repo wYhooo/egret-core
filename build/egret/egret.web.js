@@ -8314,6 +8314,10 @@ var egret;
             }
             return hash;
         }
+        //针对中文的加速查找
+        var __ChineseCharactersRegExp__ = new RegExp("^[\u4E00-\u9FA5]$");
+        var __ChineseCharacterMeasureFastMap__ = {};
+        //
         var StyleKey = (function () {
             function StyleKey(textNode, format) {
                 this.format = null;
@@ -8370,7 +8374,7 @@ var egret;
                 context.fillStyle = egret.toColorString(textColor);
                 context.strokeStyle = egret.toColorString(strokeColor);
                 //重新测试字体大小
-                var measureText = context.measureText(text);
+                var measureText = this.measureText(context, text, context.font);
                 if (measureText) {
                     this.renderWidth = measureText.width;
                     this.renderHeight = (measureText.width || this._styleKey.size);
@@ -8389,6 +8393,20 @@ var egret;
                     context.strokeText(text, x + offset, y + offset);
                 }
                 context.fillText(text, x + offset, y + offset);
+            };
+            CharValue.prototype.measureText = function (context, text, font) {
+                var isChinese = __ChineseCharactersRegExp__.test(text);
+                if (isChinese) {
+                    if (__ChineseCharacterMeasureFastMap__[font]) {
+                        return __ChineseCharacterMeasureFastMap__[font];
+                    }
+                }
+                context.font = font;
+                var measureText = context.measureText(text);
+                if (isChinese) {
+                    __ChineseCharacterMeasureFastMap__[font] = measureText;
+                }
+                return measureText;
             };
             return CharValue;
         }());
