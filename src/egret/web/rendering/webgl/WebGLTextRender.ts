@@ -115,14 +115,17 @@ namespace egret.web {
 
     class CharValue {
 
-        public readonly _char: string;
-        public readonly _styleKey: StyleKey;
-        public readonly _string: string;
-        public readonly _hashCode: number;
+        public _char: string = '';
+        public _styleKey: StyleKey = null;
+        public _string: string = '';
+        public _hashCode: number = 0;
         public renderWidth: number = 0;
         public renderHeight: number = 0;
 
-        constructor(char: string, styleKey: StyleKey) {
+        constructor() {
+        }
+
+        public init(char: string, styleKey: StyleKey): void {
             this._char = char;
             this._styleKey = styleKey;
             this._string = char + ':' + styleKey.__string__;
@@ -202,11 +205,12 @@ namespace egret.web {
         public readonly textAtlasTextureCache: TextAtlasTextureCache = new TextAtlasTextureCache;
 
         public static render(textNode: sys.TextNode): void {
+            return;
             if (!textNode) {
                 return;
             }
             //先配置这个模型
-            configTextureAtlasBookModel(128 * 2, __TEXT_RENDER_OFFSET__);
+            configTextTextureAtlas(128 * 2, __TEXT_RENDER_OFFSET__);
             //
             const offset = 4;
             const drawData = textNode.drawData;
@@ -230,9 +234,15 @@ namespace egret.web {
         private handleLabelString(labelstring: string, styleKey: StyleKey): void {
             const canvas = this.canvas;
             for (const char of labelstring) {
-                const charValue = new CharValue(char, styleKey);
-                charValue.render(canvas);
+                const charVal = new CharValue();
+                charVal.init(char, styleKey);
+                charVal.render(canvas);
                 console.log(char + ':' + canvas.width + ', ' + canvas.height);
+                //
+                // const tb = new TextBlock(charVal.renderWidth, charVal.renderHeight);
+                // if (__book__.addTextBlock(tb)) {
+
+                // }
             }
         }
 

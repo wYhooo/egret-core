@@ -8345,14 +8345,20 @@ var egret;
         }());
         __reflect(StyleKey.prototype, "StyleKey");
         var CharValue = (function () {
-            function CharValue(char, styleKey) {
+            function CharValue() {
+                this._char = '';
+                this._styleKey = null;
+                this._string = '';
+                this._hashCode = 0;
                 this.renderWidth = 0;
                 this.renderHeight = 0;
+            }
+            CharValue.prototype.init = function (char, styleKey) {
                 this._char = char;
                 this._styleKey = styleKey;
                 this._string = char + ':' + styleKey.__string__;
                 this._hashCode = __hashCode__(this._string);
-            }
+            };
             CharValue.prototype.render = function (canvas) {
                 if (!canvas) {
                     return;
@@ -8431,11 +8437,12 @@ var egret;
                 this._canvas = null;
             }
             WebGLTextRender.render = function (textNode) {
+                return;
                 if (!textNode) {
                     return;
                 }
                 //先配置这个模型
-                configTextureAtlasBookModel(128 * 2, __TEXT_RENDER_OFFSET__);
+                egret.configTextTextureAtlas(128 * 2, __TEXT_RENDER_OFFSET__);
                 //
                 var offset = 4;
                 var drawData = textNode.drawData;
@@ -8458,9 +8465,14 @@ var egret;
                 var canvas = this.canvas;
                 for (var _i = 0, labelstring_1 = labelstring; _i < labelstring_1.length; _i++) {
                     var char = labelstring_1[_i];
-                    var charValue = new CharValue(char, styleKey);
-                    charValue.render(canvas);
+                    var charVal = new CharValue();
+                    charVal.init(char, styleKey);
+                    charVal.render(canvas);
                     console.log(char + ':' + canvas.width + ', ' + canvas.height);
+                    //
+                    // const tb = new TextBlock(charVal.renderWidth, charVal.renderHeight);
+                    // if (__book__.addTextBlock(tb)) {
+                    // }
                 }
             };
             Object.defineProperty(WebGLTextRender.prototype, "canvas", {
@@ -8481,271 +8493,6 @@ var egret;
         web.__webglTextRender__ = new WebGLTextRender;
     })(web = egret.web || (egret.web = {}));
 })(egret || (egret = {}));
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-present, Egret Technology.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
-var __MAX_PAGE_SIZE__ = 1024;
-var __OFFSET__ = 1;
-var __book__ = null;
-function configTextureAtlasBookModel(maxPageSize, offset) {
-    if (!__book__) {
-        __book__ = new Book;
-        __MAX_PAGE_SIZE__ = maxPageSize;
-        __OFFSET__ = offset;
-        return true;
-    }
-    console.warn('repeat config: maxPageSize = ' + maxPageSize + ', offset = ' + offset);
-    return false;
-}
-var globalGUID = 0;
-var TextBlock = (function () {
-    function TextBlock(width, height) {
-        this._id = ++globalGUID;
-        this._width = 0;
-        this._height = 0;
-        this.line = null;
-        this.x = 0;
-        this.y = 0;
-        this._width = width;
-        this._height = height;
-    }
-    Object.defineProperty(TextBlock.prototype, "width", {
-        get: function () {
-            return this._width + __OFFSET__ * 2;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(TextBlock.prototype, "height", {
-        get: function () {
-            return this._height + __OFFSET__ * 2;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return TextBlock;
-}());
-__reflect(TextBlock.prototype, "TextBlock");
-var Line = (function () {
-    function Line(maxWidth) {
-        this._id = ++globalGUID;
-        this.page = null;
-        this.textBlocks = [];
-        this.dynamicMaxHeight = 0;
-        this.maxWidth = 0;
-        this.x = 0;
-        this.y = 0;
-        this.maxWidth = maxWidth;
-    }
-    Line.prototype.isCapacityOf = function (textBlock) {
-        if (!textBlock) {
-            return false;
-        }
-        //
-        var posx = 0;
-        var posy = 0;
-        var lastTxtBlock = this.lastTextBlock();
-        if (lastTxtBlock) {
-            posx = lastTxtBlock.x + lastTxtBlock.width;
-            posy = lastTxtBlock.y;
-        }
-        //
-        if (posx + textBlock.width > this.maxWidth) {
-            return false; //宽度不够
-        }
-        //
-        if (this.dynamicMaxHeight > 0 && posy + textBlock.height > this.dynamicMaxHeight) {
-            return false; //如果有已经有动态高度，到这里，说明高度也不够
-        }
-        return true;
-    };
-    Line.prototype.lastTextBlock = function () {
-        var textBlocks = this.textBlocks;
-        if (textBlocks.length > 0) {
-            return textBlocks[textBlocks.length - 1];
-        }
-        return null;
-    };
-    Line.prototype.addTextBlock = function (textBlock, needCheck) {
-        //
-        if (!textBlock) {
-            return false;
-        }
-        //
-        if (needCheck) {
-            if (!this.isCapacityOf(textBlock)) {
-                return false;
-            }
-        }
-        //
-        var posx = 0;
-        var posy = 0;
-        var lastTxtBlock = this.lastTextBlock();
-        if (lastTxtBlock) {
-            posx = lastTxtBlock.x + lastTxtBlock.width;
-            posy = lastTxtBlock.y;
-        }
-        //
-        textBlock.x = posx;
-        textBlock.y = posy;
-        textBlock.line = this;
-        this.textBlocks.push(textBlock);
-        this.dynamicMaxHeight = Math.max(this.dynamicMaxHeight, textBlock.height);
-        return true;
-    };
-    return Line;
-}());
-__reflect(Line.prototype, "Line");
-var Page = (function () {
-    function Page(pageWidth, pageHeight) {
-        this._id = ++globalGUID;
-        this.lines = [];
-        this.pageWidth = 0;
-        this.pageHeight = 0;
-        this.pageWidth = pageWidth;
-        this.pageHeight = pageHeight;
-    }
-    Page.prototype.addLine = function (line) {
-        if (!line) {
-            return false;
-        }
-        //
-        var posx = 0;
-        var posy = 0;
-        //
-        var lines = this.lines;
-        if (lines.length > 0) {
-            var lastLine = lines[lines.length - 1];
-            posx = lastLine.x;
-            posy = lastLine.y + lastLine.dynamicMaxHeight;
-        }
-        if (line.maxWidth > this.pageWidth) {
-            console.error('line.maxWidth = ' + line.maxWidth + ', ' + 'this.pageWidth = ' + this.pageWidth);
-            return false; //宽度不够
-        }
-        if (posy + line.dynamicMaxHeight > this.pageHeight) {
-            return false; //满了
-        }
-        //更新数据
-        line.x = posx;
-        line.y = posy;
-        line.page = this;
-        this.lines.push(line);
-        return true;
-    };
-    return Page;
-}());
-__reflect(Page.prototype, "Page");
-var Book = (function () {
-    function Book() {
-        this._pages = [];
-        this._sortLines = [];
-    }
-    Book.prototype.addTextBlock = function (textBlock) {
-        var result = this._addTextBlock(textBlock);
-        if (!result) {
-            return false;
-        }
-        //没有才要添加
-        var exist = false;
-        var cast = result;
-        for (var _i = 0, _a = this._sortLines; _i < _a.length; _i++) {
-            var line = _a[_i];
-            if (line === cast[1]) {
-                exist = true;
-            }
-        }
-        if (!exist) {
-            this._sortLines.push(cast[1]);
-        }
-        //重新排序
-        this.sort();
-        return true;
-    };
-    Book.prototype._addTextBlock = function (textBlock) {
-        if (!textBlock) {
-            return null;
-        }
-        if (textBlock.width > __MAX_PAGE_SIZE__ || textBlock.height > __MAX_PAGE_SIZE__) {
-            console.error('textBlock.width = ' + textBlock.width + ', ' + 'textBlock.height = ' + textBlock.height);
-            return null;
-        }
-        //找到最合适的
-        var _sortLines = this._sortLines;
-        for (var i = 0, length_12 = _sortLines.length; i < length_12; ++i) {
-            var line = _sortLines[i];
-            if (!line.isCapacityOf(textBlock)) {
-                continue;
-            }
-            if (line.addTextBlock(textBlock, false)) {
-                return [line.page, line];
-            }
-        }
-        //做新的行
-        var newLine = new Line(__MAX_PAGE_SIZE__);
-        if (!newLine.addTextBlock(textBlock, true)) {
-            console.error('???');
-            return null;
-        }
-        //现有的page中插入
-        var _pages = this._pages;
-        for (var i = 0, length_13 = _pages.length; i < length_13; ++i) {
-            var page = _pages[i];
-            if (page.addLine(newLine)) {
-                return [page, newLine];
-            }
-        }
-        //都没有，就做新的page
-        //添加目标行
-        var newPage = this.newPage(__MAX_PAGE_SIZE__, __MAX_PAGE_SIZE__);
-        if (!newPage.addLine(newLine)) {
-            console.error('_addText newPage.addLine failed');
-            return null;
-        }
-        return [newPage, newLine];
-    };
-    Book.prototype.newPage = function (pageWidth, pageHeight) {
-        var newPage = new Page(pageWidth, pageHeight);
-        this._pages.push(newPage);
-        return newPage;
-    };
-    Book.prototype.sort = function () {
-        if (this._sortLines.length <= 1) {
-            return;
-        }
-        var sortFunc = function (a, b) {
-            return (a.dynamicMaxHeight < b.dynamicMaxHeight) ? -1 : 1;
-        };
-        this._sortLines = this._sortLines.sort(sortFunc);
-    };
-    return Book;
-}());
-__reflect(Book.prototype, "Book");
 //////////////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2014-present, Egret Technology.
