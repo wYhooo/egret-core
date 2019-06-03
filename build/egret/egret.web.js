@@ -8437,12 +8437,14 @@ var egret;
                 this._canvas = null;
             }
             WebGLTextRender.render = function (textNode) {
-                return;
+                //return;
                 if (!textNode) {
                     return;
                 }
                 //先配置这个模型
-                egret.configTextTextureAtlas(128 * 2, __TEXT_RENDER_OFFSET__);
+                if (!egret.__book__) {
+                    egret.configTextTextureAtlas(128 * 2, __TEXT_RENDER_OFFSET__);
+                }
                 //
                 var offset = 4;
                 var drawData = textNode.drawData;
@@ -8470,9 +8472,11 @@ var egret;
                     charVal.render(canvas);
                     console.log(char + ':' + canvas.width + ', ' + canvas.height);
                     //
-                    // const tb = new TextBlock(charVal.renderWidth, charVal.renderHeight);
-                    // if (__book__.addTextBlock(tb)) {
-                    // }
+                    var tb = new egret.TextBlock(charVal.renderWidth, charVal.renderHeight);
+                    if (egret.__book__.addTextBlock(tb)) {
+                        tb['tag'] = char;
+                        //console.log('add ok');
+                    }
                 }
             };
             Object.defineProperty(WebGLTextRender.prototype, "canvas", {

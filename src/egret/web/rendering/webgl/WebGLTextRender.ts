@@ -205,12 +205,14 @@ namespace egret.web {
         public readonly textAtlasTextureCache: TextAtlasTextureCache = new TextAtlasTextureCache;
 
         public static render(textNode: sys.TextNode): void {
-            return;
+            //return;
             if (!textNode) {
                 return;
             }
             //先配置这个模型
-            configTextTextureAtlas(128 * 2, __TEXT_RENDER_OFFSET__);
+            if (!__book__) {
+                configTextTextureAtlas(128 * 2, __TEXT_RENDER_OFFSET__);
+            }
             //
             const offset = 4;
             const drawData = textNode.drawData;
@@ -239,10 +241,11 @@ namespace egret.web {
                 charVal.render(canvas);
                 console.log(char + ':' + canvas.width + ', ' + canvas.height);
                 //
-                // const tb = new TextBlock(charVal.renderWidth, charVal.renderHeight);
-                // if (__book__.addTextBlock(tb)) {
-
-                // }
+                const tb = new TextBlock(charVal.renderWidth, charVal.renderHeight);
+                if (__book__.addTextBlock(tb)) {
+                    tb['tag'] = char;
+                    //console.log('add ok');
+                }
             }
         }
 
