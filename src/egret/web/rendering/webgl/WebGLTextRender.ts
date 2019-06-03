@@ -29,6 +29,19 @@
 
 namespace egret.web {
 
+    function __hashCode__(str: string): number {
+        if (str.length === 0) {
+            return 0;
+        }
+        let hash = 0;
+        for (let i = 0, length = str.length; i < length; ++i) {
+            const chr = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + chr;
+            hash |= 0; // Convert to 32bit integer
+        }
+        return hash;
+    }
+
     class StyleKey {
         /**
          * 颜色值
@@ -82,178 +95,86 @@ namespace egret.web {
         }
     }
 
-    function __hashCode__(str: string): number {
-        if (str.length === 0) {
-            return 0;
-        }
-        let hash = 0;
-        for (let i = 0, length = str.length; i < length; ++i) {
-            const chr = str.charCodeAt(i);
-            hash = ((hash << 5) - hash) + chr;
-            hash |= 0; // Convert to 32bit integer
-        }
-        return hash;
-    }
+    class CharValue {
 
-    class CharKey {
-
-        public readonly _char: string = '';
-        public readonly _styleKey: StyleKey = {} as StyleKey;
-        public readonly _stringKeyValue: string = '';
-        public readonly _hashCode: number = 0;
+        public readonly _char: string;
+        public readonly _styleKey: StyleKey;
+        public readonly _string: string;
+        public readonly _hashCode: number;
 
         constructor(char: string, styleKey: StyleKey) {
             this._char = char;
             this._styleKey = styleKey;
-            this._stringKeyValue = char + ':' + styleKey.__string__;
-            this._hashCode = __hashCode__(this._stringKeyValue);
+            this._string = char + ':' + styleKey.__string__;
+            this._hashCode = __hashCode__(this._string);
         }
     }
 
-    class TextAtlasGrid {
-        public readonly width: number = 0;
-        public readonly height: number = 0;
-        public locationX: number = 0;
-        public locationY: number = 0;
-        public readonly charKey: CharKey = null;
-        constructor(charKey: CharKey, width: number, height: number) {
-            this.width = width;
-            this.height = height;
-            this.charKey = charKey;
-        }
-    }
-
-    class TextAtlasMap {
-
-        public readonly grids: { [index: number]: TextAtlasGrid } = {};
-
-        public width: number = 0;
-        public height: number = 0;
-        public curLocationX: number = 0;
-        public curLocationY: number = 0;
-        public maxHeight: number = 0;
-        
-        constructor(width: number, height: number) {
-            this.width = width;
-            this.height = height;
-        }
-
-        public add(grid: TextAtlasGrid): boolean {
-            const right = this.width;
-            const bottom = this.height;
-            let curX = this.curLocationX;
-            curX += grid.width;
-            if (curX >= right) {
-                //本行不够，需要换行
-                let curY = this.curLocationY;
-                curY += this.maxHeight; //换行
-                curY += grid.height;//再测试边界
-                if (curY >= this.height) {
-                    return false;//失败
-                }
-                //可以换行
-                this.curLocationX = 0;
-                this.curLocationY += this.maxHeight;
-            }
-            else {
-                let curY = this.curLocationY;
-                curY += grid.height;//再测试
-                if (curY >= bottom) {
-                    return false;
-                }
-            }
-            //
-            this.grids[grid.charKey._hashCode] = grid;
-            grid.locationX = this.curLocationX;
-            grid.locationY = this.curLocationY;
-            this.curLocationX += grid.width;
-            this.maxHeight = Math.max(this.maxHeight, grid.height);
-            return true;
-        }
-    }
+    
 
     class TextAtlasTexture {
-        
         public name: string = '';
-        private readonly textAtlasMap: TextAtlasMap = new TextAtlasMap(50, 50);
-
-        public add(charKey: CharKey): boolean {
-            const sz = charKey._styleKey.size;
-            const grid = new TextAtlasGrid(charKey, sz, sz);
-            const rs = this.textAtlasMap.add(grid);
-            return rs;
-        }
-
-        public debugLog(): void {
-            console.log('________________________________________'); 
-            console.log('TextAtlasTexture:' + this.name);
-            const grids = this.textAtlasMap.grids;
-            for (const hash in grids) {
-                const grid = grids[hash]; 
-                console.log(`[${grid.locationX}:${grid.locationY}] => ${grid.charKey._stringKeyValue}`);
-            }
-        }
     }
 
     class TextAtlasTextureCache {
 
-        private readonly textAtlasTextures: TextAtlasTexture[] = [];
-        private readonly quickFind: { [index: number]: TextAtlasTexture } = {};
+        private readonly pool: TextAtlasTexture[] = [];
+        //private readonly quickFind: { [index: number]: TextAtlasTexture } = {};
 
-        private create(): TextAtlasTexture {
-            const newAtlas = new TextAtlasTexture;
-            this.textAtlasTextures.push(newAtlas);
-            newAtlas.name = ('text:' + (this.textAtlasTextures.length - 1));
-            return newAtlas;
-        }
+        // private create(): TextAtlasTexture {
+        //     const newAtlas = new TextAtlasTexture;
+        //     this.textAtlasTextures.push(newAtlas);
+        //     newAtlas.name = ('text:' + (this.textAtlasTextures.length - 1));
+        //     return newAtlas;
+        // }
 
-        private addToExist(charKey: CharKey): TextAtlasTexture {
-            const textAtlasTextures = this.textAtlasTextures;
-            for (let i = 0, length = textAtlasTextures.length; i < length; ++i) {
-                const tex = textAtlasTextures[i];
-                if (tex.add(charKey)) {
-                    return tex;
-                }
-            }
-            return null;
-        }
+        // private addToExist(charKey: CharKey): TextAtlasTexture {
+        //     const textAtlasTextures = this.textAtlasTextures;
+        //     for (let i = 0, length = textAtlasTextures.length; i < length; ++i) {
+        //         const tex = textAtlasTextures[i];
+        //         if (tex.add(charKey)) {
+        //             return tex;
+        //         }
+        //     }
+        //     return null;
+        // }
 
-        private markQuickFind(charKey: CharKey, atlas: TextAtlasTexture): void {
-            const repeat = this.get(charKey);
-            if (repeat) {
-                console.error('markQuickFind repeat = ' + charKey._stringKeyValue);
-            }
-            this.quickFind[charKey._hashCode] = atlas;
-        }
+        // private markQuickFind(charKey: CharKey, atlas: TextAtlasTexture): void {
+        //     const repeat = this.get(charKey);
+        //     if (repeat) {
+        //         console.error('markQuickFind repeat = ' + charKey._string);
+        //     }
+        //     this.quickFind[charKey._hashCode] = atlas;
+        // }
 
-        public addAtlas(charKey: CharKey): TextAtlasTexture {
-            const findExisting = this.get(charKey);
-            if (findExisting) {
-                return findExisting;
-            }
-            const addToExist = this.addToExist(charKey);
-            if (addToExist) {
-                this.markQuickFind(charKey, addToExist);
-                return addToExist;
-            }
-            const createNew = this.create();
-            if (createNew.add(charKey)) {
-                this.markQuickFind(charKey, createNew);
-                return createNew;
-            }
-            return null;
-        }
+        // public addAtlas(charKey: CharKey): TextAtlasTexture {
+        //     const findExisting = this.get(charKey);
+        //     if (findExisting) {
+        //         return findExisting;
+        //     }
+        //     const addToExist = this.addToExist(charKey);
+        //     if (addToExist) {
+        //         this.markQuickFind(charKey, addToExist);
+        //         return addToExist;
+        //     }
+        //     const createNew = this.create();
+        //     if (createNew.add(charKey)) {
+        //         this.markQuickFind(charKey, createNew);
+        //         return createNew;
+        //     }
+        //     return null;
+        //}
 
-        public get(charKey: CharKey): TextAtlasTexture {
-            return this.quickFind[charKey._hashCode];
-        }
+        // public get(charKey: CharKey): TextAtlasTexture {
+        //     return this.quickFind[charKey._hashCode];
+        // }
 
-        public debugLog(): void {
-            const textAtlasTextures = this.textAtlasTextures;
-            for (const atlas of textAtlasTextures) {
-                atlas.debugLog();
-            }
-        }
+        // public debugLog(): void {
+        //     const textAtlasTextures = this.textAtlasTextures;
+        //     for (const atlas of textAtlasTextures) {
+        //         atlas.debugLog();
+        //     }
+        // }
     }
 
 
@@ -266,19 +187,22 @@ namespace egret.web {
             if (!textNode) {
                 return;
             }
+
+            //先配置这个模型
+            configTextureAtlasBookModel(128 * 2, 1);
+
             const offset = 4;
             const drawData = textNode.drawData;
 
             let x = 0;
             let y = 0;
             let labelString = '';
-            //let what: any = null;
             const styleKey = new StyleKey(textNode);
             for (let i = 0, length = drawData.length; i < length; i += offset) {
                 x = drawData[i + 0] as number;
                 y = drawData[i + 1] as number;
                 labelString = drawData[i + 2] as string;
-                drawData[i + 3];
+                drawData[i + 3]; //???
                 __webglTextRender__.handleLabelString(labelString, styleKey);
             }
 
@@ -307,44 +231,15 @@ namespace egret.web {
         }
 
         private handleLabelString(labelstring: string, styleKey: StyleKey): void {
-
             for (const char of labelstring) {
-                const charKey = new CharKey(char, styleKey);
+                const charValue = new CharValue(char, styleKey);
+
+
+
+
+
                 //textAtlasTextureCache.addAtlas(charKey);
             }
-
-            /*
-            const textAtlasTextureCache = this.textAtlasTextureCache;
-            for (const char of string) {
-                const charKey = new CharKey(char, styleKey);
-                textAtlasTextureCache.addAtlas(charKey);
-            }
-            */
-        }
-
-        // private extractStyleKey(textNode: sys.TextNode): StyleKey {
-        //     return {
-        //         textColor: textNode.textColor,
-        //         strokeColor: textNode.strokeColor,
-        //         size: textNode.size,
-        //         stroke: textNode.stroke,
-        //         bold: textNode.bold,
-        //         italic: textNode.italic,
-        //         fontFamily: textNode.fontFamily,
-
-        //         __string__: '' + textNode.textColor
-        //             + '-' + textNode.strokeColor
-        //             + '-' + textNode.size
-        //             + '-' + textNode.stroke
-        //             + '-' + (textNode.bold ? 1 : 0)
-        //             + '-' + (textNode.italic ? 1 : 0)
-        //             + '-' + textNode.fontFamily,
-
-        //     } as StyleKey;
-        // }
-
-        public debugLog(): void {
-            this.textAtlasTextureCache.debugLog();
         }
     }
 

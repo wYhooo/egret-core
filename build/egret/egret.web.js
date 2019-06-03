@@ -8301,6 +8301,18 @@ var egret;
 (function (egret) {
     var web;
     (function (web) {
+        function __hashCode__(str) {
+            if (str.length === 0) {
+                return 0;
+            }
+            var hash = 0;
+            for (var i = 0, length_10 = str.length; i < length_10; ++i) {
+                var chr = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + chr;
+                hash |= 0; // Convert to 32bit integer
+            }
+            return hash;
+        }
         var StyleKey = (function () {
             function StyleKey(textNode) {
                 this.textColor = textNode.textColor,
@@ -8321,170 +8333,77 @@ var egret;
             return StyleKey;
         }());
         __reflect(StyleKey.prototype, "StyleKey");
-        function __hashCode__(str) {
-            if (str.length === 0) {
-                return 0;
-            }
-            var hash = 0;
-            for (var i = 0, length_10 = str.length; i < length_10; ++i) {
-                var chr = str.charCodeAt(i);
-                hash = ((hash << 5) - hash) + chr;
-                hash |= 0; // Convert to 32bit integer
-            }
-            return hash;
-        }
         var CharKey = (function () {
             function CharKey(char, styleKey) {
-                this._char = '';
-                this._styleKey = {};
-                this._stringKeyValue = '';
-                this._hashCode = 0;
                 this._char = char;
                 this._styleKey = styleKey;
-                this._stringKeyValue = char + ':' + styleKey.__string__;
-                this._hashCode = __hashCode__(this._stringKeyValue);
+                this._string = char + ':' + styleKey.__string__;
+                this._hashCode = __hashCode__(this._string);
             }
             return CharKey;
         }());
         __reflect(CharKey.prototype, "CharKey");
-        var TextAtlasGrid = (function () {
-            function TextAtlasGrid(charKey, width, height) {
-                this.width = 0;
-                this.height = 0;
-                this.locationX = 0;
-                this.locationY = 0;
-                this.charKey = null;
-                this.width = width;
-                this.height = height;
-                this.charKey = charKey;
-            }
-            return TextAtlasGrid;
-        }());
-        __reflect(TextAtlasGrid.prototype, "TextAtlasGrid");
-        var TextAtlasMap = (function () {
-            function TextAtlasMap(width, height) {
-                this.grids = {};
-                this.width = 0;
-                this.height = 0;
-                this.curLocationX = 0;
-                this.curLocationY = 0;
-                this.maxHeight = 0;
-                this.width = width;
-                this.height = height;
-            }
-            TextAtlasMap.prototype.add = function (grid) {
-                var right = this.width;
-                var bottom = this.height;
-                var curX = this.curLocationX;
-                curX += grid.width;
-                if (curX >= right) {
-                    //本行不够，需要换行
-                    var curY = this.curLocationY;
-                    curY += this.maxHeight; //换行
-                    curY += grid.height; //再测试边界
-                    if (curY >= this.height) {
-                        return false; //失败
-                    }
-                    //可以换行
-                    this.curLocationX = 0;
-                    this.curLocationY += this.maxHeight;
-                }
-                else {
-                    var curY = this.curLocationY;
-                    curY += grid.height; //再测试
-                    if (curY >= bottom) {
-                        return false;
-                    }
-                }
-                //
-                this.grids[grid.charKey._hashCode] = grid;
-                grid.locationX = this.curLocationX;
-                grid.locationY = this.curLocationY;
-                this.curLocationX += grid.width;
-                this.maxHeight = Math.max(this.maxHeight, grid.height);
-                return true;
-            };
-            return TextAtlasMap;
-        }());
-        __reflect(TextAtlasMap.prototype, "TextAtlasMap");
         var TextAtlasTexture = (function () {
             function TextAtlasTexture() {
                 this.name = '';
-                this.textAtlasMap = new TextAtlasMap(50, 50);
             }
-            TextAtlasTexture.prototype.add = function (charKey) {
-                var sz = charKey._styleKey.size;
-                var grid = new TextAtlasGrid(charKey, sz, sz);
-                var rs = this.textAtlasMap.add(grid);
-                return rs;
-            };
-            TextAtlasTexture.prototype.debugLog = function () {
-                console.log('________________________________________');
-                console.log('TextAtlasTexture:' + this.name);
-                var grids = this.textAtlasMap.grids;
-                for (var hash in grids) {
-                    var grid = grids[hash];
-                    console.log("[" + grid.locationX + ":" + grid.locationY + "] => " + grid.charKey._stringKeyValue);
-                }
-            };
             return TextAtlasTexture;
         }());
         __reflect(TextAtlasTexture.prototype, "TextAtlasTexture");
         var TextAtlasTextureCache = (function () {
             function TextAtlasTextureCache() {
-                this.textAtlasTextures = [];
-                this.quickFind = {};
+                this.pool = [];
+                //private readonly quickFind: { [index: number]: TextAtlasTexture } = {};
+                // private create(): TextAtlasTexture {
+                //     const newAtlas = new TextAtlasTexture;
+                //     this.textAtlasTextures.push(newAtlas);
+                //     newAtlas.name = ('text:' + (this.textAtlasTextures.length - 1));
+                //     return newAtlas;
+                // }
+                // private addToExist(charKey: CharKey): TextAtlasTexture {
+                //     const textAtlasTextures = this.textAtlasTextures;
+                //     for (let i = 0, length = textAtlasTextures.length; i < length; ++i) {
+                //         const tex = textAtlasTextures[i];
+                //         if (tex.add(charKey)) {
+                //             return tex;
+                //         }
+                //     }
+                //     return null;
+                // }
+                // private markQuickFind(charKey: CharKey, atlas: TextAtlasTexture): void {
+                //     const repeat = this.get(charKey);
+                //     if (repeat) {
+                //         console.error('markQuickFind repeat = ' + charKey._string);
+                //     }
+                //     this.quickFind[charKey._hashCode] = atlas;
+                // }
+                // public addAtlas(charKey: CharKey): TextAtlasTexture {
+                //     const findExisting = this.get(charKey);
+                //     if (findExisting) {
+                //         return findExisting;
+                //     }
+                //     const addToExist = this.addToExist(charKey);
+                //     if (addToExist) {
+                //         this.markQuickFind(charKey, addToExist);
+                //         return addToExist;
+                //     }
+                //     const createNew = this.create();
+                //     if (createNew.add(charKey)) {
+                //         this.markQuickFind(charKey, createNew);
+                //         return createNew;
+                //     }
+                //     return null;
+                //}
+                // public get(charKey: CharKey): TextAtlasTexture {
+                //     return this.quickFind[charKey._hashCode];
+                // }
+                // public debugLog(): void {
+                //     const textAtlasTextures = this.textAtlasTextures;
+                //     for (const atlas of textAtlasTextures) {
+                //         atlas.debugLog();
+                //     }
+                // }
             }
-            TextAtlasTextureCache.prototype.create = function () {
-                var newAtlas = new TextAtlasTexture;
-                this.textAtlasTextures.push(newAtlas);
-                newAtlas.name = ('text:' + (this.textAtlasTextures.length - 1));
-                return newAtlas;
-            };
-            TextAtlasTextureCache.prototype.addToExist = function (charKey) {
-                var textAtlasTextures = this.textAtlasTextures;
-                for (var i = 0, length_11 = textAtlasTextures.length; i < length_11; ++i) {
-                    var tex = textAtlasTextures[i];
-                    if (tex.add(charKey)) {
-                        return tex;
-                    }
-                }
-                return null;
-            };
-            TextAtlasTextureCache.prototype.markQuickFind = function (charKey, atlas) {
-                var repeat = this.get(charKey);
-                if (repeat) {
-                    console.error('markQuickFind repeat = ' + charKey._stringKeyValue);
-                }
-                this.quickFind[charKey._hashCode] = atlas;
-            };
-            TextAtlasTextureCache.prototype.addAtlas = function (charKey) {
-                var findExisting = this.get(charKey);
-                if (findExisting) {
-                    return findExisting;
-                }
-                var addToExist = this.addToExist(charKey);
-                if (addToExist) {
-                    this.markQuickFind(charKey, addToExist);
-                    return addToExist;
-                }
-                var createNew = this.create();
-                if (createNew.add(charKey)) {
-                    this.markQuickFind(charKey, createNew);
-                    return createNew;
-                }
-                return null;
-            };
-            TextAtlasTextureCache.prototype.get = function (charKey) {
-                return this.quickFind[charKey._hashCode];
-            };
-            TextAtlasTextureCache.prototype.debugLog = function () {
-                var textAtlasTextures = this.textAtlasTextures;
-                for (var _i = 0, textAtlasTextures_1 = textAtlasTextures; _i < textAtlasTextures_1.length; _i++) {
-                    var atlas = textAtlasTextures_1[_i];
-                    atlas.debugLog();
-                }
-            };
             return TextAtlasTextureCache;
         }());
         __reflect(TextAtlasTextureCache.prototype, "TextAtlasTextureCache");
@@ -8496,18 +8415,19 @@ var egret;
                 if (!textNode) {
                     return;
                 }
+                //先配置这个模型
+                configTextureAtlasBookModel(128 * 2, 1);
                 var offset = 4;
                 var drawData = textNode.drawData;
                 var x = 0;
                 var y = 0;
                 var labelString = '';
-                //let what: any = null;
                 var styleKey = new StyleKey(textNode);
-                for (var i = 0, length_12 = drawData.length; i < length_12; i += offset) {
+                for (var i = 0, length_11 = drawData.length; i < length_11; i += offset) {
                     x = drawData[i + 0];
                     y = drawData[i + 1];
                     labelString = drawData[i + 2];
-                    drawData[i + 3];
+                    drawData[i + 3]; //???
                     web.__webglTextRender__.handleLabelString(labelString, styleKey);
                 }
                 /*
@@ -8539,34 +8459,6 @@ var egret;
                     var charKey = new CharKey(char, styleKey);
                     //textAtlasTextureCache.addAtlas(charKey);
                 }
-                /*
-                const textAtlasTextureCache = this.textAtlasTextureCache;
-                for (const char of string) {
-                    const charKey = new CharKey(char, styleKey);
-                    textAtlasTextureCache.addAtlas(charKey);
-                }
-                */
-            };
-            // private extractStyleKey(textNode: sys.TextNode): StyleKey {
-            //     return {
-            //         textColor: textNode.textColor,
-            //         strokeColor: textNode.strokeColor,
-            //         size: textNode.size,
-            //         stroke: textNode.stroke,
-            //         bold: textNode.bold,
-            //         italic: textNode.italic,
-            //         fontFamily: textNode.fontFamily,
-            //         __string__: '' + textNode.textColor
-            //             + '-' + textNode.strokeColor
-            //             + '-' + textNode.size
-            //             + '-' + textNode.stroke
-            //             + '-' + (textNode.bold ? 1 : 0)
-            //             + '-' + (textNode.italic ? 1 : 0)
-            //             + '-' + textNode.fontFamily,
-            //     } as StyleKey;
-            // }
-            WebGLTextRender.prototype.debugLog = function () {
-                this.textAtlasTextureCache.debugLog();
             };
             return WebGLTextRender;
         }());
@@ -8575,6 +8467,271 @@ var egret;
         web.__webglTextRender__ = new WebGLTextRender;
     })(web = egret.web || (egret.web = {}));
 })(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-present, Egret Technology.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var __MAX_PAGE_SIZE__ = 1024;
+var __OFFSET__ = 1;
+var __book__ = null;
+function configTextureAtlasBookModel(maxPageSize, offset) {
+    if (!__book__) {
+        __book__ = new Book;
+        __MAX_PAGE_SIZE__ = maxPageSize;
+        __OFFSET__ = offset;
+        return true;
+    }
+    console.warn('repeat config: maxPageSize = ' + maxPageSize + ', offset = ' + offset);
+    return false;
+}
+var globalGUID = 0;
+var TextBlock = (function () {
+    function TextBlock(width, height) {
+        this._id = ++globalGUID;
+        this._width = 0;
+        this._height = 0;
+        this.line = null;
+        this.x = 0;
+        this.y = 0;
+        this._width = width;
+        this._height = height;
+    }
+    Object.defineProperty(TextBlock.prototype, "width", {
+        get: function () {
+            return this._width + __OFFSET__ * 2;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(TextBlock.prototype, "height", {
+        get: function () {
+            return this._height + __OFFSET__ * 2;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    return TextBlock;
+}());
+__reflect(TextBlock.prototype, "TextBlock");
+var Line = (function () {
+    function Line(maxWidth) {
+        this._id = ++globalGUID;
+        this.page = null;
+        this.textBlocks = [];
+        this.dynamicMaxHeight = 0;
+        this.maxWidth = 0;
+        this.x = 0;
+        this.y = 0;
+        this.maxWidth = maxWidth;
+    }
+    Line.prototype.isCapacityOf = function (textBlock) {
+        if (!textBlock) {
+            return false;
+        }
+        //
+        var posx = 0;
+        var posy = 0;
+        var lastTxtBlock = this.lastTextBlock();
+        if (lastTxtBlock) {
+            posx = lastTxtBlock.x + lastTxtBlock.width;
+            posy = lastTxtBlock.y;
+        }
+        //
+        if (posx + textBlock.width > this.maxWidth) {
+            return false; //宽度不够
+        }
+        //
+        if (this.dynamicMaxHeight > 0 && posy + textBlock.height > this.dynamicMaxHeight) {
+            return false; //如果有已经有动态高度，到这里，说明高度也不够
+        }
+        return true;
+    };
+    Line.prototype.lastTextBlock = function () {
+        var textBlocks = this.textBlocks;
+        if (textBlocks.length > 0) {
+            return textBlocks[textBlocks.length - 1];
+        }
+        return null;
+    };
+    Line.prototype.addTextBlock = function (textBlock, needCheck) {
+        //
+        if (!textBlock) {
+            return false;
+        }
+        //
+        if (needCheck) {
+            if (!this.isCapacityOf(textBlock)) {
+                return false;
+            }
+        }
+        //
+        var posx = 0;
+        var posy = 0;
+        var lastTxtBlock = this.lastTextBlock();
+        if (lastTxtBlock) {
+            posx = lastTxtBlock.x + lastTxtBlock.width;
+            posy = lastTxtBlock.y;
+        }
+        //
+        textBlock.x = posx;
+        textBlock.y = posy;
+        textBlock.line = this;
+        this.textBlocks.push(textBlock);
+        this.dynamicMaxHeight = Math.max(this.dynamicMaxHeight, textBlock.height);
+        return true;
+    };
+    return Line;
+}());
+__reflect(Line.prototype, "Line");
+var Page = (function () {
+    function Page(pageWidth, pageHeight) {
+        this._id = ++globalGUID;
+        this.lines = [];
+        this.pageWidth = 0;
+        this.pageHeight = 0;
+        this.pageWidth = pageWidth;
+        this.pageHeight = pageHeight;
+    }
+    Page.prototype.addLine = function (line) {
+        if (!line) {
+            return false;
+        }
+        //
+        var posx = 0;
+        var posy = 0;
+        //
+        var lines = this.lines;
+        if (lines.length > 0) {
+            var lastLine = lines[lines.length - 1];
+            posx = lastLine.x;
+            posy = lastLine.y + lastLine.dynamicMaxHeight;
+        }
+        if (line.maxWidth > this.pageWidth) {
+            console.error('line.maxWidth = ' + line.maxWidth + ', ' + 'this.pageWidth = ' + this.pageWidth);
+            return false; //宽度不够
+        }
+        if (posy + line.dynamicMaxHeight > this.pageHeight) {
+            return false; //满了
+        }
+        //更新数据
+        line.x = posx;
+        line.y = posy;
+        line.page = this;
+        this.lines.push(line);
+        return true;
+    };
+    return Page;
+}());
+__reflect(Page.prototype, "Page");
+var Book = (function () {
+    function Book() {
+        this._pages = [];
+        this._sortLines = [];
+    }
+    Book.prototype.addTextBlock = function (textBlock) {
+        var result = this._addTextBlock(textBlock);
+        if (!result) {
+            return false;
+        }
+        //没有才要添加
+        var exist = false;
+        var cast = result;
+        for (var _i = 0, _a = this._sortLines; _i < _a.length; _i++) {
+            var line = _a[_i];
+            if (line === cast[1]) {
+                exist = true;
+            }
+        }
+        if (!exist) {
+            this._sortLines.push(cast[1]);
+        }
+        //重新排序
+        this.sort();
+        return true;
+    };
+    Book.prototype._addTextBlock = function (textBlock) {
+        if (!textBlock) {
+            return null;
+        }
+        if (textBlock.width > __MAX_PAGE_SIZE__ || textBlock.height > __MAX_PAGE_SIZE__) {
+            console.error('textBlock.width = ' + textBlock.width + ', ' + 'textBlock.height = ' + textBlock.height);
+            return null;
+        }
+        //找到最合适的
+        var _sortLines = this._sortLines;
+        for (var i = 0, length_12 = _sortLines.length; i < length_12; ++i) {
+            var line = _sortLines[i];
+            if (!line.isCapacityOf(textBlock)) {
+                continue;
+            }
+            if (line.addTextBlock(textBlock, false)) {
+                return [line.page, line];
+            }
+        }
+        //做新的行
+        var newLine = new Line(__MAX_PAGE_SIZE__);
+        if (!newLine.addTextBlock(textBlock, true)) {
+            console.error('???');
+            return null;
+        }
+        //现有的page中插入
+        var _pages = this._pages;
+        for (var i = 0, length_13 = _pages.length; i < length_13; ++i) {
+            var page = _pages[i];
+            if (page.addLine(newLine)) {
+                return [page, newLine];
+            }
+        }
+        //都没有，就做新的page
+        //添加目标行
+        var newPage = this.newPage(__MAX_PAGE_SIZE__, __MAX_PAGE_SIZE__);
+        if (!newPage.addLine(newLine)) {
+            console.error('_addText newPage.addLine failed');
+            return null;
+        }
+        return [newPage, newLine];
+    };
+    Book.prototype.newPage = function (pageWidth, pageHeight) {
+        var newPage = new Page(pageWidth, pageHeight);
+        this._pages.push(newPage);
+        return newPage;
+    };
+    Book.prototype.sort = function () {
+        if (this._sortLines.length <= 1) {
+            return;
+        }
+        var sortFunc = function (a, b) {
+            return (a.dynamicMaxHeight < b.dynamicMaxHeight) ? -1 : 1;
+        };
+        this._sortLines = this._sortLines.sort(sortFunc);
+    };
+    return Book;
+}());
+__reflect(Book.prototype, "Book");
 //////////////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2014-present, Egret Technology.
