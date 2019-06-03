@@ -157,6 +157,10 @@
             "platform": "web"
           },
           {
+            "path": "web/rendering/webgl/WebGLTextRender.ts",
+            "platform": "web"
+          },
+          {
             "path": "web/rendering/webgl/EgretWebGLAttribute.ts",
             "platform": "web"
           },

@@ -895,6 +895,7 @@ namespace egret.web {
 
             if (node.dirtyRender) {
                 let surface = this.canvasRenderBuffer.surface;
+                WebGLTextRender.render(node);
                 this.canvasRenderer.renderText(node, this.canvasRenderBuffer.context);
 
                 // 拷贝canvas到texture
