@@ -8314,35 +8314,68 @@ var egret;
             return hash;
         }
         var StyleKey = (function () {
-            function StyleKey(textNode) {
-                this.textColor = textNode.textColor,
-                    this.strokeColor = textNode.strokeColor,
-                    this.size = textNode.size,
-                    this.stroke = textNode.stroke,
-                    this.bold = textNode.bold,
-                    this.italic = textNode.italic,
-                    this.fontFamily = textNode.fontFamily,
-                    this.__string__ = '' + textNode.textColor
-                        + '-' + textNode.strokeColor
-                        + '-' + textNode.size
-                        + '-' + textNode.stroke
-                        + '-' + (textNode.bold ? 1 : 0)
-                        + '-' + (textNode.italic ? 1 : 0)
-                        + '-' + textNode.fontFamily;
+            function StyleKey(textNode, format) {
+                this.format = null;
+                this.textColor = textNode.textColor;
+                this.strokeColor = textNode.strokeColor;
+                this.size = textNode.size;
+                this.stroke = textNode.stroke;
+                this.bold = textNode.bold;
+                this.italic = textNode.italic;
+                this.fontFamily = textNode.fontFamily;
+                this.format = format;
+                this.font = egret.getFontString(textNode, this.format);
+                //
+                this.__string__ = '' + this.font;
+                var textColor = format.textColor == null ? textNode.textColor : format.textColor;
+                var strokeColor = format.strokeColor == null ? textNode.strokeColor : format.strokeColor;
+                var stroke = format.stroke == null ? textNode.stroke : format.stroke;
+                this.__string__ += '-' + egret.toColorString(textColor);
+                this.__string__ += '-' + egret.toColorString(strokeColor);
+                if (stroke) {
+                    this.__string__ += '-' + stroke * 2;
+                }
             }
             return StyleKey;
         }());
         __reflect(StyleKey.prototype, "StyleKey");
-        var CharKey = (function () {
-            function CharKey(char, styleKey) {
+        var CharValue = (function () {
+            function CharValue(char, styleKey) {
                 this._char = char;
                 this._styleKey = styleKey;
                 this._string = char + ':' + styleKey.__string__;
                 this._hashCode = __hashCode__(this._string);
             }
-            return CharKey;
+            CharValue.prototype.render = function (context) {
+                /*
+                context.textAlign = "left";
+                context.textBaseline = "middle";
+                context.lineJoin = "round";//确保描边样式是圆角
+                let drawData = node.drawData;
+                let length = drawData.length;
+                let pos = 0;
+                while (pos < length) {
+                    let x = drawData[pos++];
+                    let y = drawData[pos++];
+                    let text = drawData[pos++];
+                    let format: sys.TextFormat = drawData[pos++];
+                    context.font = getFontString(node, format);
+                    let textColor = format.textColor == null ? node.textColor : format.textColor;
+                    let strokeColor = format.strokeColor == null ? node.strokeColor : format.strokeColor;
+                    let stroke = format.stroke == null ? node.stroke : format.stroke;
+                    context.fillStyle = toColorString(textColor);
+                    context.strokeStyle = toColorString(strokeColor);
+                    if (stroke) {
+                        context.lineWidth = stroke * 2;
+                        context.strokeText(text, x + context.$offsetX, y + context.$offsetY);
+                    }
+                    context.fillText(text, x + context.$offsetX, y + context.$offsetY);
+                }
+                */
+            };
+            return CharValue;
         }());
-        __reflect(CharKey.prototype, "CharKey");
+        __reflect(CharValue.prototype, "CharValue");
         var TextAtlasTexture = (function () {
             function TextAtlasTexture() {
                 this.name = '';
@@ -8353,56 +8386,6 @@ var egret;
         var TextAtlasTextureCache = (function () {
             function TextAtlasTextureCache() {
                 this.pool = [];
-                //private readonly quickFind: { [index: number]: TextAtlasTexture } = {};
-                // private create(): TextAtlasTexture {
-                //     const newAtlas = new TextAtlasTexture;
-                //     this.textAtlasTextures.push(newAtlas);
-                //     newAtlas.name = ('text:' + (this.textAtlasTextures.length - 1));
-                //     return newAtlas;
-                // }
-                // private addToExist(charKey: CharKey): TextAtlasTexture {
-                //     const textAtlasTextures = this.textAtlasTextures;
-                //     for (let i = 0, length = textAtlasTextures.length; i < length; ++i) {
-                //         const tex = textAtlasTextures[i];
-                //         if (tex.add(charKey)) {
-                //             return tex;
-                //         }
-                //     }
-                //     return null;
-                // }
-                // private markQuickFind(charKey: CharKey, atlas: TextAtlasTexture): void {
-                //     const repeat = this.get(charKey);
-                //     if (repeat) {
-                //         console.error('markQuickFind repeat = ' + charKey._string);
-                //     }
-                //     this.quickFind[charKey._hashCode] = atlas;
-                // }
-                // public addAtlas(charKey: CharKey): TextAtlasTexture {
-                //     const findExisting = this.get(charKey);
-                //     if (findExisting) {
-                //         return findExisting;
-                //     }
-                //     const addToExist = this.addToExist(charKey);
-                //     if (addToExist) {
-                //         this.markQuickFind(charKey, addToExist);
-                //         return addToExist;
-                //     }
-                //     const createNew = this.create();
-                //     if (createNew.add(charKey)) {
-                //         this.markQuickFind(charKey, createNew);
-                //         return createNew;
-                //     }
-                //     return null;
-                //}
-                // public get(charKey: CharKey): TextAtlasTexture {
-                //     return this.quickFind[charKey._hashCode];
-                // }
-                // public debugLog(): void {
-                //     const textAtlasTextures = this.textAtlasTextures;
-                //     for (const atlas of textAtlasTextures) {
-                //         atlas.debugLog();
-                //     }
-                // }
             }
             return TextAtlasTextureCache;
         }());
@@ -8417,17 +8400,21 @@ var egret;
                 }
                 //先配置这个模型
                 configTextureAtlasBookModel(128 * 2, 1);
+                //
                 var offset = 4;
                 var drawData = textNode.drawData;
                 var x = 0;
                 var y = 0;
                 var labelString = '';
-                var styleKey = new StyleKey(textNode);
+                var format = {};
                 for (var i = 0, length_11 = drawData.length; i < length_11; i += offset) {
+                    //
                     x = drawData[i + 0];
                     y = drawData[i + 1];
                     labelString = drawData[i + 2];
-                    drawData[i + 3]; //???
+                    format = drawData[i + 3] || {};
+                    //
+                    var styleKey = new StyleKey(textNode, format);
                     web.__webglTextRender__.handleLabelString(labelString, styleKey);
                 }
                 /*
@@ -8456,7 +8443,9 @@ var egret;
             WebGLTextRender.prototype.handleLabelString = function (labelstring, styleKey) {
                 for (var _i = 0, labelstring_1 = labelstring; _i < labelstring_1.length; _i++) {
                     var char = labelstring_1[_i];
-                    var charKey = new CharKey(char, styleKey);
+                    var charValue = new CharValue(char, styleKey);
+                    var canvasContext = void 0;
+                    charValue.render(canvasContext);
                     //textAtlasTextureCache.addAtlas(charKey);
                 }
             };

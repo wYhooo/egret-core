@@ -72,26 +72,37 @@ namespace egret.web {
          */
         public readonly fontFamily: string;
 
+        //
+        public readonly font: string;
+
+        public readonly format: sys.TextFormat = null;
+
         /**
          * ????
          */
-        public readonly __string__: string;
+        public __string__: string;
 
-        constructor (textNode: sys.TextNode) {
-            this.textColor = textNode.textColor,
-            this.strokeColor = textNode.strokeColor,
-            this.size = textNode.size,
-            this.stroke = textNode.stroke,
-            this.bold = textNode.bold,
-            this.italic = textNode.italic,
-            this.fontFamily = textNode.fontFamily,
-            this.__string__ = '' + textNode.textColor
-                + '-' + textNode.strokeColor
-                + '-' + textNode.size
-                + '-' + textNode.stroke
-                + '-' + (textNode.bold ? 1 : 0)
-                + '-' + (textNode.italic ? 1 : 0)
-                + '-' + textNode.fontFamily;
+        constructor(textNode: sys.TextNode, format: sys.TextFormat) {
+            this.textColor = textNode.textColor;
+            this.strokeColor = textNode.strokeColor;
+            this.size = textNode.size;
+            this.stroke = textNode.stroke;
+            this.bold = textNode.bold;
+            this.italic = textNode.italic;
+            this.fontFamily = textNode.fontFamily;
+            this.format = format;
+            this.font = getFontString(textNode, this.format);
+
+            //
+            this.__string__ = '' + this.font;
+            const textColor = format.textColor == null ? textNode.textColor : format.textColor;
+            const strokeColor = format.strokeColor == null ? textNode.strokeColor : format.strokeColor;
+            const stroke = format.stroke == null ? textNode.stroke : format.stroke;
+            this.__string__ += '-' + toColorString(textColor);
+            this.__string__ += '-' + toColorString(strokeColor);
+            if (stroke) {
+                this.__string__ += '-' + stroke * 2;
+            }
         }
     }
 
@@ -108,9 +119,37 @@ namespace egret.web {
             this._string = char + ':' + styleKey.__string__;
             this._hashCode = __hashCode__(this._string);
         }
+
+        public render(context: CanvasRenderingContext2D): void {
+            /*
+            context.textAlign = "left";
+            context.textBaseline = "middle";
+            context.lineJoin = "round";//确保描边样式是圆角
+            let drawData = node.drawData;
+            let length = drawData.length;
+            let pos = 0;
+            while (pos < length) {
+                let x = drawData[pos++];
+                let y = drawData[pos++];
+                let text = drawData[pos++];
+                let format: sys.TextFormat = drawData[pos++];
+                context.font = getFontString(node, format);
+                let textColor = format.textColor == null ? node.textColor : format.textColor;
+                let strokeColor = format.strokeColor == null ? node.strokeColor : format.strokeColor;
+                let stroke = format.stroke == null ? node.stroke : format.stroke;
+                context.fillStyle = toColorString(textColor);
+                context.strokeStyle = toColorString(strokeColor);
+                if (stroke) {
+                    context.lineWidth = stroke * 2;
+                    context.strokeText(text, x + context.$offsetX, y + context.$offsetY);
+                }
+                context.fillText(text, x + context.$offsetX, y + context.$offsetY);
+            }
+            */
+        }
     }
 
-    
+
 
     class TextAtlasTexture {
         public name: string = '';
@@ -119,62 +158,6 @@ namespace egret.web {
     class TextAtlasTextureCache {
 
         private readonly pool: TextAtlasTexture[] = [];
-        //private readonly quickFind: { [index: number]: TextAtlasTexture } = {};
-
-        // private create(): TextAtlasTexture {
-        //     const newAtlas = new TextAtlasTexture;
-        //     this.textAtlasTextures.push(newAtlas);
-        //     newAtlas.name = ('text:' + (this.textAtlasTextures.length - 1));
-        //     return newAtlas;
-        // }
-
-        // private addToExist(charKey: CharKey): TextAtlasTexture {
-        //     const textAtlasTextures = this.textAtlasTextures;
-        //     for (let i = 0, length = textAtlasTextures.length; i < length; ++i) {
-        //         const tex = textAtlasTextures[i];
-        //         if (tex.add(charKey)) {
-        //             return tex;
-        //         }
-        //     }
-        //     return null;
-        // }
-
-        // private markQuickFind(charKey: CharKey, atlas: TextAtlasTexture): void {
-        //     const repeat = this.get(charKey);
-        //     if (repeat) {
-        //         console.error('markQuickFind repeat = ' + charKey._string);
-        //     }
-        //     this.quickFind[charKey._hashCode] = atlas;
-        // }
-
-        // public addAtlas(charKey: CharKey): TextAtlasTexture {
-        //     const findExisting = this.get(charKey);
-        //     if (findExisting) {
-        //         return findExisting;
-        //     }
-        //     const addToExist = this.addToExist(charKey);
-        //     if (addToExist) {
-        //         this.markQuickFind(charKey, addToExist);
-        //         return addToExist;
-        //     }
-        //     const createNew = this.create();
-        //     if (createNew.add(charKey)) {
-        //         this.markQuickFind(charKey, createNew);
-        //         return createNew;
-        //     }
-        //     return null;
-        //}
-
-        // public get(charKey: CharKey): TextAtlasTexture {
-        //     return this.quickFind[charKey._hashCode];
-        // }
-
-        // public debugLog(): void {
-        //     const textAtlasTextures = this.textAtlasTextures;
-        //     for (const atlas of textAtlasTextures) {
-        //         atlas.debugLog();
-        //     }
-        // }
     }
 
 
@@ -187,22 +170,24 @@ namespace egret.web {
             if (!textNode) {
                 return;
             }
-
             //先配置这个模型
             configTextureAtlasBookModel(128 * 2, 1);
-
+            //
             const offset = 4;
             const drawData = textNode.drawData;
-
             let x = 0;
             let y = 0;
             let labelString = '';
-            const styleKey = new StyleKey(textNode);
+            let format: sys.TextFormat = {};
+
             for (let i = 0, length = drawData.length; i < length; i += offset) {
+                //
                 x = drawData[i + 0] as number;
                 y = drawData[i + 1] as number;
                 labelString = drawData[i + 2] as string;
-                drawData[i + 3]; //???
+                format = drawData[i + 3] as sys.TextFormat || {};
+                //
+                const styleKey = new StyleKey(textNode, format);
                 __webglTextRender__.handleLabelString(labelString, styleKey);
             }
 
@@ -233,11 +218,8 @@ namespace egret.web {
         private handleLabelString(labelstring: string, styleKey: StyleKey): void {
             for (const char of labelstring) {
                 const charValue = new CharValue(char, styleKey);
-
-
-
-
-
+                let canvasContext: CanvasRenderingContext2D;
+                charValue.render(canvasContext)
                 //textAtlasTextureCache.addAtlas(charKey);
             }
         }
