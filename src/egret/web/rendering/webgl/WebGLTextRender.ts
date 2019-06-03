@@ -122,29 +122,27 @@ namespace egret.web {
 
         public render(context: CanvasRenderingContext2D): void {
             /*
+            if (!context) {
+                return;
+            }
             context.textAlign = "left";
             context.textBaseline = "middle";
-            context.lineJoin = "round";//确保描边样式是圆角
-            let drawData = node.drawData;
-            let length = drawData.length;
-            let pos = 0;
-            while (pos < length) {
-                let x = drawData[pos++];
-                let y = drawData[pos++];
-                let text = drawData[pos++];
-                let format: sys.TextFormat = drawData[pos++];
-                context.font = getFontString(node, format);
-                let textColor = format.textColor == null ? node.textColor : format.textColor;
-                let strokeColor = format.strokeColor == null ? node.strokeColor : format.strokeColor;
-                let stroke = format.stroke == null ? node.stroke : format.stroke;
-                context.fillStyle = toColorString(textColor);
-                context.strokeStyle = toColorString(strokeColor);
-                if (stroke) {
-                    context.lineWidth = stroke * 2;
-                    context.strokeText(text, x + context.$offsetX, y + context.$offsetY);
-                }
-                context.fillText(text, x + context.$offsetX, y + context.$offsetY);
+            context.lineJoin = "round";
+            const x = 0;
+            const y = 0;
+            const text = this._char;
+            const format: sys.TextFormat = this._styleKey.format;
+            context.font = this._styleKey.font;
+            const textColor = format.textColor == null ? this._styleKey.textColor : format.textColor;
+            const strokeColor = format.strokeColor == null ? this._styleKey.strokeColor : format.strokeColor;
+            const stroke = format.stroke == null ? this._styleKey.stroke : format.stroke;
+            context.fillStyle = toColorString(textColor);
+            context.strokeStyle = toColorString(strokeColor);
+            if (stroke) {
+                context.lineWidth = stroke * 2;
+                context.strokeText(text, x, y);
             }
+            context.fillText(text, x, y);    
             */
         }
     }
@@ -190,38 +188,28 @@ namespace egret.web {
                 const styleKey = new StyleKey(textNode, format);
                 __webglTextRender__.handleLabelString(labelString, styleKey);
             }
-
-            /*
-            if (!__webglTextRender__) {
-                return;
-            }
-            //
-            const offset = 4;
-            const drawData = textNode.drawData;
-            const styleKey = __webglTextRender__.extractStyleKey(textNode);
-            //
-            let x = 0;
-            let y = 0;
-            let string = '';
-            let style: any = null;
-            for (let i = 0, length = drawData.length; i < length; i += offset) {
-                x = drawData[i + 0] as number;
-                y = drawData[i + 1] as number;
-                string = drawData[i + 2] as string;
-                style = drawData[i + 3];
-                __webglTextRender__.handleString(string, styleKey);
-            }
-            __webglTextRender__.debugLog();
-            */
         }
 
         private handleLabelString(labelstring: string, styleKey: StyleKey): void {
+            let canvas = this.canvas;
+            const context2d = egret.sys.getContext2d(canvas);
             for (const char of labelstring) {
                 const charValue = new CharValue(char, styleKey);
-                let canvasContext: CanvasRenderingContext2D;
-                charValue.render(canvasContext)
-                //textAtlasTextureCache.addAtlas(charKey);
+                charValue.render(context2d);
+                //
+                console.log('canvas.width = ' + canvas.width);
+                console.log('canvas.height = ' + canvas.height);
             }
+        }
+
+        private _canvas: HTMLCanvasElement = null;
+        public get canvas(): HTMLCanvasElement {
+            if (!this._canvas) {
+                const size = 16;
+                const canvas = egret.sys.createCanvas(size, size);
+                this._canvas = canvas;
+            }
+            return this._canvas;
         }
     }
 
