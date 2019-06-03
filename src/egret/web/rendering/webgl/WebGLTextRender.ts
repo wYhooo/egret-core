@@ -27,6 +27,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////
 
+const __TEXT_RENDER_OFFSET__ = 1;
+
 namespace egret.web {
 
     function __hashCode__(str: string): number {
@@ -112,6 +114,8 @@ namespace egret.web {
         public readonly _styleKey: StyleKey;
         public readonly _string: string;
         public readonly _hashCode: number;
+        public renderWidth: number = 0;
+        public renderHeight: number = 0;
 
         constructor(char: string, styleKey: StyleKey) {
             this._char = char;
@@ -120,45 +124,56 @@ namespace egret.web {
             this._hashCode = __hashCode__(this._string);
         }
 
-        public render(context: CanvasRenderingContext2D): void {
-            /*
-            if (!context) {
+        public render(canvas: HTMLCanvasElement, offset: number): void {
+            if (!canvas) {
                 return;
             }
-            context.textAlign = "left";
-            context.textBaseline = "middle";
-            context.lineJoin = "round";
+            //
             const x = 0;
             const y = 0;
             const text = this._char;
             const format: sys.TextFormat = this._styleKey.format;
-            context.font = this._styleKey.font;
             const textColor = format.textColor == null ? this._styleKey.textColor : format.textColor;
             const strokeColor = format.strokeColor == null ? this._styleKey.strokeColor : format.strokeColor;
             const stroke = format.stroke == null ? this._styleKey.stroke : format.stroke;
+            //
+            const context = egret.sys.getContext2d(canvas);
+            context.textAlign = "left";
+            context.textBaseline = "middle";
+            context.lineJoin = "round";
+            context.font = this._styleKey.font;
             context.fillStyle = toColorString(textColor);
             context.strokeStyle = toColorString(strokeColor);
+            //重新测试字体大小
+            const measureText = context.measureText(text);
+            if (measureText) {
+                this.renderWidth = measureText.width;
+                this.renderHeight = (measureText.width || this._styleKey.size);
+            }
+            else {
+                console.error('text = ' + text + ', measureText is null');
+                this.renderWidth = this._styleKey.size;
+                this.renderHeight = this._styleKey.size;
+            }
+            //
+            canvas.width = this.renderWidth + offset * 2;
+            canvas.height = this.renderHeight + offset * 2;
+            //
             if (stroke) {
                 context.lineWidth = stroke * 2;
-                context.strokeText(text, x, y);
+                context.strokeText(text, x + offset, y + offset);
             }
-            context.fillText(text, x, y);    
-            */
+            context.fillText(text, x + offset, y + offset);
         }
     }
-
-
 
     class TextAtlasTexture {
         public name: string = '';
     }
 
     class TextAtlasTextureCache {
-
         private readonly pool: TextAtlasTexture[] = [];
     }
-
-
 
     export class WebGLTextRender {
 
@@ -169,7 +184,7 @@ namespace egret.web {
                 return;
             }
             //先配置这个模型
-            configTextureAtlasBookModel(128 * 2, 1);
+            configTextureAtlasBookModel(128 * 2, __TEXT_RENDER_OFFSET__);
             //
             const offset = 4;
             const drawData = textNode.drawData;
@@ -191,14 +206,11 @@ namespace egret.web {
         }
 
         private handleLabelString(labelstring: string, styleKey: StyleKey): void {
-            let canvas = this.canvas;
-            const context2d = egret.sys.getContext2d(canvas);
+            const canvas = this.canvas;
             for (const char of labelstring) {
                 const charValue = new CharValue(char, styleKey);
-                charValue.render(context2d);
-                //
-                console.log('canvas.width = ' + canvas.width);
-                console.log('canvas.height = ' + canvas.height);
+                charValue.render(canvas, __TEXT_RENDER_OFFSET__);
+                console.log(char + ':' + canvas.width + ', ' + canvas.height);
             }
         }
 
@@ -206,8 +218,7 @@ namespace egret.web {
         public get canvas(): HTMLCanvasElement {
             if (!this._canvas) {
                 const size = 16;
-                const canvas = egret.sys.createCanvas(size, size);
-                this._canvas = canvas;
+                this._canvas = egret.sys.createCanvas(size, size);
             }
             return this._canvas;
         }

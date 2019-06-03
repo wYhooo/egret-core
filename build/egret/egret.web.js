@@ -8297,6 +8297,7 @@ var egret;
 //  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //////////////////////////////////////////////////////////////////////////////////////
+var __TEXT_RENDER_OFFSET__ = 1;
 var egret;
 (function (egret) {
     var web;
@@ -8341,35 +8342,53 @@ var egret;
         __reflect(StyleKey.prototype, "StyleKey");
         var CharValue = (function () {
             function CharValue(char, styleKey) {
+                this.renderWidth = 0;
+                this.renderHeight = 0;
                 this._char = char;
                 this._styleKey = styleKey;
                 this._string = char + ':' + styleKey.__string__;
                 this._hashCode = __hashCode__(this._string);
             }
-            CharValue.prototype.render = function (context) {
-                /*
-                if (!context) {
+            CharValue.prototype.render = function (canvas, offset) {
+                if (!canvas) {
                     return;
                 }
+                //
+                var x = 0;
+                var y = 0;
+                var text = this._char;
+                var format = this._styleKey.format;
+                var textColor = format.textColor == null ? this._styleKey.textColor : format.textColor;
+                var strokeColor = format.strokeColor == null ? this._styleKey.strokeColor : format.strokeColor;
+                var stroke = format.stroke == null ? this._styleKey.stroke : format.stroke;
+                //
+                var context = egret.sys.getContext2d(canvas);
                 context.textAlign = "left";
                 context.textBaseline = "middle";
                 context.lineJoin = "round";
-                const x = 0;
-                const y = 0;
-                const text = this._char;
-                const format: sys.TextFormat = this._styleKey.format;
                 context.font = this._styleKey.font;
-                const textColor = format.textColor == null ? this._styleKey.textColor : format.textColor;
-                const strokeColor = format.strokeColor == null ? this._styleKey.strokeColor : format.strokeColor;
-                const stroke = format.stroke == null ? this._styleKey.stroke : format.stroke;
-                context.fillStyle = toColorString(textColor);
-                context.strokeStyle = toColorString(strokeColor);
+                context.fillStyle = egret.toColorString(textColor);
+                context.strokeStyle = egret.toColorString(strokeColor);
+                //重新测试字体大小
+                var measureText = context.measureText(text);
+                if (measureText) {
+                    this.renderWidth = measureText.width;
+                    this.renderHeight = (measureText.width || this._styleKey.size);
+                }
+                else {
+                    console.error('text = ' + text + ', measureText is null');
+                    this.renderWidth = this._styleKey.size;
+                    this.renderHeight = this._styleKey.size;
+                }
+                //
+                canvas.width = this.renderWidth + offset * 2;
+                canvas.height = this.renderHeight + offset * 2;
+                //
                 if (stroke) {
                     context.lineWidth = stroke * 2;
-                    context.strokeText(text, x, y);
+                    context.strokeText(text, x + offset, y + offset);
                 }
-                context.fillText(text, x, y);
-                */
+                context.fillText(text, x + offset, y + offset);
             };
             return CharValue;
         }());
@@ -8398,7 +8417,7 @@ var egret;
                     return;
                 }
                 //先配置这个模型
-                configTextureAtlasBookModel(128 * 2, 1);
+                configTextureAtlasBookModel(128 * 2, __TEXT_RENDER_OFFSET__);
                 //
                 var offset = 4;
                 var drawData = textNode.drawData;
@@ -8419,22 +8438,18 @@ var egret;
             };
             WebGLTextRender.prototype.handleLabelString = function (labelstring, styleKey) {
                 var canvas = this.canvas;
-                var context2d = egret.sys.getContext2d(canvas);
                 for (var _i = 0, labelstring_1 = labelstring; _i < labelstring_1.length; _i++) {
                     var char = labelstring_1[_i];
                     var charValue = new CharValue(char, styleKey);
-                    charValue.render(context2d);
-                    //
-                    console.log('canvas.width = ' + canvas.width);
-                    console.log('canvas.height = ' + canvas.height);
+                    charValue.render(canvas, __TEXT_RENDER_OFFSET__);
+                    console.log(char + ':' + canvas.width + ', ' + canvas.height);
                 }
             };
             Object.defineProperty(WebGLTextRender.prototype, "canvas", {
                 get: function () {
                     if (!this._canvas) {
                         var size = 16;
-                        var canvas = egret.sys.createCanvas(size, size);
-                        this._canvas = canvas;
+                        this._canvas = egret.sys.createCanvas(size, size);
                     }
                     return this._canvas;
                 },
