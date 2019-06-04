@@ -205,7 +205,7 @@ namespace egret.web {
     //测试开关
     export const textAtlasRenderEnable : boolean = true;
     //测试对象
-    export let __textAtlasRender__ = null;
+    export let __textAtlasRender__ : TextAtlasRender = null;
     //
     export class TextAtlasRender extends HashObject {
         //
@@ -221,7 +221,8 @@ namespace egret.web {
             this.webglRenderContext = webglRenderContext;
         }
         
-        public static analysisString(textNode: sys.TextNode): void {
+        public static readonly renderTextBlocks: TextBlock[] = [];
+        public static analysisTextNode(textNode: sys.TextNode): void {
             if (!textNode) {
                 return;
             }
@@ -235,6 +236,7 @@ namespace egret.web {
             let y = 0;
             let labelString = '';
             let format: sys.TextFormat = {};
+            TextAtlasRender.renderTextBlocks.length = 0;
             for (let i = 0, length = drawData.length; i < length; i += offset) {
                 x = drawData[i + 0] as number;
                 y = drawData[i + 1] as number;
@@ -253,6 +255,7 @@ namespace egret.web {
                 $charValue.reset(char, styleKey);
                 if (textBlockMap[$charValue._hashCode]) {
                     //检查重复
+                    TextAtlasRender.renderTextBlocks.push(textBlockMap[$charValue._hashCode]);
                     continue;
                 }
                 //尝试渲染到canvas
@@ -266,10 +269,10 @@ namespace egret.web {
                     console.error('__book__.addTextBlock ??');
                     continue;
                 }
-                //记录
+                //记录 + 测试 + 准备渲染
                 textBlockMap[$charValue._hashCode] = newTxtBlock;
-                //测试下
                 newTxtBlock[property_tag] = char;
+                TextAtlasRender.renderTextBlocks.push(newTxtBlock);
                 //
                 const line = newTxtBlock.line;
                 const page = line.page;

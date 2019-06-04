@@ -8103,7 +8103,7 @@ var egret;
                     /*
                     *******测试TextAtlasRender渲染机制
                     */
-                    web.textAtlasRenderEnable ? web.TextAtlasRender.analysisString(node) : void 0;
+                    web.textAtlasRenderEnable ? web.TextAtlasRender.analysisTextNode(node) : void 0;
                     // 拷贝canvas到texture
                     var texture = node.$texture;
                     if (!texture) {
@@ -8121,6 +8121,17 @@ var egret;
                 var textureWidth = node.$textureWidth;
                 var textureHeight = node.$textureHeight;
                 buffer.context.drawTexture(node.$texture, 0, 0, textureWidth, textureHeight, 0, 0, textureWidth / canvasScaleX, textureHeight / canvasScaleY, textureWidth, textureHeight);
+                /*
+                *******测试TextAtlasRender渲染机制
+                */
+                if (web.textAtlasRenderEnable && web.TextAtlasRender.renderTextBlocks.length > 0) {
+                    // let logString = '';
+                    // for (const txtBlock of TextAtlasRender.renderTextBlocks) {
+                    //     logString += txtBlock['tag'];
+                    //     //logString += '';
+                    // }
+                    // console.log('TextAtlasRender.renderTextBlocks = ' + logString);
+                }
                 if (x || y) {
                     if (node.dirtyRender) {
                         this.canvasRenderBuffer.context.setTransform(canvasScaleX, 0, 0, canvasScaleY, 0, 0);
@@ -8454,7 +8465,7 @@ var egret;
                 _this.webglRenderContext = webglRenderContext;
                 return _this;
             }
-            TextAtlasRender.analysisString = function (textNode) {
+            TextAtlasRender.analysisTextNode = function (textNode) {
                 if (!textNode) {
                     return;
                 }
@@ -8468,6 +8479,7 @@ var egret;
                 var y = 0;
                 var labelString = '';
                 var format = {};
+                TextAtlasRender.renderTextBlocks.length = 0;
                 for (var i = 0, length_11 = drawData.length; i < length_11; i += offset) {
                     x = drawData[i + 0];
                     y = drawData[i + 1];
@@ -8486,6 +8498,7 @@ var egret;
                     $charValue.reset(char, styleKey);
                     if (textBlockMap[$charValue._hashCode]) {
                         //检查重复
+                        TextAtlasRender.renderTextBlocks.push(textBlockMap[$charValue._hashCode]);
                         continue;
                     }
                     //尝试渲染到canvas
@@ -8499,10 +8512,10 @@ var egret;
                         console.error('__book__.addTextBlock ??');
                         continue;
                     }
-                    //记录
+                    //记录 + 测试 + 准备渲染
                     textBlockMap[$charValue._hashCode] = newTxtBlock;
-                    //测试下
                     newTxtBlock[property_tag] = char;
+                    TextAtlasRender.renderTextBlocks.push(newTxtBlock);
                     //
                     var line = newTxtBlock.line;
                     var page = line.page;
@@ -8536,6 +8549,7 @@ var egret;
                 enumerable: true,
                 configurable: true
             });
+            TextAtlasRender.renderTextBlocks = [];
             return TextAtlasRender;
         }(egret.HashObject));
         web.TextAtlasRender = TextAtlasRender;

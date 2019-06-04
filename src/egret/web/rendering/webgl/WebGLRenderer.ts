@@ -899,7 +899,7 @@ namespace egret.web {
                 /*
                 *******测试TextAtlasRender渲染机制
                 */
-                textAtlasRenderEnable ? TextAtlasRender.analysisString(node) : void 0;
+                textAtlasRenderEnable ? TextAtlasRender.analysisTextNode(node) : void 0;
 
                 // 拷贝canvas到texture
                 let texture = node.$texture;
@@ -918,6 +918,17 @@ namespace egret.web {
             let textureWidth = node.$textureWidth;
             let textureHeight = node.$textureHeight;
             buffer.context.drawTexture(node.$texture, 0, 0, textureWidth, textureHeight, 0, 0, textureWidth / canvasScaleX, textureHeight / canvasScaleY, textureWidth, textureHeight);
+            /*
+            *******测试TextAtlasRender渲染机制
+            */
+            if (textAtlasRenderEnable && TextAtlasRender.renderTextBlocks.length > 0) {
+                // let logString = '';
+                // for (const txtBlock of TextAtlasRender.renderTextBlocks) {
+                //     logString += txtBlock['tag'];
+                //     //logString += '';
+                // }
+                // console.log('TextAtlasRender.renderTextBlocks = ' + logString);
+            }
 
             if (x || y) {
                 if (node.dirtyRender) {
