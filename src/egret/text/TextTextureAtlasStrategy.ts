@@ -30,7 +30,7 @@
 namespace egret {
 
     export let __MAX_PAGE_SIZE__ = 1024;
-    export let __TXT_RENDER_BORDER__ = 1;
+    export let __TXT_RENDER_BORDER__ = 1; //最好是描边宽度 + 1;
     export let __book__: Book = null;
     export function configTextTextureAtlas(maxPageSize: number, offset: number): boolean {
         if (!__book__) {

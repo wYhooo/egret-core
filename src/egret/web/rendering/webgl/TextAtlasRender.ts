@@ -43,8 +43,8 @@ namespace egret.web {
     }
 
     //针对中文的加速查找
-    const __ChineseCharactersRegExp__ = new RegExp("^[\u4E00-\u9FA5]$");
-    const __ChineseCharacterMeasureFastMap__: { [index: string]: TextMetrics } = {};
+    const __chineseCharactersRegExp__ = new RegExp("^[\u4E00-\u9FA5]$");
+    const __chineseCharacterMeasureFastMap__: { [index: string]: TextMetrics } = {};
 
     //
     const kw_tag: string = 'tag';
@@ -127,7 +127,7 @@ namespace egret.web {
         constructor() {
         }
 
-        public init(char: string, styleKey: StyleKey): CharValue {
+        public reset(char: string, styleKey: StyleKey): CharValue {
             this._char = char;
             this._styleKey = styleKey;
             this._string = char + ':' + styleKey.__string__;
@@ -149,14 +149,8 @@ namespace egret.web {
             const stroke = format.stroke == null ? this._styleKey.stroke : format.stroke;
             //
             const context = egret.sys.getContext2d(canvas);
-            context.textAlign = "left";
-            context.textBaseline = "middle";
-            context.lineJoin = "round";
-            context.font = this._styleKey.font;
-            context.fillStyle = toColorString(textColor);
-            context.strokeStyle = toColorString(strokeColor);
-            //重新测试字体大小
-            const measureText = this.measureText(context, text, context.font);
+            //Step1: 重新测试字体大小
+            const measureText = this.measureText(context, text, this._styleKey.font);
             if (measureText) {
                 this.renderWidth = measureText.width;
                 this.renderHeight = (measureText['height'] || this._styleKey.size);
@@ -169,25 +163,37 @@ namespace egret.web {
             //
             canvas.width = this.renderWidth;
             canvas.height = this.renderHeight;
+            //再开始绘制
+            context.save();
+            context.textAlign = "start";
+            context.textBaseline = "top";
+            context.lineJoin = "round";
+            context.font = this._styleKey.font;
+            context.fillStyle = toColorString(textColor);
+            context.strokeStyle = toColorString(strokeColor);
+            context.clearRect(0, 0, this.renderWidth, this.renderHeight);
+            context.translate(0, 0);
+            context.scale(1, 1);
             //
             if (stroke) {
                 context.lineWidth = stroke * 2;
                 context.strokeText(text, x, y);
             }
             context.fillText(text, x, y);
+            context.restore();
         }
 
         private measureText(context: CanvasRenderingContext2D, text: string, font: string): TextMetrics {
-            const isChinese = __ChineseCharactersRegExp__.test(text);
+            const isChinese = __chineseCharactersRegExp__.test(text);
             if (isChinese) {
-                if (__ChineseCharacterMeasureFastMap__[font]) {
-                    return __ChineseCharacterMeasureFastMap__[font];
+                if (__chineseCharacterMeasureFastMap__[font]) {
+                    return __chineseCharacterMeasureFastMap__[font];
                 }
             }
             context.font = font;
             const measureText = context.measureText(text);
             if (isChinese) {
-                __ChineseCharacterMeasureFastMap__[font] = measureText;
+                __chineseCharacterMeasureFastMap__[font] = measureText;
             }
             return measureText;
         }
@@ -196,13 +202,12 @@ namespace egret.web {
     export class TextAtlasRender extends HashObject {
 
         public static render(textNode: sys.TextNode): void {
-            //return;
             if (!textNode) {
                 return;
             }
             //先配置这个模型
             if (!__book__) {
-                configTextTextureAtlas(128 * 2, 1);
+                configTextTextureAtlas(64, 2);
             }
             //
             const offset = 4;
@@ -211,14 +216,11 @@ namespace egret.web {
             let y = 0;
             let labelString = '';
             let format: sys.TextFormat = {};
-
             for (let i = 0, length = drawData.length; i < length; i += offset) {
-                //
                 x = drawData[i + 0] as number;
                 y = drawData[i + 1] as number;
                 labelString = drawData[i + 2] as string;
                 format = drawData[i + 3] as sys.TextFormat || {};
-                //
                 const styleKey = new StyleKey(textNode, format);
                 __textAtlasRender__.handleLabelString(labelString, styleKey);
             }
@@ -226,47 +228,46 @@ namespace egret.web {
 
         private readonly $charValue = new CharValue;
         private readonly _textBlockMap: { [index: number]: TextBlock } = {};
-        private testFlag: boolean = false;
         private handleLabelString(labelstring: string, styleKey: StyleKey): void {
             const canvas = this.canvas;
             const $charValue = this.$charValue;
             const _textBlockMap = this._textBlockMap;
             for (const char of labelstring) {
-                $charValue.init(char, styleKey);
+                //不反复创建
+                $charValue.reset(char, styleKey);
                 if (_textBlockMap[$charValue._hashCode]) {
+                    //检查重复
                     continue;
                 }
-                const newCharVal = new CharValue().init(char, styleKey);
-                newCharVal.render(canvas);
+                //尝试渲染到canvas
+                $charValue.render(canvas);
                 console.log(char + ':' + canvas.width + ', ' + canvas.height);
-                //
-                const newTxtBlock = new TextBlock(newCharVal.renderWidth, newCharVal.renderHeight);
+                //创建新的文字块
+                const newTxtBlock = new TextBlock($charValue.renderWidth, $charValue.renderHeight);
                 if (!__book__.addTextBlock(newTxtBlock)) {
+                    //走到这里几乎是不可能的，除非内存分配没了
+                    //暂时还没有到提交纹理的地步，现在都是虚拟的
+                    console.error('__book__.addTextBlock ??');
                     continue;
                 }
-                //
-                _textBlockMap[newCharVal._hashCode] = newTxtBlock;
-                //
+                //记录
+                _textBlockMap[$charValue._hashCode] = newTxtBlock;
+                //测试下
                 newTxtBlock[kw_tag] = char;
                 //
-                const page = newTxtBlock.line.page;
+                const line = newTxtBlock.line;
+                const page = line.page;
+                const xoffset = line.x + newTxtBlock.x + __TXT_RENDER_BORDER__;
+                const yoffset = line.y + newTxtBlock.y + __TXT_RENDER_BORDER__;
                 if (!page[kw_textTextureAtlas]) {
                     page[kw_textTextureAtlas] = this.createTextTextureAtlas(page.pageWidth, page.pageHeight);
                 }
-
-                //update 更新上去
-                if (!this.testFlag) {
-                    this.testFlag = true;
-                    const textAtlas = page[kw_textTextureAtlas];
-                    const gl = web.WebGLRenderContext.getInstance(0, 0).context;
-                    gl.bindTexture(gl.TEXTURE_2D, textAtlas);
-                    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-                    const xoffset = 0;
-                    const yoffset = 0;
-                    gl.texSubImage2D(gl.TEXTURE_2D, 0, xoffset, yoffset, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
-                    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-                }
-                
+                const textAtlas = page[kw_textTextureAtlas] as WebGLTexture; 
+                const gl = web.WebGLRenderContext.getInstance(0, 0).context;
+                gl.bindTexture(gl.TEXTURE_2D, textAtlas);
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+                gl.texSubImage2D(gl.TEXTURE_2D, 0, xoffset, yoffset, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
             }
         }
 

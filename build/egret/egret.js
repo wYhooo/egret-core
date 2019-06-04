@@ -22342,7 +22342,7 @@ var egret;
 var egret;
 (function (egret) {
     egret.__MAX_PAGE_SIZE__ = 1024;
-    egret.__TXT_RENDER_BORDER__ = 1;
+    egret.__TXT_RENDER_BORDER__ = 1; //最好是描边宽度 + 1;
     egret.__book__ = null;
     function configTextTextureAtlas(maxPageSize, offset) {
         if (!egret.__book__) {
