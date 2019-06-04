@@ -43,11 +43,11 @@ namespace egret {
         return false;
     }
 
-    let globalGUID = 0;
+    //let globalGUID = 0;
 
-    export class TextBlock {
+    export class TextBlock extends HashObject {
 
-        public readonly _id = ++globalGUID;
+        //public readonly _id = ++globalGUID;
         private _width: number = 0;
         private _height: number = 0;
         public line: Line = null;
@@ -55,6 +55,7 @@ namespace egret {
         public y: number = 0;
 
         constructor(width: number, height: number) {
+            super();
             this._width = width;
             this._height = height;
         }
@@ -68,9 +69,9 @@ namespace egret {
         }
     }
 
-    export class Line {
+    export class Line extends HashObject {
 
-        public readonly _id = ++globalGUID;
+        //public readonly _id = ++globalGUID;
         public page: Page = null;
         public readonly textBlocks: TextBlock[] = [];
         public dynamicMaxHeight: number = 0;
@@ -79,6 +80,7 @@ namespace egret {
         public y: number = 0;
 
         constructor(maxWidth: number) {
+            super();
             this.maxWidth = maxWidth;
         }
 
@@ -142,14 +144,15 @@ namespace egret {
         }
     }
 
-    export class Page {
+    export class Page extends HashObject  {
 
-        public readonly _id = ++globalGUID;
+        //public readonly _id = ++globalGUID;
         public readonly lines: Line[] = [];
         public readonly pageWidth: number = 0;
         public readonly pageHeight: number = 0;
 
         constructor(pageWidth: number, pageHeight: number) {
+            super();
             this.pageWidth = pageWidth;
             this.pageHeight = pageHeight;
         }
@@ -184,7 +187,7 @@ namespace egret {
         }
     }
 
-    export class Book {
+    export class Book extends HashObject {
 
         public readonly _pages: Page[] = [];
         public _sortLines: Line[] = [];

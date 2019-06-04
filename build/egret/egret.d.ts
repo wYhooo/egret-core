@@ -13302,8 +13302,7 @@ declare namespace egret {
     let __TXT_RENDER_BORDER__: number;
     let __book__: Book;
     function configTextTextureAtlas(maxPageSize: number, offset: number): boolean;
-    class TextBlock {
-        readonly _id: number;
+    class TextBlock extends HashObject {
         private _width;
         private _height;
         line: Line;
@@ -13313,8 +13312,7 @@ declare namespace egret {
         readonly width: number;
         readonly height: number;
     }
-    class Line {
-        readonly _id: number;
+    class Line extends HashObject {
         page: Page;
         readonly textBlocks: TextBlock[];
         dynamicMaxHeight: number;
@@ -13326,15 +13324,14 @@ declare namespace egret {
         lastTextBlock(): TextBlock;
         addTextBlock(textBlock: TextBlock, needCheck: boolean): boolean;
     }
-    class Page {
-        readonly _id: number;
+    class Page extends HashObject {
         readonly lines: Line[];
         readonly pageWidth: number;
         readonly pageHeight: number;
         constructor(pageWidth: number, pageHeight: number);
         addLine(line: Line): boolean;
     }
-    class Book {
+    class Book extends HashObject {
         readonly _pages: Page[];
         _sortLines: Line[];
         addTextBlock(textBlock: TextBlock): boolean;

@@ -47,6 +47,10 @@ namespace egret.web {
     const __ChineseCharacterMeasureFastMap__: { [index: string]: TextMetrics } = {};
 
     //
+    const kw_tag: string = 'tag';
+    const kw_textTextureAtlas: string = 'textTextureAtlas';
+
+    //
     class StyleKey {
         /**
          * 颜色值
@@ -190,17 +194,17 @@ namespace egret.web {
 
 
 
-    class TextAtlasTexture {
-        public name: string = '';
-    }
+    // class TextAtlasTexture {
+    //     public name: string = '';
+    // }
 
-    class TextAtlasTextureCache {
-        private readonly pool: TextAtlasTexture[] = [];
-    }
+    // class TextAtlasTextureCache {
+    //     private readonly pool: TextAtlasTexture[] = [];
+    // }
 
-    export class WebGLTextRender {
+    export class TextAtlasRender extends HashObject {
 
-        public readonly textAtlasTextureCache: TextAtlasTextureCache = new TextAtlasTextureCache;
+        //public readonly textAtlasTextureCache: TextAtlasTextureCache = new TextAtlasTextureCache;
 
         public static render(textNode: sys.TextNode): void {
             //return;
@@ -227,13 +231,13 @@ namespace egret.web {
                 format = drawData[i + 3] as sys.TextFormat || {};
                 //
                 const styleKey = new StyleKey(textNode, format);
-                __webglTextRender__.handleLabelString(labelString, styleKey);
+                __textAtlasRender__.handleLabelString(labelString, styleKey);
             }
         }
 
         private readonly $charValue = new CharValue;
         private readonly _textBlockMap: { [index: number]: TextBlock } = {};
-        
+
         private handleLabelString(labelstring: string, styleKey: StyleKey): void {
             const canvas = this.canvas;
             const $charValue = this.$charValue;
@@ -249,22 +253,36 @@ namespace egret.web {
                 console.log(char + ':' + canvas.width + ', ' + canvas.height);
                 //
                 const newTxtBlock = new TextBlock(newCharVal.renderWidth, newCharVal.renderHeight);
-                if (__book__.addTextBlock(newTxtBlock)) {
-                    newTxtBlock['tag'] = char;
-                    _textBlockMap[newCharVal._hashCode] = newTxtBlock;
+                if (!__book__.addTextBlock(newTxtBlock)) {
+                    continue;
+                }
+                //
+                _textBlockMap[newCharVal._hashCode] = newTxtBlock;
+                //
+                newTxtBlock[kw_tag] = char;
+                //
+                const page = newTxtBlock.line.page;
+                if (!page[kw_textTextureAtlas]) {
+                    page[kw_textTextureAtlas] = this.createTextTextureAtlas(page.pageWidth, page.pageHeight);
                 }
             }
         }
 
+        private createTextTextureAtlas(width: number, height: number): WebGLTexture {
+            const canvas = egret.sys.createCanvas(width, height);
+            const context = egret.sys.getContext2d(canvas);
+            context.fillStyle = 'white';
+            context.fillRect(0, 0, width, height);
+            return web.WebGLRenderContext.getInstance(0, 0).createTexture(canvas);
+        }
+
         private _canvas: HTMLCanvasElement = null;
         public get canvas(): HTMLCanvasElement {
-            if (!this._canvas) {
-                const size = 16;
-                this._canvas = egret.sys.createCanvas(size, size);
-            }
+            const size = 24;
+            this._canvas = this._canvas || egret.sys.createCanvas(size, size);
             return this._canvas;
         }
     }
 
-    export const __webglTextRender__ = new WebGLTextRender;
+    export const __textAtlasRender__ = new TextAtlasRender;
 }

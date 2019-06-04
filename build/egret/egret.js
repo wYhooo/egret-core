@@ -22355,17 +22355,20 @@ var egret;
         return false;
     }
     egret.configTextTextureAtlas = configTextTextureAtlas;
-    var globalGUID = 0;
-    var TextBlock = (function () {
+    //let globalGUID = 0;
+    var TextBlock = (function (_super) {
+        __extends(TextBlock, _super);
         function TextBlock(width, height) {
-            this._id = ++globalGUID;
-            this._width = 0;
-            this._height = 0;
-            this.line = null;
-            this.x = 0;
-            this.y = 0;
-            this._width = width;
-            this._height = height;
+            var _this = _super.call(this) || this;
+            //public readonly _id = ++globalGUID;
+            _this._width = 0;
+            _this._height = 0;
+            _this.line = null;
+            _this.x = 0;
+            _this.y = 0;
+            _this._width = width;
+            _this._height = height;
+            return _this;
         }
         Object.defineProperty(TextBlock.prototype, "width", {
             get: function () {
@@ -22382,19 +22385,22 @@ var egret;
             configurable: true
         });
         return TextBlock;
-    }());
+    }(egret.HashObject));
     egret.TextBlock = TextBlock;
     __reflect(TextBlock.prototype, "egret.TextBlock");
-    var Line = (function () {
+    var Line = (function (_super) {
+        __extends(Line, _super);
         function Line(maxWidth) {
-            this._id = ++globalGUID;
-            this.page = null;
-            this.textBlocks = [];
-            this.dynamicMaxHeight = 0;
-            this.maxWidth = 0;
-            this.x = 0;
-            this.y = 0;
-            this.maxWidth = maxWidth;
+            var _this = _super.call(this) || this;
+            //public readonly _id = ++globalGUID;
+            _this.page = null;
+            _this.textBlocks = [];
+            _this.dynamicMaxHeight = 0;
+            _this.maxWidth = 0;
+            _this.x = 0;
+            _this.y = 0;
+            _this.maxWidth = maxWidth;
+            return _this;
         }
         Line.prototype.isCapacityOf = function (textBlock) {
             if (!textBlock) {
@@ -22453,17 +22459,20 @@ var egret;
             return true;
         };
         return Line;
-    }());
+    }(egret.HashObject));
     egret.Line = Line;
     __reflect(Line.prototype, "egret.Line");
-    var Page = (function () {
+    var Page = (function (_super) {
+        __extends(Page, _super);
         function Page(pageWidth, pageHeight) {
-            this._id = ++globalGUID;
-            this.lines = [];
-            this.pageWidth = 0;
-            this.pageHeight = 0;
-            this.pageWidth = pageWidth;
-            this.pageHeight = pageHeight;
+            var _this = _super.call(this) || this;
+            //public readonly _id = ++globalGUID;
+            _this.lines = [];
+            _this.pageWidth = 0;
+            _this.pageHeight = 0;
+            _this.pageWidth = pageWidth;
+            _this.pageHeight = pageHeight;
+            return _this;
         }
         Page.prototype.addLine = function (line) {
             if (!line) {
@@ -22494,13 +22503,16 @@ var egret;
             return true;
         };
         return Page;
-    }());
+    }(egret.HashObject));
     egret.Page = Page;
     __reflect(Page.prototype, "egret.Page");
-    var Book = (function () {
+    var Book = (function (_super) {
+        __extends(Book, _super);
         function Book() {
-            this._pages = [];
-            this._sortLines = [];
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._pages = [];
+            _this._sortLines = [];
+            return _this;
         }
         Book.prototype.addTextBlock = function (textBlock) {
             var result = this._addTextBlock(textBlock);
@@ -22580,7 +22592,7 @@ var egret;
             this._sortLines = this._sortLines.sort(sortFunc);
         };
         return Book;
-    }());
+    }(egret.HashObject));
     egret.Book = Book;
     __reflect(Book.prototype, "egret.Book");
 })(egret || (egret = {}));

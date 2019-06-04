@@ -265,7 +265,7 @@
             "platform": "web"
           },
           {
-            "path": "web/rendering/webgl/WebGLTextRender.ts",
+            "path": "web/rendering/webgl/TextAtlasRender.ts",
             "platform": "web"
           },
           {

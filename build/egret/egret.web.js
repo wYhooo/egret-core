@@ -8099,7 +8099,7 @@ var egret;
                 }
                 if (node.dirtyRender) {
                     var surface = this.canvasRenderBuffer.surface;
-                    web.WebGLTextRender.render(node);
+                    web.TextAtlasRender.render(node);
                     this.canvasRenderer.renderText(node, this.canvasRenderBuffer.context);
                     // 拷贝canvas到texture
                     var texture = node.$texture;
@@ -8317,6 +8317,9 @@ var egret;
         var __ChineseCharactersRegExp__ = new RegExp("^[\u4E00-\u9FA5]$");
         var __ChineseCharacterMeasureFastMap__ = {};
         //
+        var kw_tag = 'tag';
+        var kw_textTextureAtlas = 'textTextureAtlas';
+        //
         var StyleKey = (function () {
             function StyleKey(textNode, format) {
                 this.format = null;
@@ -8416,28 +8419,23 @@ var egret;
             return CharValue;
         }());
         __reflect(CharValue.prototype, "CharValue");
-        var TextAtlasTexture = (function () {
-            function TextAtlasTexture() {
-                this.name = '';
+        // class TextAtlasTexture {
+        //     public name: string = '';
+        // }
+        // class TextAtlasTextureCache {
+        //     private readonly pool: TextAtlasTexture[] = [];
+        // }
+        var TextAtlasRender = (function (_super) {
+            __extends(TextAtlasRender, _super);
+            function TextAtlasRender() {
+                //public readonly textAtlasTextureCache: TextAtlasTextureCache = new TextAtlasTextureCache;
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.$charValue = new CharValue;
+                _this._textBlockMap = {};
+                _this._canvas = null;
+                return _this;
             }
-            return TextAtlasTexture;
-        }());
-        __reflect(TextAtlasTexture.prototype, "TextAtlasTexture");
-        var TextAtlasTextureCache = (function () {
-            function TextAtlasTextureCache() {
-                this.pool = [];
-            }
-            return TextAtlasTextureCache;
-        }());
-        __reflect(TextAtlasTextureCache.prototype, "TextAtlasTextureCache");
-        var WebGLTextRender = (function () {
-            function WebGLTextRender() {
-                this.textAtlasTextureCache = new TextAtlasTextureCache;
-                this.$charValue = new CharValue;
-                this._textBlockMap = {};
-                this._canvas = null;
-            }
-            WebGLTextRender.render = function (textNode) {
+            TextAtlasRender.render = function (textNode) {
                 //return;
                 if (!textNode) {
                     return;
@@ -8461,10 +8459,10 @@ var egret;
                     format = drawData[i + 3] || {};
                     //
                     var styleKey = new StyleKey(textNode, format);
-                    web.__webglTextRender__.handleLabelString(labelString, styleKey);
+                    web.__textAtlasRender__.handleLabelString(labelString, styleKey);
                 }
             };
-            WebGLTextRender.prototype.handleLabelString = function (labelstring, styleKey) {
+            TextAtlasRender.prototype.handleLabelString = function (labelstring, styleKey) {
                 var canvas = this.canvas;
                 var $charValue = this.$charValue;
                 var _textBlockMap = this._textBlockMap;
@@ -8480,28 +8478,41 @@ var egret;
                     console.log(char + ':' + canvas.width + ', ' + canvas.height);
                     //
                     var newTxtBlock = new egret.TextBlock(newCharVal.renderWidth, newCharVal.renderHeight);
-                    if (egret.__book__.addTextBlock(newTxtBlock)) {
-                        newTxtBlock['tag'] = char;
-                        _textBlockMap[newCharVal._hashCode] = newTxtBlock;
+                    if (!egret.__book__.addTextBlock(newTxtBlock)) {
+                        continue;
+                    }
+                    //
+                    _textBlockMap[newCharVal._hashCode] = newTxtBlock;
+                    //
+                    newTxtBlock[kw_tag] = char;
+                    //
+                    var page = newTxtBlock.line.page;
+                    if (!page[kw_textTextureAtlas]) {
+                        page[kw_textTextureAtlas] = this.createTextTextureAtlas(page.pageWidth, page.pageHeight);
                     }
                 }
             };
-            Object.defineProperty(WebGLTextRender.prototype, "canvas", {
+            TextAtlasRender.prototype.createTextTextureAtlas = function (width, height) {
+                var canvas = egret.sys.createCanvas(width, height);
+                var context = egret.sys.getContext2d(canvas);
+                context.fillStyle = 'white';
+                context.fillRect(0, 0, width, height);
+                return web.WebGLRenderContext.getInstance(0, 0).createTexture(canvas);
+            };
+            Object.defineProperty(TextAtlasRender.prototype, "canvas", {
                 get: function () {
-                    if (!this._canvas) {
-                        var size = 16;
-                        this._canvas = egret.sys.createCanvas(size, size);
-                    }
+                    var size = 24;
+                    this._canvas = this._canvas || egret.sys.createCanvas(size, size);
                     return this._canvas;
                 },
                 enumerable: true,
                 configurable: true
             });
-            return WebGLTextRender;
-        }());
-        web.WebGLTextRender = WebGLTextRender;
-        __reflect(WebGLTextRender.prototype, "egret.web.WebGLTextRender");
-        web.__webglTextRender__ = new WebGLTextRender;
+            return TextAtlasRender;
+        }(egret.HashObject));
+        web.TextAtlasRender = TextAtlasRender;
+        __reflect(TextAtlasRender.prototype, "egret.web.TextAtlasRender");
+        web.__textAtlasRender__ = new TextAtlasRender;
     })(web = egret.web || (egret.web = {}));
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
