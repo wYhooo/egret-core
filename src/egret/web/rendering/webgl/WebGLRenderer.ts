@@ -921,13 +921,22 @@ namespace egret.web {
             /*
             *******测试TextAtlasRender渲染机制
             */
-            if (textAtlasRenderEnable && TextAtlasRender.renderTextBlocks.length > 0) {
-                // let logString = '';
-                // for (const txtBlock of TextAtlasRender.renderTextBlocks) {
-                //     logString += txtBlock['tag'];
-                //     //logString += '';
-                // }
-                // console.log('TextAtlasRender.renderTextBlocks = ' + logString);
+            if (textAtlasRenderEnable && TextAtlasRender.renderTextBlockCommands.length > 0) {
+                for (const cmd of TextAtlasRender.renderTextBlockCommands) {
+                    let x = cmd.x;
+                    let y = cmd.y;
+                    const txtBlocks = cmd.textBlocks;
+                    for (let i = 0, length = txtBlocks.length; i < length; ++i) {
+                        const tb = txtBlocks[i];
+                        const page = tb.line.page;
+                        buffer.context.drawTexture(page['textTextureAtlas'] as WebGLTexture,
+                            0, 0, page.pageWidth, page.pageHeight, 
+                            x, y, tb.width, tb.height,
+                            page.pageWidth, page.pageHeight);
+
+                        x += tb.width;
+                    }
+                }
             }
 
             if (x || y) {

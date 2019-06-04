@@ -8124,13 +8124,19 @@ var egret;
                 /*
                 *******测试TextAtlasRender渲染机制
                 */
-                if (web.textAtlasRenderEnable && web.TextAtlasRender.renderTextBlocks.length > 0) {
-                    // let logString = '';
-                    // for (const txtBlock of TextAtlasRender.renderTextBlocks) {
-                    //     logString += txtBlock['tag'];
-                    //     //logString += '';
-                    // }
-                    // console.log('TextAtlasRender.renderTextBlocks = ' + logString);
+                if (web.textAtlasRenderEnable && web.TextAtlasRender.renderTextBlockCommands.length > 0) {
+                    for (var _i = 0, _a = web.TextAtlasRender.renderTextBlockCommands; _i < _a.length; _i++) {
+                        var cmd = _a[_i];
+                        var x_1 = cmd.x;
+                        var y_1 = cmd.y;
+                        var txtBlocks = cmd.textBlocks;
+                        for (var i = 0, length_10 = txtBlocks.length; i < length_10; ++i) {
+                            var tb = txtBlocks[i];
+                            var page = tb.line.page;
+                            buffer.context.drawTexture(page['textTextureAtlas'], 0, 0, page.pageWidth, page.pageHeight, x_1, y_1, tb.width, tb.height, page.pageWidth, page.pageHeight);
+                            x_1 += tb.width;
+                        }
+                    }
                 }
                 if (x || y) {
                     if (node.dirtyRender) {
@@ -8320,7 +8326,7 @@ var egret;
                 return 0;
             }
             var hash = 0;
-            for (var i = 0, length_10 = str.length; i < length_10; ++i) {
+            for (var i = 0, length_11 = str.length; i < length_11; ++i) {
                 var chr = str.charCodeAt(i);
                 hash = ((hash << 5) - hash) + chr;
                 hash |= 0; // Convert to 32bit integer
@@ -8447,9 +8453,22 @@ var egret;
         }(egret.HashObject));
         __reflect(CharValue.prototype, "CharValue");
         //测试开关
-        web.textAtlasRenderEnable = true;
+        web.textAtlasRenderEnable = false;
         //测试对象
         web.__textAtlasRender__ = null;
+        var DrawTextBlocksCommand = (function (_super) {
+            __extends(DrawTextBlocksCommand, _super);
+            function DrawTextBlocksCommand() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.x = 0;
+                _this.y = 0;
+                _this.textBlocks = [];
+                return _this;
+            }
+            return DrawTextBlocksCommand;
+        }(egret.HashObject));
+        web.DrawTextBlocksCommand = DrawTextBlocksCommand;
+        __reflect(DrawTextBlocksCommand.prototype, "egret.web.DrawTextBlocksCommand");
         //
         var TextAtlasRender = (function (_super) {
             __extends(TextAtlasRender, _super);
@@ -8470,7 +8489,7 @@ var egret;
                     return;
                 }
                 //先配置这个模型
-                egret.__book__ = egret.__book__ || egret.configTextTextureAtlasStrategy(64, 2);
+                egret.__book__ = egret.__book__ || egret.configTextTextureAtlasStrategy(512, 2);
                 web.__textAtlasRender__ = web.__textAtlasRender__ || new TextAtlasRender(egret.web.WebGLRenderContext.getInstance(0, 0));
                 //
                 var offset = 4;
@@ -8480,12 +8499,20 @@ var egret;
                 var labelString = '';
                 var format = {};
                 TextAtlasRender.renderTextBlocks.length = 0;
-                for (var i = 0, length_11 = drawData.length; i < length_11; i += offset) {
+                TextAtlasRender.renderTextBlockCommands.length = 0;
+                for (var i = 0, length_12 = drawData.length; i < length_12; i += offset) {
                     x = drawData[i + 0];
                     y = drawData[i + 1];
                     labelString = drawData[i + 2];
                     format = drawData[i + 3] || {};
+                    TextAtlasRender.renderTextBlocks.length = 0;
                     web.__textAtlasRender__.convertLabelStringToTextAtlas(labelString, new StyleKey(textNode, format));
+                    //
+                    var drawCmd = new DrawTextBlocksCommand;
+                    drawCmd.x = x;
+                    drawCmd.y = y;
+                    drawCmd.textBlocks = [].concat(TextAtlasRender.renderTextBlocks);
+                    TextAtlasRender.renderTextBlockCommands.push(drawCmd);
                 }
             };
             TextAtlasRender.prototype.convertLabelStringToTextAtlas = function (labelstring, styleKey) {
@@ -8550,6 +8577,7 @@ var egret;
                 configurable: true
             });
             TextAtlasRender.renderTextBlocks = [];
+            TextAtlasRender.renderTextBlockCommands = [];
             return TextAtlasRender;
         }(egret.HashObject));
         web.TextAtlasRender = TextAtlasRender;

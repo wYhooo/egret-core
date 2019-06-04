@@ -203,9 +203,16 @@ namespace egret.web {
     }
 
     //测试开关
-    export const textAtlasRenderEnable : boolean = true;
+    export const textAtlasRenderEnable : boolean = false;
     //测试对象
     export let __textAtlasRender__ : TextAtlasRender = null;
+
+    export class DrawTextBlocksCommand extends HashObject  {
+        public x: number = 0;
+        public y: number = 0;
+        public textBlocks: TextBlock[] = [];
+    }
+
     //
     export class TextAtlasRender extends HashObject {
         //
@@ -222,12 +229,13 @@ namespace egret.web {
         }
         
         public static readonly renderTextBlocks: TextBlock[] = [];
+        public static readonly renderTextBlockCommands: DrawTextBlocksCommand[] = [];
         public static analysisTextNode(textNode: sys.TextNode): void {
             if (!textNode) {
                 return;
             }
             //先配置这个模型
-            __book__ = __book__ || configTextTextureAtlasStrategy(64, 2);
+            __book__ = __book__ || configTextTextureAtlasStrategy(512, 2);
             __textAtlasRender__ = __textAtlasRender__ || new TextAtlasRender(egret.web.WebGLRenderContext.getInstance(0, 0));
             //
             const offset = 4;
@@ -237,12 +245,21 @@ namespace egret.web {
             let labelString = '';
             let format: sys.TextFormat = {};
             TextAtlasRender.renderTextBlocks.length = 0;
+            TextAtlasRender.renderTextBlockCommands.length = 0;
             for (let i = 0, length = drawData.length; i < length; i += offset) {
                 x = drawData[i + 0] as number;
                 y = drawData[i + 1] as number;
                 labelString = drawData[i + 2] as string;
                 format = drawData[i + 3] as sys.TextFormat || {};
+                TextAtlasRender.renderTextBlocks.length = 0;
                 __textAtlasRender__.convertLabelStringToTextAtlas(labelString, new StyleKey(textNode, format));
+
+                //
+                const drawCmd = new DrawTextBlocksCommand;
+                drawCmd.x = x;
+                drawCmd.y = y;
+                drawCmd.textBlocks = [].concat(TextAtlasRender.renderTextBlocks);
+                TextAtlasRender.renderTextBlockCommands.push(drawCmd);
             }
         }
 
