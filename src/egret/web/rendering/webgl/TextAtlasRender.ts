@@ -274,7 +274,7 @@ namespace egret.web {
         private createTextTextureAtlas(width: number, height: number): WebGLTexture {
             const canvas = egret.sys.createCanvas(width, height);
             const context = egret.sys.getContext2d(canvas);
-            context.fillStyle = 'white';
+            context.fillStyle = 'black';
             context.fillRect(0, 0, width, height);
             const textAtlasTexture = web.WebGLRenderContext.getInstance(0, 0).createTexture(canvas);
             textAtlasTexture['text_atlas'] = true;

@@ -8491,18 +8491,18 @@ var egret;
                         var textAtlas = page[kw_textTextureAtlas];
                         var gl = web.WebGLRenderContext.getInstance(0, 0).context;
                         gl.bindTexture(gl.TEXTURE_2D, textAtlas);
-                        //gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+                        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
                         var xoffset = 0;
                         var yoffset = 0;
                         gl.texSubImage2D(gl.TEXTURE_2D, 0, xoffset, yoffset, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
-                        //gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
                     }
                 }
             };
             TextAtlasRender.prototype.createTextTextureAtlas = function (width, height) {
                 var canvas = egret.sys.createCanvas(width, height);
                 var context = egret.sys.getContext2d(canvas);
-                context.fillStyle = 'white';
+                context.fillStyle = 'black';
                 context.fillRect(0, 0, width, height);
                 var textAtlasTexture = web.WebGLRenderContext.getInstance(0, 0).createTexture(canvas);
                 textAtlasTexture['text_atlas'] = true;
