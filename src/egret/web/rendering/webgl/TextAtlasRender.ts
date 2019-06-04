@@ -127,11 +127,12 @@ namespace egret.web {
         constructor() {
         }
 
-        public init(char: string, styleKey: StyleKey): void {
+        public init(char: string, styleKey: StyleKey): CharValue {
             this._char = char;
             this._styleKey = styleKey;
             this._string = char + ':' + styleKey.__string__;
             this._hashCode = __hashCode__(this._string);
+            return this;
         }
 
         public render(canvas: HTMLCanvasElement): void {
@@ -192,19 +193,7 @@ namespace egret.web {
         }
     }
 
-
-
-    // class TextAtlasTexture {
-    //     public name: string = '';
-    // }
-
-    // class TextAtlasTextureCache {
-    //     private readonly pool: TextAtlasTexture[] = [];
-    // }
-
     export class TextAtlasRender extends HashObject {
-
-        //public readonly textAtlasTextureCache: TextAtlasTextureCache = new TextAtlasTextureCache;
 
         public static render(textNode: sys.TextNode): void {
             //return;
@@ -237,7 +226,7 @@ namespace egret.web {
 
         private readonly $charValue = new CharValue;
         private readonly _textBlockMap: { [index: number]: TextBlock } = {};
-
+        private testFlag: boolean = false;
         private handleLabelString(labelstring: string, styleKey: StyleKey): void {
             const canvas = this.canvas;
             const $charValue = this.$charValue;
@@ -247,8 +236,7 @@ namespace egret.web {
                 if (_textBlockMap[$charValue._hashCode]) {
                     continue;
                 }
-                const newCharVal = new CharValue();
-                newCharVal.init(char, styleKey);
+                const newCharVal = new CharValue().init(char, styleKey);
                 newCharVal.render(canvas);
                 console.log(char + ':' + canvas.width + ', ' + canvas.height);
                 //
@@ -265,15 +253,33 @@ namespace egret.web {
                 if (!page[kw_textTextureAtlas]) {
                     page[kw_textTextureAtlas] = this.createTextTextureAtlas(page.pageWidth, page.pageHeight);
                 }
+
+                //update 更新上去
+                if (!this.testFlag) {
+                    this.testFlag = true;
+                    const textAtlas = page[kw_textTextureAtlas];
+                    const gl = web.WebGLRenderContext.getInstance(0, 0).context;
+                    gl.bindTexture(gl.TEXTURE_2D, textAtlas);
+                    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+                    const xoffset = 0;
+                    const yoffset = 0;
+                    gl.texSubImage2D(gl.TEXTURE_2D, 0, xoffset, yoffset, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
+                    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                }
+                
             }
         }
 
+        private readonly textAtlasTextureCache: WebGLTexture[] = [];
         private createTextTextureAtlas(width: number, height: number): WebGLTexture {
             const canvas = egret.sys.createCanvas(width, height);
             const context = egret.sys.getContext2d(canvas);
             context.fillStyle = 'white';
             context.fillRect(0, 0, width, height);
-            return web.WebGLRenderContext.getInstance(0, 0).createTexture(canvas);
+            const textAtlasTexture = web.WebGLRenderContext.getInstance(0, 0).createTexture(canvas);
+            textAtlasTexture['text_atlas'] = true;
+            this.textAtlasTextureCache.push(textAtlasTexture);
+            return textAtlasTexture;
         }
 
         private _canvas: HTMLCanvasElement = null;

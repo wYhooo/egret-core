@@ -8360,6 +8360,7 @@ var egret;
                 this._styleKey = styleKey;
                 this._string = char + ':' + styleKey.__string__;
                 this._hashCode = __hashCode__(this._string);
+                return this;
             };
             CharValue.prototype.render = function (canvas) {
                 if (!canvas) {
@@ -8419,19 +8420,14 @@ var egret;
             return CharValue;
         }());
         __reflect(CharValue.prototype, "CharValue");
-        // class TextAtlasTexture {
-        //     public name: string = '';
-        // }
-        // class TextAtlasTextureCache {
-        //     private readonly pool: TextAtlasTexture[] = [];
-        // }
         var TextAtlasRender = (function (_super) {
             __extends(TextAtlasRender, _super);
             function TextAtlasRender() {
-                //public readonly textAtlasTextureCache: TextAtlasTextureCache = new TextAtlasTextureCache;
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.$charValue = new CharValue;
                 _this._textBlockMap = {};
+                _this.testFlag = false;
+                _this.textAtlasTextureCache = [];
                 _this._canvas = null;
                 return _this;
             }
@@ -8472,8 +8468,7 @@ var egret;
                     if (_textBlockMap[$charValue._hashCode]) {
                         continue;
                     }
-                    var newCharVal = new CharValue();
-                    newCharVal.init(char, styleKey);
+                    var newCharVal = new CharValue().init(char, styleKey);
                     newCharVal.render(canvas);
                     console.log(char + ':' + canvas.width + ', ' + canvas.height);
                     //
@@ -8490,6 +8485,18 @@ var egret;
                     if (!page[kw_textTextureAtlas]) {
                         page[kw_textTextureAtlas] = this.createTextTextureAtlas(page.pageWidth, page.pageHeight);
                     }
+                    //update 更新上去
+                    if (!this.testFlag) {
+                        this.testFlag = true;
+                        var textAtlas = page[kw_textTextureAtlas];
+                        var gl = web.WebGLRenderContext.getInstance(0, 0).context;
+                        gl.bindTexture(gl.TEXTURE_2D, textAtlas);
+                        //gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+                        var xoffset = 0;
+                        var yoffset = 0;
+                        gl.texSubImage2D(gl.TEXTURE_2D, 0, xoffset, yoffset, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
+                        //gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                    }
                 }
             };
             TextAtlasRender.prototype.createTextTextureAtlas = function (width, height) {
@@ -8497,7 +8504,10 @@ var egret;
                 var context = egret.sys.getContext2d(canvas);
                 context.fillStyle = 'white';
                 context.fillRect(0, 0, width, height);
-                return web.WebGLRenderContext.getInstance(0, 0).createTexture(canvas);
+                var textAtlasTexture = web.WebGLRenderContext.getInstance(0, 0).createTexture(canvas);
+                textAtlasTexture['text_atlas'] = true;
+                this.textAtlasTextureCache.push(textAtlasTexture);
+                return textAtlasTexture;
             };
             Object.defineProperty(TextAtlasRender.prototype, "canvas", {
                 get: function () {
