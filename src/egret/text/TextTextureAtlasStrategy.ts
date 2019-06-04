@@ -30,13 +30,13 @@
 namespace egret {
 
     export let __MAX_PAGE_SIZE__ = 1024;
-    export let __TXT_BLOCK_OFFSET__ = 1;
+    export let __TXT_RENDER_BORDER__ = 1;
     export let __book__: Book = null;
     export function configTextTextureAtlas(maxPageSize: number, offset: number): boolean {
         if (!__book__) {
             __book__ = new Book;
             __MAX_PAGE_SIZE__ = maxPageSize;
-            __TXT_BLOCK_OFFSET__ = offset;
+            __TXT_RENDER_BORDER__ = offset;
             return true;
         }
         console.warn('repeat config: maxPageSize = ' + maxPageSize + ', offset = ' + offset);
@@ -60,11 +60,11 @@ namespace egret {
         }
 
         public get width(): number {
-            return this._width + __TXT_BLOCK_OFFSET__ * 2;
+            return this._width + __TXT_RENDER_BORDER__ * 2;
         }
 
         public get height(): number {
-            return this._height + __TXT_BLOCK_OFFSET__ * 2;
+            return this._height + __TXT_RENDER_BORDER__ * 2;
         }
     }
 

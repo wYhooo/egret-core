@@ -8297,7 +8297,6 @@ var egret;
 //  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //////////////////////////////////////////////////////////////////////////////////////
-var __TEXT_RENDER_OFFSET__ = 1;
 var egret;
 (function (egret) {
     var web;
@@ -8434,6 +8433,8 @@ var egret;
         var WebGLTextRender = (function () {
             function WebGLTextRender() {
                 this.textAtlasTextureCache = new TextAtlasTextureCache;
+                this.$charValue = new CharValue;
+                this._textBlockMap = {};
                 this._canvas = null;
             }
             WebGLTextRender.render = function (textNode) {
@@ -8443,7 +8444,7 @@ var egret;
                 }
                 //先配置这个模型
                 if (!egret.__book__) {
-                    egret.configTextTextureAtlas(128 * 2, __TEXT_RENDER_OFFSET__);
+                    egret.configTextTextureAtlas(128 * 2, 1);
                 }
                 //
                 var offset = 4;
@@ -8465,17 +8466,23 @@ var egret;
             };
             WebGLTextRender.prototype.handleLabelString = function (labelstring, styleKey) {
                 var canvas = this.canvas;
+                var $charValue = this.$charValue;
+                var _textBlockMap = this._textBlockMap;
                 for (var _i = 0, labelstring_1 = labelstring; _i < labelstring_1.length; _i++) {
                     var char = labelstring_1[_i];
-                    var charVal = new CharValue();
-                    charVal.init(char, styleKey);
-                    charVal.render(canvas);
+                    $charValue.init(char, styleKey);
+                    if (_textBlockMap[$charValue._hashCode]) {
+                        continue;
+                    }
+                    var newCharVal = new CharValue();
+                    newCharVal.init(char, styleKey);
+                    newCharVal.render(canvas);
                     console.log(char + ':' + canvas.width + ', ' + canvas.height);
                     //
-                    var tb = new egret.TextBlock(charVal.renderWidth, charVal.renderHeight);
-                    if (egret.__book__.addTextBlock(tb)) {
-                        tb['tag'] = char;
-                        //console.log('add ok');
+                    var newTxtBlock = new egret.TextBlock(newCharVal.renderWidth, newCharVal.renderHeight);
+                    if (egret.__book__.addTextBlock(newTxtBlock)) {
+                        newTxtBlock['tag'] = char;
+                        _textBlockMap[newCharVal._hashCode] = newTxtBlock;
                     }
                 }
             };

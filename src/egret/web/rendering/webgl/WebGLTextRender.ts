@@ -27,8 +27,6 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////
 
-const __TEXT_RENDER_OFFSET__ = 1;
-
 namespace egret.web {
 
     function __hashCode__(str: string): number {
@@ -211,7 +209,7 @@ namespace egret.web {
             }
             //先配置这个模型
             if (!__book__) {
-                configTextTextureAtlas(128 * 2, __TEXT_RENDER_OFFSET__);
+                configTextTextureAtlas(128 * 2, 1);
             }
             //
             const offset = 4;
@@ -233,18 +231,27 @@ namespace egret.web {
             }
         }
 
+        private readonly $charValue = new CharValue;
+        private readonly _textBlockMap: { [index: number]: TextBlock } = {};
+        
         private handleLabelString(labelstring: string, styleKey: StyleKey): void {
             const canvas = this.canvas;
+            const $charValue = this.$charValue;
+            const _textBlockMap = this._textBlockMap;
             for (const char of labelstring) {
-                const charVal = new CharValue();
-                charVal.init(char, styleKey);
-                charVal.render(canvas);
+                $charValue.init(char, styleKey);
+                if (_textBlockMap[$charValue._hashCode]) {
+                    continue;
+                }
+                const newCharVal = new CharValue();
+                newCharVal.init(char, styleKey);
+                newCharVal.render(canvas);
                 console.log(char + ':' + canvas.width + ', ' + canvas.height);
                 //
-                const tb = new TextBlock(charVal.renderWidth, charVal.renderHeight);
-                if (__book__.addTextBlock(tb)) {
-                    tb['tag'] = char;
-                    //console.log('add ok');
+                const newTxtBlock = new TextBlock(newCharVal.renderWidth, newCharVal.renderHeight);
+                if (__book__.addTextBlock(newTxtBlock)) {
+                    newTxtBlock['tag'] = char;
+                    _textBlockMap[newCharVal._hashCode] = newTxtBlock;
                 }
             }
         }

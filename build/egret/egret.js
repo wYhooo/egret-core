@@ -19852,279 +19852,6 @@ var egret;
 //////////////////////////////////////////////////////////////////////////////////////
 var egret;
 (function (egret) {
-    egret.__MAX_PAGE_SIZE__ = 1024;
-    egret.__TXT_BLOCK_OFFSET__ = 1;
-    egret.__book__ = null;
-    function configTextTextureAtlas(maxPageSize, offset) {
-        if (!egret.__book__) {
-            egret.__book__ = new Book;
-            egret.__MAX_PAGE_SIZE__ = maxPageSize;
-            egret.__TXT_BLOCK_OFFSET__ = offset;
-            return true;
-        }
-        console.warn('repeat config: maxPageSize = ' + maxPageSize + ', offset = ' + offset);
-        return false;
-    }
-    egret.configTextTextureAtlas = configTextTextureAtlas;
-    var globalGUID = 0;
-    var TextBlock = (function () {
-        function TextBlock(width, height) {
-            this._id = ++globalGUID;
-            this._width = 0;
-            this._height = 0;
-            this.line = null;
-            this.x = 0;
-            this.y = 0;
-            this._width = width;
-            this._height = height;
-        }
-        Object.defineProperty(TextBlock.prototype, "width", {
-            get: function () {
-                return this._width + egret.__TXT_BLOCK_OFFSET__ * 2;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(TextBlock.prototype, "height", {
-            get: function () {
-                return this._height + egret.__TXT_BLOCK_OFFSET__ * 2;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return TextBlock;
-    }());
-    egret.TextBlock = TextBlock;
-    __reflect(TextBlock.prototype, "egret.TextBlock");
-    var Line = (function () {
-        function Line(maxWidth) {
-            this._id = ++globalGUID;
-            this.page = null;
-            this.textBlocks = [];
-            this.dynamicMaxHeight = 0;
-            this.maxWidth = 0;
-            this.x = 0;
-            this.y = 0;
-            this.maxWidth = maxWidth;
-        }
-        Line.prototype.isCapacityOf = function (textBlock) {
-            if (!textBlock) {
-                return false;
-            }
-            //
-            var posx = 0;
-            var posy = 0;
-            var lastTxtBlock = this.lastTextBlock();
-            if (lastTxtBlock) {
-                posx = lastTxtBlock.x + lastTxtBlock.width;
-                posy = lastTxtBlock.y;
-            }
-            //
-            if (posx + textBlock.width > this.maxWidth) {
-                return false; //宽度不够
-            }
-            //
-            if (this.dynamicMaxHeight > 0 && posy + textBlock.height > this.dynamicMaxHeight) {
-                return false; //如果有已经有动态高度，到这里，说明高度也不够
-            }
-            return true;
-        };
-        Line.prototype.lastTextBlock = function () {
-            var textBlocks = this.textBlocks;
-            if (textBlocks.length > 0) {
-                return textBlocks[textBlocks.length - 1];
-            }
-            return null;
-        };
-        Line.prototype.addTextBlock = function (textBlock, needCheck) {
-            //
-            if (!textBlock) {
-                return false;
-            }
-            //
-            if (needCheck) {
-                if (!this.isCapacityOf(textBlock)) {
-                    return false;
-                }
-            }
-            //
-            var posx = 0;
-            var posy = 0;
-            var lastTxtBlock = this.lastTextBlock();
-            if (lastTxtBlock) {
-                posx = lastTxtBlock.x + lastTxtBlock.width;
-                posy = lastTxtBlock.y;
-            }
-            //
-            textBlock.x = posx;
-            textBlock.y = posy;
-            textBlock.line = this;
-            this.textBlocks.push(textBlock);
-            this.dynamicMaxHeight = Math.max(this.dynamicMaxHeight, textBlock.height);
-            return true;
-        };
-        return Line;
-    }());
-    egret.Line = Line;
-    __reflect(Line.prototype, "egret.Line");
-    var Page = (function () {
-        function Page(pageWidth, pageHeight) {
-            this._id = ++globalGUID;
-            this.lines = [];
-            this.pageWidth = 0;
-            this.pageHeight = 0;
-            this.pageWidth = pageWidth;
-            this.pageHeight = pageHeight;
-        }
-        Page.prototype.addLine = function (line) {
-            if (!line) {
-                return false;
-            }
-            //
-            var posx = 0;
-            var posy = 0;
-            //
-            var lines = this.lines;
-            if (lines.length > 0) {
-                var lastLine = lines[lines.length - 1];
-                posx = lastLine.x;
-                posy = lastLine.y + lastLine.dynamicMaxHeight;
-            }
-            if (line.maxWidth > this.pageWidth) {
-                console.error('line.maxWidth = ' + line.maxWidth + ', ' + 'this.pageWidth = ' + this.pageWidth);
-                return false; //宽度不够
-            }
-            if (posy + line.dynamicMaxHeight > this.pageHeight) {
-                return false; //满了
-            }
-            //更新数据
-            line.x = posx;
-            line.y = posy;
-            line.page = this;
-            this.lines.push(line);
-            return true;
-        };
-        return Page;
-    }());
-    egret.Page = Page;
-    __reflect(Page.prototype, "egret.Page");
-    var Book = (function () {
-        function Book() {
-            this._pages = [];
-            this._sortLines = [];
-        }
-        Book.prototype.addTextBlock = function (textBlock) {
-            var result = this._addTextBlock(textBlock);
-            if (!result) {
-                return false;
-            }
-            //没有才要添加
-            var exist = false;
-            var cast = result;
-            for (var _i = 0, _a = this._sortLines; _i < _a.length; _i++) {
-                var line = _a[_i];
-                if (line === cast[1]) {
-                    exist = true;
-                }
-            }
-            if (!exist) {
-                this._sortLines.push(cast[1]);
-            }
-            //重新排序
-            this.sort();
-            return true;
-        };
-        Book.prototype._addTextBlock = function (textBlock) {
-            if (!textBlock) {
-                return null;
-            }
-            if (textBlock.width > egret.__MAX_PAGE_SIZE__ || textBlock.height > egret.__MAX_PAGE_SIZE__) {
-                console.error('textBlock.width = ' + textBlock.width + ', ' + 'textBlock.height = ' + textBlock.height);
-                return null;
-            }
-            //找到最合适的
-            var _sortLines = this._sortLines;
-            for (var i = 0, length_7 = _sortLines.length; i < length_7; ++i) {
-                var line = _sortLines[i];
-                if (!line.isCapacityOf(textBlock)) {
-                    continue;
-                }
-                if (line.addTextBlock(textBlock, false)) {
-                    return [line.page, line];
-                }
-            }
-            //做新的行
-            var newLine = new Line(egret.__MAX_PAGE_SIZE__);
-            if (!newLine.addTextBlock(textBlock, true)) {
-                console.error('???');
-                return null;
-            }
-            //现有的page中插入
-            var _pages = this._pages;
-            for (var i = 0, length_8 = _pages.length; i < length_8; ++i) {
-                var page = _pages[i];
-                if (page.addLine(newLine)) {
-                    return [page, newLine];
-                }
-            }
-            //都没有，就做新的page
-            //添加目标行
-            var newPage = this.newPage(egret.__MAX_PAGE_SIZE__, egret.__MAX_PAGE_SIZE__);
-            if (!newPage.addLine(newLine)) {
-                console.error('_addText newPage.addLine failed');
-                return null;
-            }
-            return [newPage, newLine];
-        };
-        Book.prototype.newPage = function (pageWidth, pageHeight) {
-            var newPage = new Page(pageWidth, pageHeight);
-            this._pages.push(newPage);
-            return newPage;
-        };
-        Book.prototype.sort = function () {
-            if (this._sortLines.length <= 1) {
-                return;
-            }
-            var sortFunc = function (a, b) {
-                return (a.dynamicMaxHeight < b.dynamicMaxHeight) ? -1 : 1;
-            };
-            this._sortLines = this._sortLines.sort(sortFunc);
-        };
-        return Book;
-    }());
-    egret.Book = Book;
-    __reflect(Book.prototype, "egret.Book");
-})(egret || (egret = {}));
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-present, Egret Technology.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
-var egret;
-(function (egret) {
     var SplitRegex = new RegExp("(?=[\\u00BF-\\u1FFF\\u2C00-\\uD7FF]|\\b|\\s)(?![。，！、》…）)}”】\\.\\,\\!\\?\\]\\:])");
     /**
      * @private
@@ -21468,8 +21195,8 @@ var egret;
                 if (lines && lines.length > 0) {
                     var textColor = values[2 /* textColor */];
                     var lastColor = -1;
-                    var length_9 = lines.length;
-                    for (var i = 0; i < length_9; i += 4) {
+                    var length_7 = lines.length;
+                    for (var i = 0; i < length_7; i += 4) {
                         var x = lines[i];
                         var y = lines[i + 1];
                         var w = lines[i + 2];
@@ -22583,6 +22310,279 @@ var egret;
     var sys;
     (function (sys) {
     })(sys = egret.sys || (egret.sys = {}));
+})(egret || (egret = {}));
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2014-present, Egret Technology.
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Egret nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
+//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////////////////
+var egret;
+(function (egret) {
+    egret.__MAX_PAGE_SIZE__ = 1024;
+    egret.__TXT_RENDER_BORDER__ = 1;
+    egret.__book__ = null;
+    function configTextTextureAtlas(maxPageSize, offset) {
+        if (!egret.__book__) {
+            egret.__book__ = new Book;
+            egret.__MAX_PAGE_SIZE__ = maxPageSize;
+            egret.__TXT_RENDER_BORDER__ = offset;
+            return true;
+        }
+        console.warn('repeat config: maxPageSize = ' + maxPageSize + ', offset = ' + offset);
+        return false;
+    }
+    egret.configTextTextureAtlas = configTextTextureAtlas;
+    var globalGUID = 0;
+    var TextBlock = (function () {
+        function TextBlock(width, height) {
+            this._id = ++globalGUID;
+            this._width = 0;
+            this._height = 0;
+            this.line = null;
+            this.x = 0;
+            this.y = 0;
+            this._width = width;
+            this._height = height;
+        }
+        Object.defineProperty(TextBlock.prototype, "width", {
+            get: function () {
+                return this._width + egret.__TXT_RENDER_BORDER__ * 2;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TextBlock.prototype, "height", {
+            get: function () {
+                return this._height + egret.__TXT_RENDER_BORDER__ * 2;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return TextBlock;
+    }());
+    egret.TextBlock = TextBlock;
+    __reflect(TextBlock.prototype, "egret.TextBlock");
+    var Line = (function () {
+        function Line(maxWidth) {
+            this._id = ++globalGUID;
+            this.page = null;
+            this.textBlocks = [];
+            this.dynamicMaxHeight = 0;
+            this.maxWidth = 0;
+            this.x = 0;
+            this.y = 0;
+            this.maxWidth = maxWidth;
+        }
+        Line.prototype.isCapacityOf = function (textBlock) {
+            if (!textBlock) {
+                return false;
+            }
+            //
+            var posx = 0;
+            var posy = 0;
+            var lastTxtBlock = this.lastTextBlock();
+            if (lastTxtBlock) {
+                posx = lastTxtBlock.x + lastTxtBlock.width;
+                posy = lastTxtBlock.y;
+            }
+            //
+            if (posx + textBlock.width > this.maxWidth) {
+                return false; //宽度不够
+            }
+            //
+            if (this.dynamicMaxHeight > 0 && posy + textBlock.height > this.dynamicMaxHeight) {
+                return false; //如果有已经有动态高度，到这里，说明高度也不够
+            }
+            return true;
+        };
+        Line.prototype.lastTextBlock = function () {
+            var textBlocks = this.textBlocks;
+            if (textBlocks.length > 0) {
+                return textBlocks[textBlocks.length - 1];
+            }
+            return null;
+        };
+        Line.prototype.addTextBlock = function (textBlock, needCheck) {
+            //
+            if (!textBlock) {
+                return false;
+            }
+            //
+            if (needCheck) {
+                if (!this.isCapacityOf(textBlock)) {
+                    return false;
+                }
+            }
+            //
+            var posx = 0;
+            var posy = 0;
+            var lastTxtBlock = this.lastTextBlock();
+            if (lastTxtBlock) {
+                posx = lastTxtBlock.x + lastTxtBlock.width;
+                posy = lastTxtBlock.y;
+            }
+            //
+            textBlock.x = posx;
+            textBlock.y = posy;
+            textBlock.line = this;
+            this.textBlocks.push(textBlock);
+            this.dynamicMaxHeight = Math.max(this.dynamicMaxHeight, textBlock.height);
+            return true;
+        };
+        return Line;
+    }());
+    egret.Line = Line;
+    __reflect(Line.prototype, "egret.Line");
+    var Page = (function () {
+        function Page(pageWidth, pageHeight) {
+            this._id = ++globalGUID;
+            this.lines = [];
+            this.pageWidth = 0;
+            this.pageHeight = 0;
+            this.pageWidth = pageWidth;
+            this.pageHeight = pageHeight;
+        }
+        Page.prototype.addLine = function (line) {
+            if (!line) {
+                return false;
+            }
+            //
+            var posx = 0;
+            var posy = 0;
+            //
+            var lines = this.lines;
+            if (lines.length > 0) {
+                var lastLine = lines[lines.length - 1];
+                posx = lastLine.x;
+                posy = lastLine.y + lastLine.dynamicMaxHeight;
+            }
+            if (line.maxWidth > this.pageWidth) {
+                console.error('line.maxWidth = ' + line.maxWidth + ', ' + 'this.pageWidth = ' + this.pageWidth);
+                return false; //宽度不够
+            }
+            if (posy + line.dynamicMaxHeight > this.pageHeight) {
+                return false; //满了
+            }
+            //更新数据
+            line.x = posx;
+            line.y = posy;
+            line.page = this;
+            this.lines.push(line);
+            return true;
+        };
+        return Page;
+    }());
+    egret.Page = Page;
+    __reflect(Page.prototype, "egret.Page");
+    var Book = (function () {
+        function Book() {
+            this._pages = [];
+            this._sortLines = [];
+        }
+        Book.prototype.addTextBlock = function (textBlock) {
+            var result = this._addTextBlock(textBlock);
+            if (!result) {
+                return false;
+            }
+            //没有才要添加
+            var exist = false;
+            var cast = result;
+            for (var _i = 0, _a = this._sortLines; _i < _a.length; _i++) {
+                var line = _a[_i];
+                if (line === cast[1]) {
+                    exist = true;
+                }
+            }
+            if (!exist) {
+                this._sortLines.push(cast[1]);
+            }
+            //重新排序
+            this.sort();
+            return true;
+        };
+        Book.prototype._addTextBlock = function (textBlock) {
+            if (!textBlock) {
+                return null;
+            }
+            if (textBlock.width > egret.__MAX_PAGE_SIZE__ || textBlock.height > egret.__MAX_PAGE_SIZE__) {
+                console.error('textBlock.width = ' + textBlock.width + ', ' + 'textBlock.height = ' + textBlock.height);
+                return null;
+            }
+            //找到最合适的
+            var _sortLines = this._sortLines;
+            for (var i = 0, length_8 = _sortLines.length; i < length_8; ++i) {
+                var line = _sortLines[i];
+                if (!line.isCapacityOf(textBlock)) {
+                    continue;
+                }
+                if (line.addTextBlock(textBlock, false)) {
+                    return [line.page, line];
+                }
+            }
+            //做新的行
+            var newLine = new Line(egret.__MAX_PAGE_SIZE__);
+            if (!newLine.addTextBlock(textBlock, true)) {
+                console.error('???');
+                return null;
+            }
+            //现有的page中插入
+            var _pages = this._pages;
+            for (var i = 0, length_9 = _pages.length; i < length_9; ++i) {
+                var page = _pages[i];
+                if (page.addLine(newLine)) {
+                    return [page, newLine];
+                }
+            }
+            //都没有，就做新的page
+            //添加目标行
+            var newPage = this.newPage(egret.__MAX_PAGE_SIZE__, egret.__MAX_PAGE_SIZE__);
+            if (!newPage.addLine(newLine)) {
+                console.error('_addText newPage.addLine failed');
+                return null;
+            }
+            return [newPage, newLine];
+        };
+        Book.prototype.newPage = function (pageWidth, pageHeight) {
+            var newPage = new Page(pageWidth, pageHeight);
+            this._pages.push(newPage);
+            return newPage;
+        };
+        Book.prototype.sort = function () {
+            if (this._sortLines.length <= 1) {
+                return;
+            }
+            var sortFunc = function (a, b) {
+                return (a.dynamicMaxHeight < b.dynamicMaxHeight) ? -1 : 1;
+            };
+            this._sortLines = this._sortLines.sort(sortFunc);
+        };
+        return Book;
+    }());
+    egret.Book = Book;
+    __reflect(Book.prototype, "egret.Book");
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //

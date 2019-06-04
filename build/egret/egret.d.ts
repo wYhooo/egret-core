@@ -12185,52 +12185,6 @@ declare namespace egret {
         new (): StageText;
     };
 }
-declare namespace egret {
-    let __MAX_PAGE_SIZE__: number;
-    let __TXT_BLOCK_OFFSET__: number;
-    let __book__: Book;
-    function configTextTextureAtlas(maxPageSize: number, offset: number): boolean;
-    class TextBlock {
-        readonly _id: number;
-        private _width;
-        private _height;
-        line: Line;
-        x: number;
-        y: number;
-        constructor(width: number, height: number);
-        readonly width: number;
-        readonly height: number;
-    }
-    class Line {
-        readonly _id: number;
-        page: Page;
-        readonly textBlocks: TextBlock[];
-        dynamicMaxHeight: number;
-        readonly maxWidth: number;
-        x: number;
-        y: number;
-        constructor(maxWidth: number);
-        isCapacityOf(textBlock: TextBlock): boolean;
-        lastTextBlock(): TextBlock;
-        addTextBlock(textBlock: TextBlock, needCheck: boolean): boolean;
-    }
-    class Page {
-        readonly _id: number;
-        readonly lines: Line[];
-        readonly pageWidth: number;
-        readonly pageHeight: number;
-        constructor(pageWidth: number, pageHeight: number);
-        addLine(line: Line): boolean;
-    }
-    class Book {
-        readonly _pages: Page[];
-        _sortLines: Line[];
-        addTextBlock(textBlock: TextBlock): boolean;
-        _addTextBlock(textBlock: TextBlock): [Page, Line] | null;
-        newPage(pageWidth: number, pageHeight: number): Page;
-        sort(): void;
-    }
-}
 declare namespace egret.sys {
     /**
      * @private
@@ -13342,6 +13296,52 @@ declare namespace egret.sys {
      * @param italic 是否斜体
      */
     let measureText: (text: string, fontFamily: string, fontSize: number, bold: boolean, italic: boolean) => number;
+}
+declare namespace egret {
+    let __MAX_PAGE_SIZE__: number;
+    let __TXT_RENDER_BORDER__: number;
+    let __book__: Book;
+    function configTextTextureAtlas(maxPageSize: number, offset: number): boolean;
+    class TextBlock {
+        readonly _id: number;
+        private _width;
+        private _height;
+        line: Line;
+        x: number;
+        y: number;
+        constructor(width: number, height: number);
+        readonly width: number;
+        readonly height: number;
+    }
+    class Line {
+        readonly _id: number;
+        page: Page;
+        readonly textBlocks: TextBlock[];
+        dynamicMaxHeight: number;
+        readonly maxWidth: number;
+        x: number;
+        y: number;
+        constructor(maxWidth: number);
+        isCapacityOf(textBlock: TextBlock): boolean;
+        lastTextBlock(): TextBlock;
+        addTextBlock(textBlock: TextBlock, needCheck: boolean): boolean;
+    }
+    class Page {
+        readonly _id: number;
+        readonly lines: Line[];
+        readonly pageWidth: number;
+        readonly pageHeight: number;
+        constructor(pageWidth: number, pageHeight: number);
+        addLine(line: Line): boolean;
+    }
+    class Book {
+        readonly _pages: Page[];
+        _sortLines: Line[];
+        addTextBlock(textBlock: TextBlock): boolean;
+        _addTextBlock(textBlock: TextBlock): [Page, Line] | null;
+        newPage(pageWidth: number, pageHeight: number): Page;
+        sort(): void;
+    }
 }
 declare namespace egret {
     /**
