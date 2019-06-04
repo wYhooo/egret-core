@@ -46,12 +46,12 @@ namespace egret.web {
     const __chineseCharactersRegExp__ = new RegExp("^[\u4E00-\u9FA5]$");
     const __chineseCharacterMeasureFastMap__: { [index: string]: TextMetrics } = {};
 
-    //
-    const kw_tag: string = 'tag';
-    const kw_textTextureAtlas: string = 'textTextureAtlas';
+    //属性关键子
+    const property_tag: string = 'tag';
+    const property_textTextureAtlas: string = 'textTextureAtlas';
 
     //
-    class StyleKey {
+    class StyleKey extends HashObject {
         /**
          * 颜色值
          */
@@ -92,6 +92,8 @@ namespace egret.web {
         public __string__: string;
 
         constructor(textNode: sys.TextNode, format: sys.TextFormat) {
+            super();
+
             this.textColor = textNode.textColor;
             this.strokeColor = textNode.strokeColor;
             this.size = textNode.size;
@@ -115,7 +117,7 @@ namespace egret.web {
         }
     }
 
-    class CharValue {
+    class CharValue extends HashObject {
 
         public _char: string = '';
         public _styleKey: StyleKey = null;
@@ -125,6 +127,7 @@ namespace egret.web {
         public renderHeight: number = 0;
 
         constructor() {
+            super();
         }
 
         public reset(char: string, styleKey: StyleKey): CharValue {
@@ -135,7 +138,7 @@ namespace egret.web {
             return this;
         }
 
-        public render(canvas: HTMLCanvasElement): void {
+        public drawToCanvas(canvas: HTMLCanvasElement): void {
             if (!canvas) {
                 return;
             }
@@ -165,13 +168,13 @@ namespace egret.web {
             canvas.height = this.renderHeight;
             //再开始绘制
             context.save();
-            context.textAlign = "start";
-            context.textBaseline = "top";
-            context.lineJoin = "round";
+            context.textAlign = 'start';
+            context.textBaseline = 'top';
+            context.lineJoin = 'round';
             context.font = this._styleKey.font;
             context.fillStyle = toColorString(textColor);
             context.strokeStyle = toColorString(strokeColor);
-            context.clearRect(0, 0, this.renderWidth, this.renderHeight);
+            context.clearRect(0, 0, canvas.width, canvas.height);
             context.translate(0, 0);
             context.scale(1, 1);
             //
@@ -199,16 +202,32 @@ namespace egret.web {
         }
     }
 
+    //测试开关
+    export const textAtlasRenderEnable : boolean = true;
+    //测试对象
+    export let __textAtlasRender__ = null;
+    //
     export class TextAtlasRender extends HashObject {
+        //
+        private readonly $charValue = new CharValue;
+        private readonly textBlockMap: { [index: number]: TextBlock } = {};
+        private _canvas: HTMLCanvasElement = null;
+        private readonly textAtlasTextureCache: WebGLTexture[] = [];
+        private readonly webglRenderContext: WebGLRenderContext = null;
 
-        public static render(textNode: sys.TextNode): void {
+        //
+        constructor (webglRenderContext: WebGLRenderContext) {
+            super();
+            this.webglRenderContext = webglRenderContext;
+        }
+        
+        public static analysisString(textNode: sys.TextNode): void {
             if (!textNode) {
                 return;
             }
             //先配置这个模型
-            if (!__book__) {
-                configTextTextureAtlas(64, 2);
-            }
+            __book__ = __book__ || configTextTextureAtlasStrategy(64, 2);
+            __textAtlasRender__ = __textAtlasRender__ || new TextAtlasRender(egret.web.WebGLRenderContext.getInstance(0, 0));
             //
             const offset = 4;
             const drawData = textNode.drawData;
@@ -221,27 +240,24 @@ namespace egret.web {
                 y = drawData[i + 1] as number;
                 labelString = drawData[i + 2] as string;
                 format = drawData[i + 3] as sys.TextFormat || {};
-                const styleKey = new StyleKey(textNode, format);
-                __textAtlasRender__.handleLabelString(labelString, styleKey);
+                __textAtlasRender__.convertLabelStringToTextAtlas(labelString, new StyleKey(textNode, format));
             }
         }
 
-        private readonly $charValue = new CharValue;
-        private readonly _textBlockMap: { [index: number]: TextBlock } = {};
-        private handleLabelString(labelstring: string, styleKey: StyleKey): void {
+        public convertLabelStringToTextAtlas(labelstring: string, styleKey: StyleKey): void {
             const canvas = this.canvas;
             const $charValue = this.$charValue;
-            const _textBlockMap = this._textBlockMap;
+            const textBlockMap = this.textBlockMap;
             for (const char of labelstring) {
                 //不反复创建
                 $charValue.reset(char, styleKey);
-                if (_textBlockMap[$charValue._hashCode]) {
+                if (textBlockMap[$charValue._hashCode]) {
                     //检查重复
                     continue;
                 }
                 //尝试渲染到canvas
-                $charValue.render(canvas);
-                console.log(char + ':' + canvas.width + ', ' + canvas.height);
+                $charValue.drawToCanvas(canvas);
+                //console.log(char + ':' + canvas.width + ', ' + canvas.height);
                 //创建新的文字块
                 const newTxtBlock = new TextBlock($charValue.renderWidth, $charValue.renderHeight);
                 if (!__book__.addTextBlock(newTxtBlock)) {
@@ -251,19 +267,17 @@ namespace egret.web {
                     continue;
                 }
                 //记录
-                _textBlockMap[$charValue._hashCode] = newTxtBlock;
+                textBlockMap[$charValue._hashCode] = newTxtBlock;
                 //测试下
-                newTxtBlock[kw_tag] = char;
+                newTxtBlock[property_tag] = char;
                 //
                 const line = newTxtBlock.line;
                 const page = line.page;
                 const xoffset = line.x + newTxtBlock.x + __TXT_RENDER_BORDER__;
                 const yoffset = line.y + newTxtBlock.y + __TXT_RENDER_BORDER__;
-                if (!page[kw_textTextureAtlas]) {
-                    page[kw_textTextureAtlas] = this.createTextTextureAtlas(page.pageWidth, page.pageHeight);
-                }
-                const textAtlas = page[kw_textTextureAtlas] as WebGLTexture; 
-                const gl = web.WebGLRenderContext.getInstance(0, 0).context;
+                page[property_textTextureAtlas] = page[property_textTextureAtlas] || this.createTextTextureAtlas(page.pageWidth, page.pageHeight);
+                const textAtlas = page[property_textTextureAtlas] as WebGLTexture;
+                const gl = this.webglRenderContext.context;
                 gl.bindTexture(gl.TEXTURE_2D, textAtlas);
                 gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
                 gl.texSubImage2D(gl.TEXTURE_2D, 0, xoffset, yoffset, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
@@ -271,25 +285,21 @@ namespace egret.web {
             }
         }
 
-        private readonly textAtlasTextureCache: WebGLTexture[] = [];
         private createTextTextureAtlas(width: number, height: number): WebGLTexture {
             const canvas = egret.sys.createCanvas(width, height);
             const context = egret.sys.getContext2d(canvas);
             context.fillStyle = 'black';
             context.fillRect(0, 0, width, height);
-            const textAtlasTexture = web.WebGLRenderContext.getInstance(0, 0).createTexture(canvas);
+            const textAtlasTexture = this.webglRenderContext.createTexture(canvas);
             textAtlasTexture['text_atlas'] = true;
             this.textAtlasTextureCache.push(textAtlasTexture);
             return textAtlasTexture;
         }
 
-        private _canvas: HTMLCanvasElement = null;
-        public get canvas(): HTMLCanvasElement {
+        private get canvas(): HTMLCanvasElement {
             const size = 24;
             this._canvas = this._canvas || egret.sys.createCanvas(size, size);
             return this._canvas;
         }
     }
-
-    export const __textAtlasRender__ = new TextAtlasRender;
 }

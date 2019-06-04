@@ -8099,8 +8099,11 @@ var egret;
                 }
                 if (node.dirtyRender) {
                     var surface = this.canvasRenderBuffer.surface;
-                    web.TextAtlasRender.render(node);
                     this.canvasRenderer.renderText(node, this.canvasRenderBuffer.context);
+                    /*
+                    *******测试TextAtlasRender渲染机制
+                    */
+                    web.textAtlasRenderEnable ? web.TextAtlasRender.analysisString(node) : void 0;
                     // 拷贝canvas到texture
                     var texture = node.$texture;
                     if (!texture) {
@@ -8316,44 +8319,50 @@ var egret;
         //针对中文的加速查找
         var __chineseCharactersRegExp__ = new RegExp("^[\u4E00-\u9FA5]$");
         var __chineseCharacterMeasureFastMap__ = {};
+        //属性关键子
+        var property_tag = 'tag';
+        var property_textTextureAtlas = 'textTextureAtlas';
         //
-        var kw_tag = 'tag';
-        var kw_textTextureAtlas = 'textTextureAtlas';
-        //
-        var StyleKey = (function () {
+        var StyleKey = (function (_super) {
+            __extends(StyleKey, _super);
             function StyleKey(textNode, format) {
-                this.format = null;
-                this.textColor = textNode.textColor;
-                this.strokeColor = textNode.strokeColor;
-                this.size = textNode.size;
-                this.stroke = textNode.stroke;
-                this.bold = textNode.bold;
-                this.italic = textNode.italic;
-                this.fontFamily = textNode.fontFamily;
-                this.format = format;
-                this.font = egret.getFontString(textNode, this.format);
+                var _this = _super.call(this) || this;
+                _this.format = null;
+                _this.textColor = textNode.textColor;
+                _this.strokeColor = textNode.strokeColor;
+                _this.size = textNode.size;
+                _this.stroke = textNode.stroke;
+                _this.bold = textNode.bold;
+                _this.italic = textNode.italic;
+                _this.fontFamily = textNode.fontFamily;
+                _this.format = format;
+                _this.font = egret.getFontString(textNode, _this.format);
                 //
-                this.__string__ = '' + this.font;
+                _this.__string__ = '' + _this.font;
                 var textColor = format.textColor == null ? textNode.textColor : format.textColor;
                 var strokeColor = format.strokeColor == null ? textNode.strokeColor : format.strokeColor;
                 var stroke = format.stroke == null ? textNode.stroke : format.stroke;
-                this.__string__ += '-' + egret.toColorString(textColor);
-                this.__string__ += '-' + egret.toColorString(strokeColor);
+                _this.__string__ += '-' + egret.toColorString(textColor);
+                _this.__string__ += '-' + egret.toColorString(strokeColor);
                 if (stroke) {
-                    this.__string__ += '-' + stroke * 2;
+                    _this.__string__ += '-' + stroke * 2;
                 }
+                return _this;
             }
             return StyleKey;
-        }());
+        }(egret.HashObject));
         __reflect(StyleKey.prototype, "StyleKey");
-        var CharValue = (function () {
+        var CharValue = (function (_super) {
+            __extends(CharValue, _super);
             function CharValue() {
-                this._char = '';
-                this._styleKey = null;
-                this._string = '';
-                this._hashCode = 0;
-                this.renderWidth = 0;
-                this.renderHeight = 0;
+                var _this = _super.call(this) || this;
+                _this._char = '';
+                _this._styleKey = null;
+                _this._string = '';
+                _this._hashCode = 0;
+                _this.renderWidth = 0;
+                _this.renderHeight = 0;
+                return _this;
             }
             CharValue.prototype.reset = function (char, styleKey) {
                 this._char = char;
@@ -8362,7 +8371,7 @@ var egret;
                 this._hashCode = __hashCode__(this._string);
                 return this;
             };
-            CharValue.prototype.render = function (canvas) {
+            CharValue.prototype.drawToCanvas = function (canvas) {
                 if (!canvas) {
                     return;
                 }
@@ -8392,13 +8401,13 @@ var egret;
                 canvas.height = this.renderHeight;
                 //再开始绘制
                 context.save();
-                context.textAlign = "start";
-                context.textBaseline = "top";
-                context.lineJoin = "round";
+                context.textAlign = 'start';
+                context.textBaseline = 'top';
+                context.lineJoin = 'round';
                 context.font = this._styleKey.font;
                 context.fillStyle = egret.toColorString(textColor);
                 context.strokeStyle = egret.toColorString(strokeColor);
-                context.clearRect(0, 0, this.renderWidth, this.renderHeight);
+                context.clearRect(0, 0, canvas.width, canvas.height);
                 context.translate(0, 0);
                 context.scale(1, 1);
                 //
@@ -8424,26 +8433,34 @@ var egret;
                 return measureText;
             };
             return CharValue;
-        }());
+        }(egret.HashObject));
         __reflect(CharValue.prototype, "CharValue");
+        //测试开关
+        web.textAtlasRenderEnable = true;
+        //测试对象
+        web.__textAtlasRender__ = null;
+        //
         var TextAtlasRender = (function (_super) {
             __extends(TextAtlasRender, _super);
-            function TextAtlasRender() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
+            //
+            function TextAtlasRender(webglRenderContext) {
+                var _this = _super.call(this) || this;
+                //
                 _this.$charValue = new CharValue;
-                _this._textBlockMap = {};
-                _this.textAtlasTextureCache = [];
+                _this.textBlockMap = {};
                 _this._canvas = null;
+                _this.textAtlasTextureCache = [];
+                _this.webglRenderContext = null;
+                _this.webglRenderContext = webglRenderContext;
                 return _this;
             }
-            TextAtlasRender.render = function (textNode) {
+            TextAtlasRender.analysisString = function (textNode) {
                 if (!textNode) {
                     return;
                 }
                 //先配置这个模型
-                if (!egret.__book__) {
-                    egret.configTextTextureAtlas(64, 2);
-                }
+                egret.__book__ = egret.__book__ || egret.configTextTextureAtlasStrategy(64, 2);
+                web.__textAtlasRender__ = web.__textAtlasRender__ || new TextAtlasRender(egret.web.WebGLRenderContext.getInstance(0, 0));
                 //
                 var offset = 4;
                 var drawData = textNode.drawData;
@@ -8456,25 +8473,24 @@ var egret;
                     y = drawData[i + 1];
                     labelString = drawData[i + 2];
                     format = drawData[i + 3] || {};
-                    var styleKey = new StyleKey(textNode, format);
-                    web.__textAtlasRender__.handleLabelString(labelString, styleKey);
+                    web.__textAtlasRender__.convertLabelStringToTextAtlas(labelString, new StyleKey(textNode, format));
                 }
             };
-            TextAtlasRender.prototype.handleLabelString = function (labelstring, styleKey) {
+            TextAtlasRender.prototype.convertLabelStringToTextAtlas = function (labelstring, styleKey) {
                 var canvas = this.canvas;
                 var $charValue = this.$charValue;
-                var _textBlockMap = this._textBlockMap;
+                var textBlockMap = this.textBlockMap;
                 for (var _i = 0, labelstring_1 = labelstring; _i < labelstring_1.length; _i++) {
                     var char = labelstring_1[_i];
                     //不反复创建
                     $charValue.reset(char, styleKey);
-                    if (_textBlockMap[$charValue._hashCode]) {
+                    if (textBlockMap[$charValue._hashCode]) {
                         //检查重复
                         continue;
                     }
                     //尝试渲染到canvas
-                    $charValue.render(canvas);
-                    console.log(char + ':' + canvas.width + ', ' + canvas.height);
+                    $charValue.drawToCanvas(canvas);
+                    //console.log(char + ':' + canvas.width + ', ' + canvas.height);
                     //创建新的文字块
                     var newTxtBlock = new egret.TextBlock($charValue.renderWidth, $charValue.renderHeight);
                     if (!egret.__book__.addTextBlock(newTxtBlock)) {
@@ -8484,19 +8500,17 @@ var egret;
                         continue;
                     }
                     //记录
-                    _textBlockMap[$charValue._hashCode] = newTxtBlock;
+                    textBlockMap[$charValue._hashCode] = newTxtBlock;
                     //测试下
-                    newTxtBlock[kw_tag] = char;
+                    newTxtBlock[property_tag] = char;
                     //
                     var line = newTxtBlock.line;
                     var page = line.page;
                     var xoffset = line.x + newTxtBlock.x + egret.__TXT_RENDER_BORDER__;
                     var yoffset = line.y + newTxtBlock.y + egret.__TXT_RENDER_BORDER__;
-                    if (!page[kw_textTextureAtlas]) {
-                        page[kw_textTextureAtlas] = this.createTextTextureAtlas(page.pageWidth, page.pageHeight);
-                    }
-                    var textAtlas = page[kw_textTextureAtlas];
-                    var gl = web.WebGLRenderContext.getInstance(0, 0).context;
+                    page[property_textTextureAtlas] = page[property_textTextureAtlas] || this.createTextTextureAtlas(page.pageWidth, page.pageHeight);
+                    var textAtlas = page[property_textTextureAtlas];
+                    var gl = this.webglRenderContext.context;
                     gl.bindTexture(gl.TEXTURE_2D, textAtlas);
                     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
                     gl.texSubImage2D(gl.TEXTURE_2D, 0, xoffset, yoffset, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
@@ -8508,7 +8522,7 @@ var egret;
                 var context = egret.sys.getContext2d(canvas);
                 context.fillStyle = 'black';
                 context.fillRect(0, 0, width, height);
-                var textAtlasTexture = web.WebGLRenderContext.getInstance(0, 0).createTexture(canvas);
+                var textAtlasTexture = this.webglRenderContext.createTexture(canvas);
                 textAtlasTexture['text_atlas'] = true;
                 this.textAtlasTextureCache.push(textAtlasTexture);
                 return textAtlasTexture;
@@ -8526,7 +8540,6 @@ var egret;
         }(egret.HashObject));
         web.TextAtlasRender = TextAtlasRender;
         __reflect(TextAtlasRender.prototype, "egret.web.TextAtlasRender");
-        web.__textAtlasRender__ = new TextAtlasRender;
     })(web = egret.web || (egret.web = {}));
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////

@@ -22344,23 +22344,20 @@ var egret;
     egret.__MAX_PAGE_SIZE__ = 1024;
     egret.__TXT_RENDER_BORDER__ = 1; //最好是描边宽度 + 1;
     egret.__book__ = null;
-    function configTextTextureAtlas(maxPageSize, offset) {
+    function configTextTextureAtlasStrategy(maxPageSize, offset) {
         if (!egret.__book__) {
             egret.__book__ = new Book;
             egret.__MAX_PAGE_SIZE__ = maxPageSize;
             egret.__TXT_RENDER_BORDER__ = offset;
-            return true;
+            console.log('configTextTextureAtlasStrategy: max page = ' + egret.__MAX_PAGE_SIZE__ + ', border = ' + egret.__TXT_RENDER_BORDER__);
         }
-        console.warn('repeat config: maxPageSize = ' + maxPageSize + ', offset = ' + offset);
-        return false;
+        return egret.__book__;
     }
-    egret.configTextTextureAtlas = configTextTextureAtlas;
-    //let globalGUID = 0;
+    egret.configTextTextureAtlasStrategy = configTextTextureAtlasStrategy;
     var TextBlock = (function (_super) {
         __extends(TextBlock, _super);
         function TextBlock(width, height) {
             var _this = _super.call(this) || this;
-            //public readonly _id = ++globalGUID;
             _this._width = 0;
             _this._height = 0;
             _this.line = null;
@@ -22392,7 +22389,6 @@ var egret;
         __extends(Line, _super);
         function Line(maxWidth) {
             var _this = _super.call(this) || this;
-            //public readonly _id = ++globalGUID;
             _this.page = null;
             _this.textBlocks = [];
             _this.dynamicMaxHeight = 0;
@@ -22466,7 +22462,6 @@ var egret;
         __extends(Page, _super);
         function Page(pageWidth, pageHeight) {
             var _this = _super.call(this) || this;
-            //public readonly _id = ++globalGUID;
             _this.lines = [];
             _this.pageWidth = 0;
             _this.pageHeight = 0;

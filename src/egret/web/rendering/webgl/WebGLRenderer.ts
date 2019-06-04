@@ -895,8 +895,11 @@ namespace egret.web {
 
             if (node.dirtyRender) {
                 let surface = this.canvasRenderBuffer.surface;
-                TextAtlasRender.render(node);
                 this.canvasRenderer.renderText(node, this.canvasRenderBuffer.context);
+                /*
+                *******测试TextAtlasRender渲染机制
+                */
+                textAtlasRenderEnable ? TextAtlasRender.analysisString(node) : void 0;
 
                 // 拷贝canvas到texture
                 let texture = node.$texture;

@@ -13301,7 +13301,7 @@ declare namespace egret {
     let __MAX_PAGE_SIZE__: number;
     let __TXT_RENDER_BORDER__: number;
     let __book__: Book;
-    function configTextTextureAtlas(maxPageSize: number, offset: number): boolean;
+    function configTextTextureAtlasStrategy(maxPageSize: number, offset: number): Book;
     class TextBlock extends HashObject {
         private _width;
         private _height;

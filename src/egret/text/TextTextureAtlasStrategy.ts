@@ -32,22 +32,18 @@ namespace egret {
     export let __MAX_PAGE_SIZE__ = 1024;
     export let __TXT_RENDER_BORDER__ = 1; //最好是描边宽度 + 1;
     export let __book__: Book = null;
-    export function configTextTextureAtlas(maxPageSize: number, offset: number): boolean {
+    export function configTextTextureAtlasStrategy(maxPageSize: number, offset: number): Book {
         if (!__book__) {
             __book__ = new Book;
             __MAX_PAGE_SIZE__ = maxPageSize;
             __TXT_RENDER_BORDER__ = offset;
-            return true;
+            console.log('configTextTextureAtlasStrategy: max page = ' + __MAX_PAGE_SIZE__ + ', border = ' + __TXT_RENDER_BORDER__);
         }
-        console.warn('repeat config: maxPageSize = ' + maxPageSize + ', offset = ' + offset);
-        return false;
+        return __book__;
     }
-
-    //let globalGUID = 0;
 
     export class TextBlock extends HashObject {
 
-        //public readonly _id = ++globalGUID;
         private _width: number = 0;
         private _height: number = 0;
         public line: Line = null;
@@ -71,7 +67,6 @@ namespace egret {
 
     export class Line extends HashObject {
 
-        //public readonly _id = ++globalGUID;
         public page: Page = null;
         public readonly textBlocks: TextBlock[] = [];
         public dynamicMaxHeight: number = 0;
@@ -146,7 +141,6 @@ namespace egret {
 
     export class Page extends HashObject  {
 
-        //public readonly _id = ++globalGUID;
         public readonly lines: Line[] = [];
         public readonly pageWidth: number = 0;
         public readonly pageHeight: number = 0;
