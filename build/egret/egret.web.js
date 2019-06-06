@@ -8367,6 +8367,7 @@ var egret;
             __extends(StyleKey, _super);
             function StyleKey(textNode, format) {
                 var _this = _super.call(this) || this;
+                //
                 _this.format = null;
                 _this.textColor = textNode.textColor;
                 _this.strokeColor = textNode.strokeColor;
@@ -8377,6 +8378,8 @@ var egret;
                 _this.fontFamily = textNode.fontFamily;
                 _this.format = format;
                 _this.font = egret.getFontString(textNode, _this.format);
+                _this.$canvasScaleX = parseFloat(textNode.$canvasScaleX.toFixed(2)); //不搞那么长
+                _this.$canvasScaleY = parseFloat(textNode.$canvasScaleY.toFixed(2));
                 //
                 _this.__string__ = '' + _this.font;
                 var textColor = format.textColor == null ? textNode.textColor : format.textColor;
@@ -8387,6 +8390,8 @@ var egret;
                 if (stroke) {
                     _this.__string__ += '-' + stroke * 2;
                 }
+                _this.__string__ += '-' + _this.$canvasScaleX;
+                _this.__string__ += '-' + _this.$canvasScaleY;
                 return _this;
             }
             return StyleKey;
@@ -8429,13 +8434,15 @@ var egret;
                 var measureText = this.measureText(context, text, this._styleKey.font);
                 if (measureText) {
                     this.renderWidth = measureText.width;
-                    this.renderHeight = (measureText['height'] || this._styleKey.size);
+                    this.renderHeight = this._styleKey.size;
                 }
                 else {
                     console.error('text = ' + text + ', measureText is null');
                     this.renderWidth = this._styleKey.size;
                     this.renderHeight = this._styleKey.size;
                 }
+                this.renderWidth *= this._styleKey.$canvasScaleX;
+                this.renderHeight *= this._styleKey.$canvasScaleY;
                 //
                 canvas.width = this.renderWidth;
                 canvas.height = this.renderHeight;
@@ -8449,7 +8456,7 @@ var egret;
                 context.strokeStyle = egret.toColorString(strokeColor);
                 context.clearRect(0, 0, canvas.width, canvas.height);
                 context.translate(0, 0);
-                context.scale(1, 1);
+                context.scale(this._styleKey.$canvasScaleX, this._styleKey.$canvasScaleY);
                 //
                 if (stroke) {
                     context.lineWidth = stroke * 2;

@@ -84,7 +84,12 @@ namespace egret.web {
         //
         public readonly font: string;
 
+        //
         public readonly format: sys.TextFormat = null;
+
+
+        public readonly $canvasScaleX: number;
+        public readonly $canvasScaleY: number;
 
         /**
          * ????
@@ -103,7 +108,8 @@ namespace egret.web {
             this.fontFamily = textNode.fontFamily;
             this.format = format;
             this.font = getFontString(textNode, this.format);
-
+            this.$canvasScaleX = parseFloat(textNode.$canvasScaleX.toFixed(2)); //不搞那么长
+            this.$canvasScaleY = parseFloat(textNode.$canvasScaleY.toFixed(2));
             //
             this.__string__ = '' + this.font;
             const textColor = format.textColor == null ? textNode.textColor : format.textColor;
@@ -114,6 +120,8 @@ namespace egret.web {
             if (stroke) {
                 this.__string__ += '-' + stroke * 2;
             }
+            this.__string__ += '-' + this.$canvasScaleX;
+            this.__string__ += '-' + this.$canvasScaleY;
         }
     }
 
@@ -156,13 +164,15 @@ namespace egret.web {
             const measureText = this.measureText(context, text, this._styleKey.font);
             if (measureText) {
                 this.renderWidth = measureText.width;
-                this.renderHeight = (measureText['height'] || this._styleKey.size);
+                this.renderHeight = this._styleKey.size;
             }
             else {
                 console.error('text = ' + text + ', measureText is null');
                 this.renderWidth = this._styleKey.size;
                 this.renderHeight = this._styleKey.size;
             }
+            this.renderWidth *= this._styleKey.$canvasScaleX;
+            this.renderHeight *= this._styleKey.$canvasScaleY;
             //
             canvas.width = this.renderWidth;
             canvas.height = this.renderHeight;
@@ -176,7 +186,7 @@ namespace egret.web {
             context.strokeStyle = toColorString(strokeColor);
             context.clearRect(0, 0, canvas.width, canvas.height);
             context.translate(0, 0);
-            context.scale(1, 1);
+            context.scale(this._styleKey.$canvasScaleX, this._styleKey.$canvasScaleY); //必须转化scale
             //
             if (stroke) {
                 context.lineWidth = stroke * 2;
