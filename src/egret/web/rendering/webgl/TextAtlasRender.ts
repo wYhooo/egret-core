@@ -203,7 +203,7 @@ namespace egret.web {
     }
 
     //测试开关
-    export const textAtlasRenderEnable : boolean = false;
+    export const textAtlasRenderEnable : boolean = true;
     //测试对象
     export let __textAtlasRender__ : TextAtlasRender = null;
 
@@ -306,14 +306,11 @@ namespace egret.web {
         }
 
         private createTextTextureAtlas(width: number, height: number): WebGLTexture {
-            const canvas = egret.sys.createCanvas(width, height);
-            const context = egret.sys.getContext2d(canvas);
-            context.fillStyle = 'black';
-            context.fillRect(0, 0, width, height);
-            const textAtlasTexture = this.webglRenderContext.createTexture(canvas);
-            textAtlasTexture['text_atlas'] = true;
-            this.textAtlasTextureCache.push(textAtlasTexture);
-            return textAtlasTexture;
+            const texture = egret.sys._createTexture(this.webglRenderContext, width, height, null);
+            if (texture) {
+                this.textAtlasTextureCache.push(texture);
+            }
+            return texture;
         }
 
         private get canvas(): HTMLCanvasElement {

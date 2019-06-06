@@ -14619,6 +14619,14 @@ var egret;
         }
         sys.createTexture = createTexture;
         /**
+       * 重新设置主canvas的大小
+       */
+        function _createTexture(renderContext, width, height, data) {
+            console.error("empty sys._createTexture = " + width + ", " + height + ", " + data);
+            return null;
+        }
+        sys._createTexture = _createTexture;
+        /**
          * 画texture
          **/
         function drawTextureElements(renderContext, data, offset) {

@@ -108,6 +108,14 @@ namespace egret.sys {
     }
 
     /**
+   * 重新设置主canvas的大小
+   */
+    export function _createTexture(renderContext: RenderContext, width: number, height: number, data: any): WebGLTexture {
+        console.error(`empty sys._createTexture = ${width}, ${height}, ${data}`);
+        return null;
+    }
+
+    /**
      * 画texture
      **/
     export function drawTextureElements(renderContext: RenderContext, data: any, offset: number): number {
