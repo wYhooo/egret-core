@@ -187,6 +187,8 @@ namespace egret.web {
             context.clearRect(0, 0, canvas.width, canvas.height);
             context.translate(0, 0);
             context.scale(this._styleKey.$canvasScaleX, this._styleKey.$canvasScaleY); //必须转化scale
+            //context.scale(1, 1); //必须转化scale
+
             //
             if (stroke) {
                 context.lineWidth = stroke * 2;
@@ -245,7 +247,7 @@ namespace egret.web {
                 return;
             }
             //先配置这个模型
-            __book__ = __book__ || configTextTextureAtlasStrategy(512, 2);
+            __book__ = __book__ || configTextTextureAtlasStrategy(512, 1);
             __textAtlasRender__ = __textAtlasRender__ || new TextAtlasRender(egret.web.WebGLRenderContext.getInstance(0, 0));
             //
             const offset = 4;

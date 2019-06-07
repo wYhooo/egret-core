@@ -13312,9 +13312,14 @@ declare namespace egret {
         line: Line;
         x: number;
         y: number;
+        u: number;
+        v: number;
         constructor(width: number, height: number);
         readonly width: number;
         readonly height: number;
+        readonly contentWidth: number;
+        readonly contentHeight: number;
+        updateUV(): boolean;
     }
     class Line extends HashObject {
         page: Page;

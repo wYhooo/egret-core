@@ -8148,18 +8148,30 @@ var egret;
                 *******测试TextAtlasRender渲染机制
                 */
                 if (web.textAtlasRenderEnable && web.TextAtlasRender.renderTextBlockCommands.length > 0) {
+                    var drawX = 0;
+                    var drawY = 0;
+                    var _offsetX = buffer.$offsetX;
+                    var _offsetY = buffer.$offsetY;
+                    //
                     for (var _i = 0, _a = web.TextAtlasRender.renderTextBlockCommands; _i < _a.length; _i++) {
                         var cmd = _a[_i];
-                        var x_1 = cmd.x;
-                        var y_1 = cmd.y;
+                        var anchorX = cmd.x;
+                        var anchorY = cmd.y;
                         var txtBlocks = cmd.textBlocks;
                         for (var i = 0, length_10 = txtBlocks.length; i < length_10; ++i) {
                             var tb = txtBlocks[i];
                             var page = tb.line.page;
-                            buffer.context.drawTexture(page['textTextureAtlas'], 0, 0, page.pageWidth, page.pageHeight, x_1, y_1, tb.width, tb.height, page.pageWidth, page.pageHeight);
-                            x_1 += tb.width;
+                            //
+                            buffer.$offsetX = _offsetX + (anchorX + drawX - node.x / canvasScaleX);
+                            buffer.$offsetY = _offsetY + (-node.y) / canvasScaleY;
+                            //
+                            buffer.context.drawTexture(page['textTextureAtlas'], tb.u, tb.v, tb.contentWidth, tb.contentHeight, 0, 0, tb.contentWidth / canvasScaleX, tb.contentHeight / canvasScaleY, page.pageWidth, page.pageHeight);
+                            drawX += tb.contentWidth / canvasScaleX;
                         }
+                        //break;
                     }
+                    buffer.$offsetX = _offsetX;
+                    buffer.$offsetX = _offsetY;
                 }
                 if (x || y) {
                     if (node.dirtyRender) {
@@ -8456,7 +8468,8 @@ var egret;
                 context.strokeStyle = egret.toColorString(strokeColor);
                 context.clearRect(0, 0, canvas.width, canvas.height);
                 context.translate(0, 0);
-                context.scale(this._styleKey.$canvasScaleX, this._styleKey.$canvasScaleY);
+                context.scale(this._styleKey.$canvasScaleX, this._styleKey.$canvasScaleY); //必须转化scale
+                //context.scale(1, 1); //必须转化scale
                 //
                 if (stroke) {
                     context.lineWidth = stroke * 2;
@@ -8519,7 +8532,7 @@ var egret;
                     return;
                 }
                 //先配置这个模型
-                egret.__book__ = egret.__book__ || egret.configTextTextureAtlasStrategy(512, 2);
+                egret.__book__ = egret.__book__ || egret.configTextTextureAtlasStrategy(512, 1);
                 web.__textAtlasRender__ = web.__textAtlasRender__ || new TextAtlasRender(egret.web.WebGLRenderContext.getInstance(0, 0));
                 //
                 var offset = 4;

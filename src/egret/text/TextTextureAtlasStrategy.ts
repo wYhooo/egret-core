@@ -49,6 +49,8 @@ namespace egret {
         public line: Line = null;
         public x: number = 0;
         public y: number = 0;
+        public u: number = 0;
+        public v: number = 0;
 
         constructor(width: number, height: number) {
             super();
@@ -62,6 +64,26 @@ namespace egret {
 
         public get height(): number {
             return this._height + __TXT_RENDER_BORDER__ * 2;
+        }
+
+        public get contentWidth(): number {
+            return this._width;
+        }
+
+        public get contentHeight(): number {
+            return this._height;
+        }
+
+        public updateUV(): boolean {
+            const line = this.line;
+            if (!line) {
+                //不属于任何的line就是错的
+                return false;
+            }
+
+            this.u = line.x + this.x + __TXT_RENDER_BORDER__ * 1;
+            this.v = line.y + this.y + __TXT_RENDER_BORDER__ * 1;
+            return true;
         }
     }
 
@@ -139,7 +161,7 @@ namespace egret {
         }
     }
 
-    export class Page extends HashObject  {
+    export class Page extends HashObject {
 
         public readonly lines: Line[] = [];
         public readonly pageWidth: number = 0;
@@ -191,16 +213,20 @@ namespace egret {
             if (!result) {
                 return false;
             }
+            //更新下uv
+            textBlock.updateUV();
             //没有才要添加
             let exist = false;
             const cast = result as [Page, Line];
-            for (const line of this._sortLines) {
+            const _sortLines = this._sortLines;
+            for (const line of _sortLines) {
                 if (line === cast[1]) {
                     exist = true;
+                    break;
                 }
             }
             if (!exist) {
-                this._sortLines.push(cast[1]);
+                _sortLines.push(cast[1]);
             }
             //重新排序
             this.sort();

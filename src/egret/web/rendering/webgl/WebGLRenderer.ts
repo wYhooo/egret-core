@@ -922,21 +922,37 @@ namespace egret.web {
             *******测试TextAtlasRender渲染机制
             */
             if (textAtlasRenderEnable && TextAtlasRender.renderTextBlockCommands.length > 0) {
+                let drawX = 0;
+                let drawY = 0;
+                const _offsetX = buffer.$offsetX;
+                const _offsetY = buffer.$offsetY;
+                //
                 for (const cmd of TextAtlasRender.renderTextBlockCommands) {
-                    let x = cmd.x;
-                    let y = cmd.y;
+                    const anchorX = cmd.x;
+                    const anchorY = cmd.y;
                     const txtBlocks = cmd.textBlocks;
+
                     for (let i = 0, length = txtBlocks.length; i < length; ++i) {
                         const tb = txtBlocks[i];
                         const page = tb.line.page;
+                        //
+                        buffer.$offsetX = _offsetX + (anchorX + drawX - node.x/canvasScaleX);
+                        buffer.$offsetY = _offsetY + (-node.y)/canvasScaleY;
+                        //
                         buffer.context.drawTexture(page['textTextureAtlas'] as WebGLTexture,
-                            0, 0, page.pageWidth, page.pageHeight, 
-                            x, y, tb.width, tb.height,
+                            tb.u, tb.v,
+                            tb.contentWidth, tb.contentHeight,
+                            0, 0,
+                            tb.contentWidth/canvasScaleX, tb.contentHeight/canvasScaleY,
                             page.pageWidth, page.pageHeight);
 
-                        x += tb.width;
+                        drawX += tb.contentWidth/canvasScaleX;
                     }
+                    //break;
                 }
+
+                buffer.$offsetX = _offsetX;
+                buffer.$offsetX = _offsetY;
             }
 
             if (x || y) {

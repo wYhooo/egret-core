@@ -22371,6 +22371,8 @@ var egret;
             _this.line = null;
             _this.x = 0;
             _this.y = 0;
+            _this.u = 0;
+            _this.v = 0;
             _this._width = width;
             _this._height = height;
             return _this;
@@ -22389,6 +22391,30 @@ var egret;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(TextBlock.prototype, "contentWidth", {
+            get: function () {
+                return this._width;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TextBlock.prototype, "contentHeight", {
+            get: function () {
+                return this._height;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        TextBlock.prototype.updateUV = function () {
+            var line = this.line;
+            if (!line) {
+                //不属于任何的line就是错的
+                return false;
+            }
+            this.u = line.x + this.x + egret.__TXT_RENDER_BORDER__ * 1;
+            this.v = line.y + this.y + egret.__TXT_RENDER_BORDER__ * 1;
+            return true;
+        };
         return TextBlock;
     }(egret.HashObject));
     egret.TextBlock = TextBlock;
@@ -22522,17 +22548,21 @@ var egret;
             if (!result) {
                 return false;
             }
+            //更新下uv
+            textBlock.updateUV();
             //没有才要添加
             var exist = false;
             var cast = result;
-            for (var _i = 0, _a = this._sortLines; _i < _a.length; _i++) {
-                var line = _a[_i];
+            var _sortLines = this._sortLines;
+            for (var _i = 0, _sortLines_1 = _sortLines; _i < _sortLines_1.length; _i++) {
+                var line = _sortLines_1[_i];
                 if (line === cast[1]) {
                     exist = true;
+                    break;
                 }
             }
             if (!exist) {
-                this._sortLines.push(cast[1]);
+                _sortLines.push(cast[1]);
             }
             //重新排序
             this.sort();
