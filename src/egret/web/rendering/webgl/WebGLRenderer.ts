@@ -922,33 +922,30 @@ namespace egret.web {
             *******测试TextAtlasRender渲染机制
             */
             if (textAtlasRenderEnable && TextAtlasRender.renderTextBlockCommands.length > 0) {
-                let drawX = 0;
-                let drawY = 0;
-                const _offsetX = buffer.$offsetX;
-                const _offsetY = buffer.$offsetY;
-                //
+                const _offsetX = buffer.$offsetX - node.x / canvasScaleX;
+                const _offsetY = buffer.$offsetY - node.y / canvasScaleX;
                 for (const cmd of TextAtlasRender.renderTextBlockCommands) {
-                    const anchorX = cmd.x;
-                    const anchorY = cmd.y;
+                    const anchorX = cmd.anchorX;
+                    const anchorY = cmd.anchorY;
                     const txtBlocks = cmd.textBlocks;
+                    let drawX = 0;
 
                     for (let i = 0, length = txtBlocks.length; i < length; ++i) {
                         const tb = txtBlocks[i];
                         const page = tb.line.page;
                         //
-                        buffer.$offsetX = _offsetX + (anchorX + drawX - node.x/canvasScaleX);
-                        buffer.$offsetY = _offsetY + (-node.y)/canvasScaleY;
+                        buffer.$offsetX = _offsetX + (anchorX + drawX);
+                        buffer.$offsetY = _offsetY + (anchorY + (-tb['measureHeight'] / 2));
                         //
                         buffer.context.drawTexture(page['textTextureAtlas'] as WebGLTexture,
                             tb.u, tb.v,
                             tb.contentWidth, tb.contentHeight,
                             0, 0,
-                            tb.contentWidth/canvasScaleX, tb.contentHeight/canvasScaleY,
+                            tb.contentWidth / canvasScaleX, tb.contentHeight / canvasScaleY,
                             page.pageWidth, page.pageHeight);
 
-                        drawX += tb.contentWidth/canvasScaleX;
+                        drawX += tb.contentWidth / canvasScaleX;
                     }
-                    //break;
                 }
 
                 buffer.$offsetX = _offsetX;

@@ -131,9 +131,9 @@ namespace egret.web {
         public _styleKey: StyleKey = null;
         public _string: string = '';
         public _hashCode: number = 0;
-        public renderWidth: number = 0;
-        public renderHeight: number = 0;
-
+        public measureWidth: number = 0;
+        public measureHeight: number = 0;
+        
         constructor() {
             super();
         }
@@ -146,13 +146,19 @@ namespace egret.web {
             return this;
         }
 
+        public get renderWidth(): number {
+            return this.measureWidth * this._styleKey.$canvasScaleX;
+        }
+
+        public get renderHeight(): number {
+            return this.measureHeight * this._styleKey.$canvasScaleY;
+        }
+
         public drawToCanvas(canvas: HTMLCanvasElement): void {
             if (!canvas) {
                 return;
             }
             //
-            const x = 0;
-            const y = 0;
             const text = this._char;
             const format: sys.TextFormat = this._styleKey.format;
             const textColor = format.textColor == null ? this._styleKey.textColor : format.textColor;
@@ -163,22 +169,20 @@ namespace egret.web {
             //Step1: 重新测试字体大小
             const measureText = this.measureText(context, text, this._styleKey.font);
             if (measureText) {
-                this.renderWidth = measureText.width;
-                this.renderHeight = this._styleKey.size;
+                this.measureWidth = measureText.width;
+                this.measureHeight = this._styleKey.size;
             }
             else {
                 console.error('text = ' + text + ', measureText is null');
-                this.renderWidth = this._styleKey.size;
-                this.renderHeight = this._styleKey.size;
+                this.measureWidth = this._styleKey.size;
+                this.measureHeight = this._styleKey.size;
             }
-            this.renderWidth *= this._styleKey.$canvasScaleX;
-            this.renderHeight *= this._styleKey.$canvasScaleY;
             //
             canvas.width = this.renderWidth;
             canvas.height = this.renderHeight;
             //再开始绘制
             context.save();
-            context.textAlign = 'start';
+            context.textAlign = 'left';
             context.textBaseline = 'top';
             context.lineJoin = 'round';
             context.font = this._styleKey.font;
@@ -186,15 +190,13 @@ namespace egret.web {
             context.strokeStyle = toColorString(strokeColor);
             context.clearRect(0, 0, canvas.width, canvas.height);
             context.translate(0, 0);
-            context.scale(this._styleKey.$canvasScaleX, this._styleKey.$canvasScaleY); //必须转化scale
-            //context.scale(1, 1); //必须转化scale
-
+            context.scale(this._styleKey.$canvasScaleX, this._styleKey.$canvasScaleY);
             //
             if (stroke) {
                 context.lineWidth = stroke * 2;
-                context.strokeText(text, x, y);
+                context.strokeText(text, 0, 0);
             }
-            context.fillText(text, x, y);
+            context.fillText(text, 0, 0);
             context.restore();
         }
 
@@ -220,8 +222,8 @@ namespace egret.web {
     export let __textAtlasRender__ : TextAtlasRender = null;
 
     export class DrawTextBlocksCommand extends HashObject  {
-        public x: number = 0;
-        public y: number = 0;
+        public anchorX: number = 0;
+        public anchorY: number = 0;
         public textBlocks: TextBlock[] = [];
     }
 
@@ -252,15 +254,15 @@ namespace egret.web {
             //
             const offset = 4;
             const drawData = textNode.drawData;
-            let x = 0;
-            let y = 0;
+            let anchorX = 0;
+            let anchorY = 0;
             let labelString = '';
             let format: sys.TextFormat = {};
             TextAtlasRender.renderTextBlocks.length = 0;
             TextAtlasRender.renderTextBlockCommands.length = 0;
             for (let i = 0, length = drawData.length; i < length; i += offset) {
-                x = drawData[i + 0] as number;
-                y = drawData[i + 1] as number;
+                anchorX = drawData[i + 0] as number;
+                anchorY = drawData[i + 1] as number;
                 labelString = drawData[i + 2] as string;
                 format = drawData[i + 3] as sys.TextFormat || {};
                 TextAtlasRender.renderTextBlocks.length = 0;
@@ -268,8 +270,8 @@ namespace egret.web {
 
                 //
                 const drawCmd = new DrawTextBlocksCommand;
-                drawCmd.x = x;
-                drawCmd.y = y;
+                drawCmd.anchorX = anchorX;
+                drawCmd.anchorY = anchorY;
                 drawCmd.textBlocks = [].concat(TextAtlasRender.renderTextBlocks);
                 TextAtlasRender.renderTextBlockCommands.push(drawCmd);
             }
@@ -301,12 +303,15 @@ namespace egret.web {
                 //记录 + 测试 + 准备渲染
                 textBlockMap[$charValue._hashCode] = newTxtBlock;
                 newTxtBlock[property_tag] = char;
+                newTxtBlock['measureWidth'] = $charValue.measureWidth;
+                newTxtBlock['measureHeight'] = $charValue.measureHeight;
                 TextAtlasRender.renderTextBlocks.push(newTxtBlock);
                 //
                 const line = newTxtBlock.line;
                 const page = line.page;
                 const xoffset = line.x + newTxtBlock.x + __TXT_RENDER_BORDER__;
                 const yoffset = line.y + newTxtBlock.y + __TXT_RENDER_BORDER__;
+                //
                 page[property_textTextureAtlas] = page[property_textTextureAtlas] || this.createTextTextureAtlas(page.pageWidth, page.pageHeight);
                 const textAtlas = page[property_textTextureAtlas] as WebGLTexture;
                 const gl = this.webglRenderContext.context;

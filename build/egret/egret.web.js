@@ -8148,27 +8148,24 @@ var egret;
                 *******测试TextAtlasRender渲染机制
                 */
                 if (web.textAtlasRenderEnable && web.TextAtlasRender.renderTextBlockCommands.length > 0) {
-                    var drawX = 0;
-                    var drawY = 0;
-                    var _offsetX = buffer.$offsetX;
-                    var _offsetY = buffer.$offsetY;
-                    //
+                    var _offsetX = buffer.$offsetX - node.x / canvasScaleX;
+                    var _offsetY = buffer.$offsetY - node.y / canvasScaleX;
                     for (var _i = 0, _a = web.TextAtlasRender.renderTextBlockCommands; _i < _a.length; _i++) {
                         var cmd = _a[_i];
-                        var anchorX = cmd.x;
-                        var anchorY = cmd.y;
+                        var anchorX = cmd.anchorX;
+                        var anchorY = cmd.anchorY;
                         var txtBlocks = cmd.textBlocks;
+                        var drawX = 0;
                         for (var i = 0, length_10 = txtBlocks.length; i < length_10; ++i) {
                             var tb = txtBlocks[i];
                             var page = tb.line.page;
                             //
-                            buffer.$offsetX = _offsetX + (anchorX + drawX - node.x / canvasScaleX);
-                            buffer.$offsetY = _offsetY + (-node.y) / canvasScaleY;
+                            buffer.$offsetX = _offsetX + (anchorX + drawX);
+                            buffer.$offsetY = _offsetY + (anchorY + (-tb['measureHeight'] / 2));
                             //
                             buffer.context.drawTexture(page['textTextureAtlas'], tb.u, tb.v, tb.contentWidth, tb.contentHeight, 0, 0, tb.contentWidth / canvasScaleX, tb.contentHeight / canvasScaleY, page.pageWidth, page.pageHeight);
                             drawX += tb.contentWidth / canvasScaleX;
                         }
-                        //break;
                     }
                     buffer.$offsetX = _offsetX;
                     buffer.$offsetX = _offsetY;
@@ -8417,8 +8414,8 @@ var egret;
                 _this._styleKey = null;
                 _this._string = '';
                 _this._hashCode = 0;
-                _this.renderWidth = 0;
-                _this.renderHeight = 0;
+                _this.measureWidth = 0;
+                _this.measureHeight = 0;
                 return _this;
             }
             CharValue.prototype.reset = function (char, styleKey) {
@@ -8428,13 +8425,25 @@ var egret;
                 this._hashCode = __hashCode__(this._string);
                 return this;
             };
+            Object.defineProperty(CharValue.prototype, "renderWidth", {
+                get: function () {
+                    return this.measureWidth * this._styleKey.$canvasScaleX;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(CharValue.prototype, "renderHeight", {
+                get: function () {
+                    return this.measureHeight * this._styleKey.$canvasScaleY;
+                },
+                enumerable: true,
+                configurable: true
+            });
             CharValue.prototype.drawToCanvas = function (canvas) {
                 if (!canvas) {
                     return;
                 }
                 //
-                var x = 0;
-                var y = 0;
                 var text = this._char;
                 var format = this._styleKey.format;
                 var textColor = format.textColor == null ? this._styleKey.textColor : format.textColor;
@@ -8445,22 +8454,20 @@ var egret;
                 //Step1: 重新测试字体大小
                 var measureText = this.measureText(context, text, this._styleKey.font);
                 if (measureText) {
-                    this.renderWidth = measureText.width;
-                    this.renderHeight = this._styleKey.size;
+                    this.measureWidth = measureText.width;
+                    this.measureHeight = this._styleKey.size;
                 }
                 else {
                     console.error('text = ' + text + ', measureText is null');
-                    this.renderWidth = this._styleKey.size;
-                    this.renderHeight = this._styleKey.size;
+                    this.measureWidth = this._styleKey.size;
+                    this.measureHeight = this._styleKey.size;
                 }
-                this.renderWidth *= this._styleKey.$canvasScaleX;
-                this.renderHeight *= this._styleKey.$canvasScaleY;
                 //
                 canvas.width = this.renderWidth;
                 canvas.height = this.renderHeight;
                 //再开始绘制
                 context.save();
-                context.textAlign = 'start';
+                context.textAlign = 'left';
                 context.textBaseline = 'top';
                 context.lineJoin = 'round';
                 context.font = this._styleKey.font;
@@ -8468,14 +8475,13 @@ var egret;
                 context.strokeStyle = egret.toColorString(strokeColor);
                 context.clearRect(0, 0, canvas.width, canvas.height);
                 context.translate(0, 0);
-                context.scale(this._styleKey.$canvasScaleX, this._styleKey.$canvasScaleY); //必须转化scale
-                //context.scale(1, 1); //必须转化scale
+                context.scale(this._styleKey.$canvasScaleX, this._styleKey.$canvasScaleY);
                 //
                 if (stroke) {
                     context.lineWidth = stroke * 2;
-                    context.strokeText(text, x, y);
+                    context.strokeText(text, 0, 0);
                 }
-                context.fillText(text, x, y);
+                context.fillText(text, 0, 0);
                 context.restore();
             };
             CharValue.prototype.measureText = function (context, text, font) {
@@ -8503,8 +8509,8 @@ var egret;
             __extends(DrawTextBlocksCommand, _super);
             function DrawTextBlocksCommand() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.x = 0;
-                _this.y = 0;
+                _this.anchorX = 0;
+                _this.anchorY = 0;
                 _this.textBlocks = [];
                 return _this;
             }
@@ -8537,23 +8543,23 @@ var egret;
                 //
                 var offset = 4;
                 var drawData = textNode.drawData;
-                var x = 0;
-                var y = 0;
+                var anchorX = 0;
+                var anchorY = 0;
                 var labelString = '';
                 var format = {};
                 TextAtlasRender.renderTextBlocks.length = 0;
                 TextAtlasRender.renderTextBlockCommands.length = 0;
                 for (var i = 0, length_12 = drawData.length; i < length_12; i += offset) {
-                    x = drawData[i + 0];
-                    y = drawData[i + 1];
+                    anchorX = drawData[i + 0];
+                    anchorY = drawData[i + 1];
                     labelString = drawData[i + 2];
                     format = drawData[i + 3] || {};
                     TextAtlasRender.renderTextBlocks.length = 0;
                     web.__textAtlasRender__.convertLabelStringToTextAtlas(labelString, new StyleKey(textNode, format));
                     //
                     var drawCmd = new DrawTextBlocksCommand;
-                    drawCmd.x = x;
-                    drawCmd.y = y;
+                    drawCmd.anchorX = anchorX;
+                    drawCmd.anchorY = anchorY;
                     drawCmd.textBlocks = [].concat(TextAtlasRender.renderTextBlocks);
                     TextAtlasRender.renderTextBlockCommands.push(drawCmd);
                 }
@@ -8585,12 +8591,15 @@ var egret;
                     //记录 + 测试 + 准备渲染
                     textBlockMap[$charValue._hashCode] = newTxtBlock;
                     newTxtBlock[property_tag] = char;
+                    newTxtBlock['measureWidth'] = $charValue.measureWidth;
+                    newTxtBlock['measureHeight'] = $charValue.measureHeight;
                     TextAtlasRender.renderTextBlocks.push(newTxtBlock);
                     //
                     var line = newTxtBlock.line;
                     var page = line.page;
                     var xoffset = line.x + newTxtBlock.x + egret.__TXT_RENDER_BORDER__;
                     var yoffset = line.y + newTxtBlock.y + egret.__TXT_RENDER_BORDER__;
+                    //
                     page[property_textTextureAtlas] = page[property_textTextureAtlas] || this.createTextTextureAtlas(page.pageWidth, page.pageHeight);
                     var textAtlas = page[property_textTextureAtlas];
                     var gl = this.webglRenderContext.context;
